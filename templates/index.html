@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Изменение регистра </title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Изменение регистра </h1>
+        <form action="/change_case" method="POST">
+            <div class="form-group">
+                <label for="text">Текст:</label>
+                <input type="text" id="text" name="text" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="case">Перевести в:</label>
+                <select id="case" name="case" class="form-control">
+                    <option value="lower">Внижний</option>
+                    <option value="upper">В верхний</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Изменить</button>
+        </form>
+        {% if changed_text %}
+        <div class="mt-4">
+            <p class="lead">Готовый текст: {{ changed_text }}</p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
