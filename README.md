@@ -6,9 +6,10 @@ which visually or semantically related strings must remain distinct: usernames,
 routing keys, dataset labels, and similar identifiers.
 It is not a generic text case converter.
 
-> **Phase 0 — safety reset.** There is no runnable collision engine or user
-> interface in the current tree. This phase removes the old case-conversion web
-> demo and records the security and reproducibility constraints for the rebuild.
+> **Phase 1 — bounded policy engine.** The current tree ships a typed,
+> dependency-free Python library for evaluating explicit Unicode normalization
+> and case-mapping pipelines. Corpus ingestion, collision graphs, a CLI, and a
+> user interface are not implemented yet.
 
 ## Why this problem matters
 
@@ -28,13 +29,19 @@ those choices visible and produce evidence that can be reproduced independently.
 
 ## Current state
 
-Phase 0 deliberately contains documentation only:
+The first implementation layer now provides:
 
 - the legacy Flask development server and remote Bootstrap dependency have been
   removed from the current tree;
 - the threat model and disclosure process are documented in
   [SECURITY.md](SECURITY.md);
-- the repository has an explicit license and ignores local development output.
+- ordered NFC, NFD, NFKC, NFKD, lower, upper, and case-fold operations;
+- a canonical policy document bound to the runtime Unicode database version;
+- independent byte, code-point, stage-expansion, and policy-length limits;
+- fail-closed or explicit-preserve handling for controls, format characters,
+  and bidirectional controls;
+- redacted failures and hazard metadata that do not echo rejected identifiers;
+- a typed installed package with no runtime dependencies.
 
 The historical case-conversion prototype remains available in Git history for
 provenance. It is not supported and must not be deployed: it ran Flask's debug
@@ -47,8 +54,10 @@ Each phase will be implemented and tested before its results are presented as
 working features.
 
 1. **Bounded policy engine** — explicit normalization and case-folding order,
-   Unicode-version metadata, configurable handling of controls and ignorables,
-   and strict byte, line, record, field, and expansion limits.
+   Unicode-version metadata, configurable rejection or preservation of control,
+   format, and bidirectional-control hazards, and strict byte, code-point, stage,
+   and expansion limits (**implemented for individual identifiers**). Complete
+   Unicode `Default_Ignorable_Code_Point` coverage remains future work.
 2. **Collision analysis** — collision graphs, connected components, and minimal
    witness sets that explain which transformation caused each merge.
 3. **Reproducible ingestion** — streaming input, deterministic output, and
@@ -73,6 +82,40 @@ boundary tests, static analysis, package checks, and commands that regenerate
 published examples. A result should be attributable to exact input bytes and an
 explicit policy rather than to ambient locale, network state, or an unspecified
 Unicode database.
+
+## Quick check
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -e .
+.venv/bin/python -m unittest discover -s tests -v
+```
+
+The operation order is part of the policy:
+
+```python
+from casefold_observatory import TransformStep, apply_policy, create_policy
+
+policy = create_policy((TransformStep.NFKC, TransformStep.CASEFOLD))
+result = apply_policy("Straße", policy)
+
+print(result.transformed)  # strasse
+print(result.unicode_version)
+print(result.policy_id)
+```
+
+`TransformResult` retains the transformed identifier in memory. Its `repr`
+omits that value. The library's `IdentifierTransformError` payload does not echo
+rejected values, and invalid-scalar validation does not create a chained
+`UnicodeEncodeError` containing them. Callers can still attach ambient exception
+context or causes, and caller objects, result objects, and Python traceback frame
+locals can retain the raw string. This phase does not provide memory zeroization
+or anonymous reports. Treat results derived from private namespaces as
+sensitive.
+
+Canonical serialization accepts only the active runtime's three-component
+Unicode database version. A policy from another runtime is rejected instead of
+being relabeled with semantics this process cannot execute.
 
 ## Security
 

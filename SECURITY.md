@@ -2,12 +2,15 @@
 
 ## Current support status
 
-The current tree is a phase-0 safety reset and does not contain a runnable
-application. The historical Flask prototype is unsupported and must not be
+The current tree contains the phase-1 bounded transformation library. It does
+not contain corpus ingestion, a command-line tool, a web application, or a
+network service. The historical Flask prototype is unsupported and must not be
 deployed.
 
-Security guarantees described below are requirements for future implementations,
-not claims about functionality that already exists.
+The library rejects malformed scalar values, applies fixed byte/code-point and
+stage bounds, binds policies to the active Unicode database version, and
+redacts failures. The remaining controls below are requirements for later
+corpus, report, CLI, and UI layers.
 
 ## Threat model
 
@@ -36,6 +39,16 @@ Implementations must fail closed at documented byte, line, record, field,
 code-point, and expansion bounds. Streaming ingestion must not imply unbounded
 aggregation. Policy choices and Unicode data versions must be explicit and bound
 to deterministic receipts.
+
+The phase-1 `PRESERVE` hazard mode is an explicit analytical choice. It returns
+raw transformed text and redacted hazard locations; it does not make controls
+safe to print. `TransformResult` values from private namespaces remain
+sensitive. The library-owned rejection payload does not echo the identifier, and
+invalid-scalar validation does not create a `UnicodeEncodeError` context that
+contains it. Caller-supplied causes or ambient exception context, caller objects,
+and Python traceback frame locals remain outside that boundary and can retain or
+display the raw value. Python strings cannot be reliably zeroized, and this
+library does not claim memory-erasure guarantees.
 
 Controls, bidirectional marks, invisible code points, and ambiguous whitespace
 must be rendered visibly in human-facing output. Raw untrusted text must never be
