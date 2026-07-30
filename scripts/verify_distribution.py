@@ -8,11 +8,27 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import tomllib
 import venv
 import zipfile
 from pathlib import Path, PurePosixPath
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _project_version() -> str:
+    document = tomllib.loads(
+        (PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    )
+    project = document.get("project")
+    if not isinstance(project, dict):
+        raise TypeError("pyproject project metadata must be a table")
+    version = project.get("version")
+    if not isinstance(version, str):
+        raise TypeError("pyproject project.version must be a string")
+    if not version:
+        raise ValueError("pyproject project.version must not be empty")
+    return version
 
 
 def _run(*args: str, cwd: Path) -> subprocess.CompletedProcess[str]:
@@ -75,9 +91,17 @@ def _assert_archive_contract(sdist: Path, wheel: Path) -> None:
     required_source_files = (
         "README.md",
         "SECURITY.md",
+        "docs/collision-graph-contract.md",
+        "docs/visuals/README.md",
+        "docs/visuals/architecture.svg",
+        "docs/visuals/collision-witness-graph.svg",
+        "docs/visuals/evidence/collision-visuals.v1.json",
+        "docs/visuals/policy-collision-landscape.svg",
+        "scripts/render_collision_visuals.py",
         "scripts/verify_distribution.py",
         "tests/test_collision.py",
         "tests/test_collision_properties.py",
+        "tests/test_visuals.py",
     )
     for required in required_source_files:
         if not any(name.endswith(required) for name in sdist_names):
@@ -150,6 +174,7 @@ print(
 
 
 def main() -> None:
+    expected_version = _project_version()
     with tempfile.TemporaryDirectory(prefix="casefold-dist-") as temporary:
         root = Path(temporary)
         source_dist = root / "source-dist"
@@ -202,7 +227,7 @@ def main() -> None:
         "component_members": [0, 1, 2],
         "policy_group_members": [0, 1, 2],
         "record_ids": ["eszett", "lower", "upper"],
-        "version": payload["version"],
+        "version": expected_version,
         "witness_stages": [0, 1],
     }
     if payload != expected:

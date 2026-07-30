@@ -1,0 +1,1608 @@
+{
+  "architecture": {
+    "algorithm": "stage-partition-witness-v1",
+    "bounds": {
+      "max_components": 1024,
+      "max_policies": 8,
+      "max_policy_groups": 8192,
+      "max_records": 2048,
+      "max_total_input_utf8_bytes": 524288,
+      "max_transform_applications": 65536,
+      "max_transformed_utf8_bytes": 33554432,
+      "max_witnesses": 20480
+    },
+    "invariants": [
+      "Record IDs define canonical ordinals; caller tuple order is non-semantic.",
+      "Policy tuple order is explicit and significant.",
+      "Exact strings define equality; hashes only label the semantic corpus.",
+      "A policy rejection aborts analysis atomically.",
+      "Each policy collision group receives a minimum witness tree.",
+      "Global components are cross-policy risk neighborhoods, not equivalence."
+    ],
+    "workflow": [
+      "records + ordered policies",
+      "revalidate types, Unicode scalars, IDs, and aggregate budgets",
+      "canonicalize records by stable ID and label the semantic corpus",
+      "evaluate every stage under every ordered policy",
+      "connect first-merging partitions with minimum witness forests",
+      "union policy relations and select a separate component tree",
+      "return an immutable bounded CollisionGraph"
+    ]
+  },
+  "first_merge": {
+    "description": "SS and ss first merge at lower; ß joins only at casefold. The two API witnesses form the minimum two-edge explanation tree.",
+    "graph": {
+      "algorithm": "stage-partition-witness-v1",
+      "colliding_record_count": 3,
+      "components": [
+        {
+          "component_id": "gc_0000",
+          "duplicate_group_ids": [],
+          "member_record_ordinals": [
+            0,
+            1,
+            2
+          ],
+          "policy_group_ids": [
+            "pc_p00_0000"
+          ],
+          "policy_ordinals": [
+            0
+          ],
+          "witness_tree_ids": [
+            "wi_p00_s00_0001_0002",
+            "wi_p00_s01_0000_0001"
+          ]
+        }
+      ],
+      "duplicate_groups": [],
+      "isolated_record_ordinals": [],
+      "policy_groups": [
+        {
+          "group_id": "pc_p00_0000",
+          "member_record_ordinals": [
+            0,
+            1,
+            2
+          ],
+          "output_codepoints": 2,
+          "output_utf8_bytes": 2,
+          "policy_id": "1b9b2452c734cd5172d72581b83a031079e2d878a24d9ab391bdef2404f8d26f",
+          "policy_ordinal": 0,
+          "transformed": "ss",
+          "transformed_codepoints": "U+0073 U+0073",
+          "witness_ids": [
+            "wi_p00_s00_0001_0002",
+            "wi_p00_s01_0000_0001"
+          ]
+        }
+      ],
+      "policy_ids": [
+        "1b9b2452c734cd5172d72581b83a031079e2d878a24d9ab391bdef2404f8d26f"
+      ],
+      "record_count": 3,
+      "record_ids": [
+        "eszett",
+        "lower",
+        "upper"
+      ],
+      "semantic_corpus_sha256": "3ccca0815c2deeee3e4d2a61283ab17ca9debb9f4f3f7dd7f501b0c03664aa46",
+      "unicode_version": "15.0.0",
+      "witnesses": [
+        {
+          "kind": "transform_stage",
+          "left_record_ordinal": 1,
+          "policy_id": "1b9b2452c734cd5172d72581b83a031079e2d878a24d9ab391bdef2404f8d26f",
+          "policy_ordinal": 0,
+          "right_record_ordinal": 2,
+          "stage_index": 0,
+          "step": "case:lower",
+          "witness_id": "wi_p00_s00_0001_0002"
+        },
+        {
+          "kind": "transform_stage",
+          "left_record_ordinal": 0,
+          "policy_id": "1b9b2452c734cd5172d72581b83a031079e2d878a24d9ab391bdef2404f8d26f",
+          "policy_ordinal": 0,
+          "right_record_ordinal": 1,
+          "stage_index": 1,
+          "step": "case:casefold",
+          "witness_id": "wi_p00_s01_0000_0001"
+        }
+      ]
+    },
+    "name": "first_merge_witness",
+    "policies": [
+      {
+        "hazard_handling": "reject",
+        "intent": "Separate the first equality-producing stage from the final group.",
+        "label": "lower → casefold",
+        "policy_id": "1b9b2452c734cd5172d72581b83a031079e2d878a24d9ab391bdef2404f8d26f",
+        "policy_ordinal": 0,
+        "steps": [
+          "case:lower",
+          "case:casefold"
+        ]
+      }
+    ],
+    "records": [
+      {
+        "input": "ß",
+        "input_codepoints": "U+00DF",
+        "record_id": "eszett",
+        "record_ordinal": 0,
+        "stages_by_policy": [
+          {
+            "policy_ordinal": 0,
+            "stages": [
+              {
+                "output": "ß",
+                "output_codepoints": "U+00DF",
+                "stage_index": 0,
+                "step": "case:lower"
+              },
+              {
+                "output": "ss",
+                "output_codepoints": "U+0073 U+0073",
+                "stage_index": 1,
+                "step": "case:casefold"
+              }
+            ]
+          }
+        ],
+        "visible_input": "ß"
+      },
+      {
+        "input": "ss",
+        "input_codepoints": "U+0073 U+0073",
+        "record_id": "lower",
+        "record_ordinal": 1,
+        "stages_by_policy": [
+          {
+            "policy_ordinal": 0,
+            "stages": [
+              {
+                "output": "ss",
+                "output_codepoints": "U+0073 U+0073",
+                "stage_index": 0,
+                "step": "case:lower"
+              },
+              {
+                "output": "ss",
+                "output_codepoints": "U+0073 U+0073",
+                "stage_index": 1,
+                "step": "case:casefold"
+              }
+            ]
+          }
+        ],
+        "visible_input": "ss"
+      },
+      {
+        "input": "SS",
+        "input_codepoints": "U+0053 U+0053",
+        "record_id": "upper",
+        "record_ordinal": 2,
+        "stages_by_policy": [
+          {
+            "policy_ordinal": 0,
+            "stages": [
+              {
+                "output": "ss",
+                "output_codepoints": "U+0073 U+0073",
+                "stage_index": 0,
+                "step": "case:lower"
+              },
+              {
+                "output": "ss",
+                "output_codepoints": "U+0073 U+0073",
+                "stage_index": 1,
+                "step": "case:casefold"
+              }
+            ]
+          }
+        ],
+        "visible_input": "SS"
+      }
+    ]
+  },
+  "generator": {
+    "canonical_json": "UTF-8; sorted object keys; two-space indentation; trailing LF",
+    "check_command": "python scripts/render_collision_visuals.py --check",
+    "command": "python scripts/render_collision_visuals.py",
+    "generator": "scripts/render_collision_visuals.py",
+    "generator_sha256": "bf974c9a132deb666ca17caab012936ccb9cdf6f094b0797ccfca0f3609c322a",
+    "generator_version": 1,
+    "outputs": [
+      "docs/visuals/README.md",
+      "docs/visuals/evidence/collision-visuals.v1.json",
+      "docs/visuals/architecture.svg",
+      "docs/visuals/collision-witness-graph.svg",
+      "docs/visuals/policy-collision-landscape.svg"
+    ],
+    "source_api": "casefold_observatory.analyze_collisions",
+    "source_paths": [
+      "src/casefold_observatory/collision.py",
+      "src/casefold_observatory/engine.py",
+      "src/casefold_observatory/model.py"
+    ],
+    "source_revision": "8c55335d6db549fbc55319addba33f3a2bda0e96",
+    "source_tree_sha256": "c6560d331aac6ba7ca9182207bf4d6e65c8e530ff6c384352fc7aff8a435a599"
+  },
+  "landscape": {
+    "description": "Reviewed synthetic Unicode identifiers evaluated under four ordered policies. Filled cells are exact final-equality collision groups.",
+    "graph": {
+      "algorithm": "stage-partition-witness-v1",
+      "colliding_record_count": 11,
+      "components": [
+        {
+          "component_id": "gc_0000",
+          "duplicate_group_ids": [],
+          "member_record_ordinals": [
+            0,
+            2,
+            5
+          ],
+          "policy_group_ids": [
+            "pc_p01_0000"
+          ],
+          "policy_ordinals": [
+            1
+          ],
+          "witness_tree_ids": [
+            "wi_p01_s00_0000_0002",
+            "wi_p01_s00_0000_0005"
+          ]
+        },
+        {
+          "component_id": "gc_0001",
+          "duplicate_group_ids": [],
+          "member_record_ordinals": [
+            1,
+            7
+          ],
+          "policy_group_ids": [
+            "pc_p00_0000",
+            "pc_p01_0001",
+            "pc_p02_0000"
+          ],
+          "policy_ordinals": [
+            0,
+            1,
+            2
+          ],
+          "witness_tree_ids": [
+            "wi_p00_s00_0001_0007"
+          ]
+        },
+        {
+          "component_id": "gc_0002",
+          "duplicate_group_ids": [],
+          "member_record_ordinals": [
+            3,
+            9,
+            10
+          ],
+          "policy_group_ids": [
+            "pc_p00_0001",
+            "pc_p01_0002",
+            "pc_p02_0001",
+            "pc_p03_0000"
+          ],
+          "policy_ordinals": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "witness_tree_ids": [
+            "wi_p00_s00_0003_0010",
+            "wi_p01_s00_0003_0009"
+          ]
+        },
+        {
+          "component_id": "gc_0003",
+          "duplicate_group_ids": [],
+          "member_record_ordinals": [
+            4,
+            8,
+            11
+          ],
+          "policy_group_ids": [
+            "pc_p00_0002",
+            "pc_p02_0002",
+            "pc_p03_0001"
+          ],
+          "policy_ordinals": [
+            0,
+            2,
+            3
+          ],
+          "witness_tree_ids": [
+            "wi_p00_s00_0008_0011",
+            "wi_p00_s01_0004_0008"
+          ]
+        }
+      ],
+      "duplicate_groups": [],
+      "isolated_record_ordinals": [
+        6
+      ],
+      "policy_groups": [
+        {
+          "group_id": "pc_p00_0000",
+          "member_record_ordinals": [
+            1,
+            7
+          ],
+          "output_codepoints": 1,
+          "output_utf8_bytes": 1,
+          "policy_id": "1b9b2452c734cd5172d72581b83a031079e2d878a24d9ab391bdef2404f8d26f",
+          "policy_ordinal": 0,
+          "transformed": "k",
+          "transformed_codepoints": "U+006B",
+          "witness_ids": [
+            "wi_p00_s00_0001_0007"
+          ]
+        },
+        {
+          "group_id": "pc_p00_0001",
+          "member_record_ordinals": [
+            3,
+            10
+          ],
+          "output_codepoints": 2,
+          "output_utf8_bytes": 3,
+          "policy_id": "1b9b2452c734cd5172d72581b83a031079e2d878a24d9ab391bdef2404f8d26f",
+          "policy_ordinal": 0,
+          "transformed": "é",
+          "transformed_codepoints": "U+0065 U+0301",
+          "witness_ids": [
+            "wi_p00_s00_0003_0010"
+          ]
+        },
+        {
+          "group_id": "pc_p00_0002",
+          "member_record_ordinals": [
+            4,
+            8,
+            11
+          ],
+          "output_codepoints": 2,
+          "output_utf8_bytes": 2,
+          "policy_id": "1b9b2452c734cd5172d72581b83a031079e2d878a24d9ab391bdef2404f8d26f",
+          "policy_ordinal": 0,
+          "transformed": "ss",
+          "transformed_codepoints": "U+0073 U+0073",
+          "witness_ids": [
+            "wi_p00_s00_0008_0011",
+            "wi_p00_s01_0004_0008"
+          ]
+        },
+        {
+          "group_id": "pc_p01_0000",
+          "member_record_ordinals": [
+            0,
+            2,
+            5
+          ],
+          "output_codepoints": 1,
+          "output_utf8_bytes": 1,
+          "policy_id": "ec80986460687e4b1dd4e0132281eb403f5d2ffa93102729e96607509be509b6",
+          "policy_ordinal": 1,
+          "transformed": "1",
+          "transformed_codepoints": "U+0031",
+          "witness_ids": [
+            "wi_p01_s00_0000_0002",
+            "wi_p01_s00_0000_0005"
+          ]
+        },
+        {
+          "group_id": "pc_p01_0001",
+          "member_record_ordinals": [
+            1,
+            7
+          ],
+          "output_codepoints": 1,
+          "output_utf8_bytes": 1,
+          "policy_id": "ec80986460687e4b1dd4e0132281eb403f5d2ffa93102729e96607509be509b6",
+          "policy_ordinal": 1,
+          "transformed": "K",
+          "transformed_codepoints": "U+004B",
+          "witness_ids": [
+            "wi_p01_s00_0001_0007"
+          ]
+        },
+        {
+          "group_id": "pc_p01_0002",
+          "member_record_ordinals": [
+            3,
+            9
+          ],
+          "output_codepoints": 1,
+          "output_utf8_bytes": 2,
+          "policy_id": "ec80986460687e4b1dd4e0132281eb403f5d2ffa93102729e96607509be509b6",
+          "policy_ordinal": 1,
+          "transformed": "é",
+          "transformed_codepoints": "U+00E9",
+          "witness_ids": [
+            "wi_p01_s00_0003_0009"
+          ]
+        },
+        {
+          "group_id": "pc_p02_0000",
+          "member_record_ordinals": [
+            1,
+            7
+          ],
+          "output_codepoints": 1,
+          "output_utf8_bytes": 1,
+          "policy_id": "4f55cfc271662828747fa33e646b5360927788e5ebf104cee55c297089a2da1d",
+          "policy_ordinal": 2,
+          "transformed": "k",
+          "transformed_codepoints": "U+006B",
+          "witness_ids": [
+            "wi_p02_s00_0001_0007"
+          ]
+        },
+        {
+          "group_id": "pc_p02_0001",
+          "member_record_ordinals": [
+            3,
+            9,
+            10
+          ],
+          "output_codepoints": 1,
+          "output_utf8_bytes": 2,
+          "policy_id": "4f55cfc271662828747fa33e646b5360927788e5ebf104cee55c297089a2da1d",
+          "policy_ordinal": 2,
+          "transformed": "é",
+          "transformed_codepoints": "U+00E9",
+          "witness_ids": [
+            "wi_p02_s00_0003_0009",
+            "wi_p02_s01_0003_0010"
+          ]
+        },
+        {
+          "group_id": "pc_p02_0002",
+          "member_record_ordinals": [
+            4,
+            8,
+            11
+          ],
+          "output_codepoints": 2,
+          "output_utf8_bytes": 2,
+          "policy_id": "4f55cfc271662828747fa33e646b5360927788e5ebf104cee55c297089a2da1d",
+          "policy_ordinal": 2,
+          "transformed": "ss",
+          "transformed_codepoints": "U+0073 U+0073",
+          "witness_ids": [
+            "wi_p02_s01_0004_0008",
+            "wi_p02_s01_0004_0011"
+          ]
+        },
+        {
+          "group_id": "pc_p03_0000",
+          "member_record_ordinals": [
+            3,
+            10
+          ],
+          "output_codepoints": 2,
+          "output_utf8_bytes": 3,
+          "policy_id": "18a5f7402747377f92fa09d81c0baaac9ddeedf47551bfcb540654753fadf82a",
+          "policy_ordinal": 3,
+          "transformed": "É",
+          "transformed_codepoints": "U+0045 U+0301",
+          "witness_ids": [
+            "wi_p03_s00_0003_0010"
+          ]
+        },
+        {
+          "group_id": "pc_p03_0001",
+          "member_record_ordinals": [
+            4,
+            8,
+            11
+          ],
+          "output_codepoints": 2,
+          "output_utf8_bytes": 2,
+          "policy_id": "18a5f7402747377f92fa09d81c0baaac9ddeedf47551bfcb540654753fadf82a",
+          "policy_ordinal": 3,
+          "transformed": "SS",
+          "transformed_codepoints": "U+0053 U+0053",
+          "witness_ids": [
+            "wi_p03_s00_0004_0008",
+            "wi_p03_s00_0004_0011"
+          ]
+        }
+      ],
+      "policy_ids": [
+        "1b9b2452c734cd5172d72581b83a031079e2d878a24d9ab391bdef2404f8d26f",
+        "ec80986460687e4b1dd4e0132281eb403f5d2ffa93102729e96607509be509b6",
+        "4f55cfc271662828747fa33e646b5360927788e5ebf104cee55c297089a2da1d",
+        "18a5f7402747377f92fa09d81c0baaac9ddeedf47551bfcb540654753fadf82a"
+      ],
+      "record_count": 12,
+      "record_ids": [
+        "ascii-digit",
+        "ascii-k",
+        "circled-digit",
+        "decomposed",
+        "eszett",
+        "fullwidth-digit",
+        "isolated",
+        "kelvin",
+        "lower-ss",
+        "precomposed",
+        "upper-decomposed",
+        "upper-ss"
+      ],
+      "semantic_corpus_sha256": "4c3f94071f8acc5b69aa949a36db22697d84024fa5b01f53a099525c0c47684b",
+      "unicode_version": "15.0.0",
+      "witnesses": [
+        {
+          "kind": "transform_stage",
+          "left_record_ordinal": 1,
+          "policy_id": "1b9b2452c734cd5172d72581b83a031079e2d878a24d9ab391bdef2404f8d26f",
+          "policy_ordinal": 0,
+          "right_record_ordinal": 7,
+          "stage_index": 0,
+          "step": "case:lower",
+          "witness_id": "wi_p00_s00_0001_0007"
+        },
+        {
+          "kind": "transform_stage",
+          "left_record_ordinal": 3,
+          "policy_id": "1b9b2452c734cd5172d72581b83a031079e2d878a24d9ab391bdef2404f8d26f",
+          "policy_ordinal": 0,
+          "right_record_ordinal": 10,
+          "stage_index": 0,
+          "step": "case:lower",
+          "witness_id": "wi_p00_s00_0003_0010"
+        },
+        {
+          "kind": "transform_stage",
+          "left_record_ordinal": 8,
+          "policy_id": "1b9b2452c734cd5172d72581b83a031079e2d878a24d9ab391bdef2404f8d26f",
+          "policy_ordinal": 0,
+          "right_record_ordinal": 11,
+          "stage_index": 0,
+          "step": "case:lower",
+          "witness_id": "wi_p00_s00_0008_0011"
+        },
+        {
+          "kind": "transform_stage",
+          "left_record_ordinal": 4,
+          "policy_id": "1b9b2452c734cd5172d72581b83a031079e2d878a24d9ab391bdef2404f8d26f",
+          "policy_ordinal": 0,
+          "right_record_ordinal": 8,
+          "stage_index": 1,
+          "step": "case:casefold",
+          "witness_id": "wi_p00_s01_0004_0008"
+        },
+        {
+          "kind": "transform_stage",
+          "left_record_ordinal": 0,
+          "policy_id": "ec80986460687e4b1dd4e0132281eb403f5d2ffa93102729e96607509be509b6",
+          "policy_ordinal": 1,
+          "right_record_ordinal": 2,
+          "stage_index": 0,
+          "step": "normalize:nfkc",
+          "witness_id": "wi_p01_s00_0000_0002"
+        },
+        {
+          "kind": "transform_stage",
+          "left_record_ordinal": 0,
+          "policy_id": "ec80986460687e4b1dd4e0132281eb403f5d2ffa93102729e96607509be509b6",
+          "policy_ordinal": 1,
+          "right_record_ordinal": 5,
+          "stage_index": 0,
+          "step": "normalize:nfkc",
+          "witness_id": "wi_p01_s00_0000_0005"
+        },
+        {
+          "kind": "transform_stage",
+          "left_record_ordinal": 1,
+          "policy_id": "ec80986460687e4b1dd4e0132281eb403f5d2ffa93102729e96607509be509b6",
+          "policy_ordinal": 1,
+          "right_record_ordinal": 7,
+          "stage_index": 0,
+          "step": "normalize:nfkc",
+          "witness_id": "wi_p01_s00_0001_0007"
+        },
+        {
+          "kind": "transform_stage",
+          "left_record_ordinal": 3,
+          "policy_id": "ec80986460687e4b1dd4e0132281eb403f5d2ffa93102729e96607509be509b6",
+          "policy_ordinal": 1,
+          "right_record_ordinal": 9,
+          "stage_index": 0,
+          "step": "normalize:nfkc",
+          "witness_id": "wi_p01_s00_0003_0009"
+        },
+        {
+          "kind": "transform_stage",
+          "left_record_ordinal": 1,
+          "policy_id": "4f55cfc271662828747fa33e646b5360927788e5ebf104cee55c297089a2da1d",
+          "policy_ordinal": 2,
+          "right_record_ordinal": 7,
+          "stage_index": 0,
+          "step": "normalize:nfd",
+          "witness_id": "wi_p02_s00_0001_0007"
+        },
+        {
+          "kind": "transform_stage",
+          "left_record_ordinal": 3,
+          "policy_id": "4f55cfc271662828747fa33e646b5360927788e5ebf104cee55c297089a2da1d",
+          "policy_ordinal": 2,
+          "right_record_ordinal": 9,
+          "stage_index": 0,
+          "step": "normalize:nfd",
+          "witness_id": "wi_p02_s00_0003_0009"
+        },
+        {
+          "kind": "transform_stage",
+          "left_record_ordinal": 3,
+          "policy_id": "4f55cfc271662828747fa33e646b5360927788e5ebf104cee55c297089a2da1d",
+          "policy_ordinal": 2,
+          "right_record_ordinal": 10,
+          "stage_index": 1,
+          "step": "case:casefold",
+          "witness_id": "wi_p02_s01_0003_0010"
+        },
+        {
+          "kind": "transform_stage",
+          "left_record_ordinal": 4,
+          "policy_id": "4f55cfc271662828747fa33e646b5360927788e5ebf104cee55c297089a2da1d",
+          "policy_ordinal": 2,
+          "right_record_ordinal": 8,
+          "stage_index": 1,
+          "step": "case:casefold",
+          "witness_id": "wi_p02_s01_0004_0008"
+        },
+        {
+          "kind": "transform_stage",
+          "left_record_ordinal": 4,
+          "policy_id": "4f55cfc271662828747fa33e646b5360927788e5ebf104cee55c297089a2da1d",
+          "policy_ordinal": 2,
+          "right_record_ordinal": 11,
+          "stage_index": 1,
+          "step": "case:casefold",
+          "witness_id": "wi_p02_s01_0004_0011"
+        },
+        {
+          "kind": "transform_stage",
+          "left_record_ordinal": 3,
+          "policy_id": "18a5f7402747377f92fa09d81c0baaac9ddeedf47551bfcb540654753fadf82a",
+          "policy_ordinal": 3,
+          "right_record_ordinal": 10,
+          "stage_index": 0,
+          "step": "case:upper",
+          "witness_id": "wi_p03_s00_0003_0010"
+        },
+        {
+          "kind": "transform_stage",
+          "left_record_ordinal": 4,
+          "policy_id": "18a5f7402747377f92fa09d81c0baaac9ddeedf47551bfcb540654753fadf82a",
+          "policy_ordinal": 3,
+          "right_record_ordinal": 8,
+          "stage_index": 0,
+          "step": "case:upper",
+          "witness_id": "wi_p03_s00_0004_0008"
+        },
+        {
+          "kind": "transform_stage",
+          "left_record_ordinal": 4,
+          "policy_id": "18a5f7402747377f92fa09d81c0baaac9ddeedf47551bfcb540654753fadf82a",
+          "policy_ordinal": 3,
+          "right_record_ordinal": 11,
+          "stage_index": 0,
+          "step": "case:upper",
+          "witness_id": "wi_p03_s00_0004_0011"
+        }
+      ]
+    },
+    "name": "multi_policy_landscape",
+    "policies": [
+      {
+        "hazard_handling": "reject",
+        "intent": "Locale-independent case convergence in two observable stages.",
+        "label": "lower → casefold",
+        "policy_id": "1b9b2452c734cd5172d72581b83a031079e2d878a24d9ab391bdef2404f8d26f",
+        "policy_ordinal": 0,
+        "steps": [
+          "case:lower",
+          "case:casefold"
+        ]
+      },
+      {
+        "hazard_handling": "reject",
+        "intent": "Compatibility normalization for width and presentation forms.",
+        "label": "NFKC",
+        "policy_id": "ec80986460687e4b1dd4e0132281eb403f5d2ffa93102729e96607509be509b6",
+        "policy_ordinal": 1,
+        "steps": [
+          "normalize:nfkc"
+        ]
+      },
+      {
+        "hazard_handling": "reject",
+        "intent": "Decompose, fold case, then recompose canonically.",
+        "label": "NFD → casefold → NFC",
+        "policy_id": "4f55cfc271662828747fa33e646b5360927788e5ebf104cee55c297089a2da1d",
+        "policy_ordinal": 2,
+        "steps": [
+          "normalize:nfd",
+          "case:casefold",
+          "normalize:nfc"
+        ]
+      },
+      {
+        "hazard_handling": "reject",
+        "intent": "Locale-independent uppercase mapping without normalization.",
+        "label": "upper",
+        "policy_id": "18a5f7402747377f92fa09d81c0baaac9ddeedf47551bfcb540654753fadf82a",
+        "policy_ordinal": 3,
+        "steps": [
+          "case:upper"
+        ]
+      }
+    ],
+    "records": [
+      {
+        "input": "1",
+        "input_codepoints": "U+0031",
+        "record_id": "ascii-digit",
+        "record_ordinal": 0,
+        "stages_by_policy": [
+          {
+            "policy_ordinal": 0,
+            "stages": [
+              {
+                "output": "1",
+                "output_codepoints": "U+0031",
+                "stage_index": 0,
+                "step": "case:lower"
+              },
+              {
+                "output": "1",
+                "output_codepoints": "U+0031",
+                "stage_index": 1,
+                "step": "case:casefold"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 1,
+            "stages": [
+              {
+                "output": "1",
+                "output_codepoints": "U+0031",
+                "stage_index": 0,
+                "step": "normalize:nfkc"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 2,
+            "stages": [
+              {
+                "output": "1",
+                "output_codepoints": "U+0031",
+                "stage_index": 0,
+                "step": "normalize:nfd"
+              },
+              {
+                "output": "1",
+                "output_codepoints": "U+0031",
+                "stage_index": 1,
+                "step": "case:casefold"
+              },
+              {
+                "output": "1",
+                "output_codepoints": "U+0031",
+                "stage_index": 2,
+                "step": "normalize:nfc"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 3,
+            "stages": [
+              {
+                "output": "1",
+                "output_codepoints": "U+0031",
+                "stage_index": 0,
+                "step": "case:upper"
+              }
+            ]
+          }
+        ],
+        "visible_input": "1"
+      },
+      {
+        "input": "K",
+        "input_codepoints": "U+004B",
+        "record_id": "ascii-k",
+        "record_ordinal": 1,
+        "stages_by_policy": [
+          {
+            "policy_ordinal": 0,
+            "stages": [
+              {
+                "output": "k",
+                "output_codepoints": "U+006B",
+                "stage_index": 0,
+                "step": "case:lower"
+              },
+              {
+                "output": "k",
+                "output_codepoints": "U+006B",
+                "stage_index": 1,
+                "step": "case:casefold"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 1,
+            "stages": [
+              {
+                "output": "K",
+                "output_codepoints": "U+004B",
+                "stage_index": 0,
+                "step": "normalize:nfkc"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 2,
+            "stages": [
+              {
+                "output": "K",
+                "output_codepoints": "U+004B",
+                "stage_index": 0,
+                "step": "normalize:nfd"
+              },
+              {
+                "output": "k",
+                "output_codepoints": "U+006B",
+                "stage_index": 1,
+                "step": "case:casefold"
+              },
+              {
+                "output": "k",
+                "output_codepoints": "U+006B",
+                "stage_index": 2,
+                "step": "normalize:nfc"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 3,
+            "stages": [
+              {
+                "output": "K",
+                "output_codepoints": "U+004B",
+                "stage_index": 0,
+                "step": "case:upper"
+              }
+            ]
+          }
+        ],
+        "visible_input": "K"
+      },
+      {
+        "input": "①",
+        "input_codepoints": "U+2460",
+        "record_id": "circled-digit",
+        "record_ordinal": 2,
+        "stages_by_policy": [
+          {
+            "policy_ordinal": 0,
+            "stages": [
+              {
+                "output": "①",
+                "output_codepoints": "U+2460",
+                "stage_index": 0,
+                "step": "case:lower"
+              },
+              {
+                "output": "①",
+                "output_codepoints": "U+2460",
+                "stage_index": 1,
+                "step": "case:casefold"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 1,
+            "stages": [
+              {
+                "output": "1",
+                "output_codepoints": "U+0031",
+                "stage_index": 0,
+                "step": "normalize:nfkc"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 2,
+            "stages": [
+              {
+                "output": "①",
+                "output_codepoints": "U+2460",
+                "stage_index": 0,
+                "step": "normalize:nfd"
+              },
+              {
+                "output": "①",
+                "output_codepoints": "U+2460",
+                "stage_index": 1,
+                "step": "case:casefold"
+              },
+              {
+                "output": "①",
+                "output_codepoints": "U+2460",
+                "stage_index": 2,
+                "step": "normalize:nfc"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 3,
+            "stages": [
+              {
+                "output": "①",
+                "output_codepoints": "U+2460",
+                "stage_index": 0,
+                "step": "case:upper"
+              }
+            ]
+          }
+        ],
+        "visible_input": "①"
+      },
+      {
+        "input": "é",
+        "input_codepoints": "U+0065 U+0301",
+        "record_id": "decomposed",
+        "record_ordinal": 3,
+        "stages_by_policy": [
+          {
+            "policy_ordinal": 0,
+            "stages": [
+              {
+                "output": "é",
+                "output_codepoints": "U+0065 U+0301",
+                "stage_index": 0,
+                "step": "case:lower"
+              },
+              {
+                "output": "é",
+                "output_codepoints": "U+0065 U+0301",
+                "stage_index": 1,
+                "step": "case:casefold"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 1,
+            "stages": [
+              {
+                "output": "é",
+                "output_codepoints": "U+00E9",
+                "stage_index": 0,
+                "step": "normalize:nfkc"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 2,
+            "stages": [
+              {
+                "output": "é",
+                "output_codepoints": "U+0065 U+0301",
+                "stage_index": 0,
+                "step": "normalize:nfd"
+              },
+              {
+                "output": "é",
+                "output_codepoints": "U+0065 U+0301",
+                "stage_index": 1,
+                "step": "case:casefold"
+              },
+              {
+                "output": "é",
+                "output_codepoints": "U+00E9",
+                "stage_index": 2,
+                "step": "normalize:nfc"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 3,
+            "stages": [
+              {
+                "output": "É",
+                "output_codepoints": "U+0045 U+0301",
+                "stage_index": 0,
+                "step": "case:upper"
+              }
+            ]
+          }
+        ],
+        "visible_input": "e◌́"
+      },
+      {
+        "input": "ß",
+        "input_codepoints": "U+00DF",
+        "record_id": "eszett",
+        "record_ordinal": 4,
+        "stages_by_policy": [
+          {
+            "policy_ordinal": 0,
+            "stages": [
+              {
+                "output": "ß",
+                "output_codepoints": "U+00DF",
+                "stage_index": 0,
+                "step": "case:lower"
+              },
+              {
+                "output": "ss",
+                "output_codepoints": "U+0073 U+0073",
+                "stage_index": 1,
+                "step": "case:casefold"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 1,
+            "stages": [
+              {
+                "output": "ß",
+                "output_codepoints": "U+00DF",
+                "stage_index": 0,
+                "step": "normalize:nfkc"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 2,
+            "stages": [
+              {
+                "output": "ß",
+                "output_codepoints": "U+00DF",
+                "stage_index": 0,
+                "step": "normalize:nfd"
+              },
+              {
+                "output": "ss",
+                "output_codepoints": "U+0073 U+0073",
+                "stage_index": 1,
+                "step": "case:casefold"
+              },
+              {
+                "output": "ss",
+                "output_codepoints": "U+0073 U+0073",
+                "stage_index": 2,
+                "step": "normalize:nfc"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 3,
+            "stages": [
+              {
+                "output": "SS",
+                "output_codepoints": "U+0053 U+0053",
+                "stage_index": 0,
+                "step": "case:upper"
+              }
+            ]
+          }
+        ],
+        "visible_input": "ß"
+      },
+      {
+        "input": "１",
+        "input_codepoints": "U+FF11",
+        "record_id": "fullwidth-digit",
+        "record_ordinal": 5,
+        "stages_by_policy": [
+          {
+            "policy_ordinal": 0,
+            "stages": [
+              {
+                "output": "１",
+                "output_codepoints": "U+FF11",
+                "stage_index": 0,
+                "step": "case:lower"
+              },
+              {
+                "output": "１",
+                "output_codepoints": "U+FF11",
+                "stage_index": 1,
+                "step": "case:casefold"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 1,
+            "stages": [
+              {
+                "output": "1",
+                "output_codepoints": "U+0031",
+                "stage_index": 0,
+                "step": "normalize:nfkc"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 2,
+            "stages": [
+              {
+                "output": "１",
+                "output_codepoints": "U+FF11",
+                "stage_index": 0,
+                "step": "normalize:nfd"
+              },
+              {
+                "output": "１",
+                "output_codepoints": "U+FF11",
+                "stage_index": 1,
+                "step": "case:casefold"
+              },
+              {
+                "output": "１",
+                "output_codepoints": "U+FF11",
+                "stage_index": 2,
+                "step": "normalize:nfc"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 3,
+            "stages": [
+              {
+                "output": "１",
+                "output_codepoints": "U+FF11",
+                "stage_index": 0,
+                "step": "case:upper"
+              }
+            ]
+          }
+        ],
+        "visible_input": "１"
+      },
+      {
+        "input": "atlas",
+        "input_codepoints": "U+0061 U+0074 U+006C U+0061 U+0073",
+        "record_id": "isolated",
+        "record_ordinal": 6,
+        "stages_by_policy": [
+          {
+            "policy_ordinal": 0,
+            "stages": [
+              {
+                "output": "atlas",
+                "output_codepoints": "U+0061 U+0074 U+006C U+0061 U+0073",
+                "stage_index": 0,
+                "step": "case:lower"
+              },
+              {
+                "output": "atlas",
+                "output_codepoints": "U+0061 U+0074 U+006C U+0061 U+0073",
+                "stage_index": 1,
+                "step": "case:casefold"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 1,
+            "stages": [
+              {
+                "output": "atlas",
+                "output_codepoints": "U+0061 U+0074 U+006C U+0061 U+0073",
+                "stage_index": 0,
+                "step": "normalize:nfkc"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 2,
+            "stages": [
+              {
+                "output": "atlas",
+                "output_codepoints": "U+0061 U+0074 U+006C U+0061 U+0073",
+                "stage_index": 0,
+                "step": "normalize:nfd"
+              },
+              {
+                "output": "atlas",
+                "output_codepoints": "U+0061 U+0074 U+006C U+0061 U+0073",
+                "stage_index": 1,
+                "step": "case:casefold"
+              },
+              {
+                "output": "atlas",
+                "output_codepoints": "U+0061 U+0074 U+006C U+0061 U+0073",
+                "stage_index": 2,
+                "step": "normalize:nfc"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 3,
+            "stages": [
+              {
+                "output": "ATLAS",
+                "output_codepoints": "U+0041 U+0054 U+004C U+0041 U+0053",
+                "stage_index": 0,
+                "step": "case:upper"
+              }
+            ]
+          }
+        ],
+        "visible_input": "atlas"
+      },
+      {
+        "input": "K",
+        "input_codepoints": "U+212A",
+        "record_id": "kelvin",
+        "record_ordinal": 7,
+        "stages_by_policy": [
+          {
+            "policy_ordinal": 0,
+            "stages": [
+              {
+                "output": "k",
+                "output_codepoints": "U+006B",
+                "stage_index": 0,
+                "step": "case:lower"
+              },
+              {
+                "output": "k",
+                "output_codepoints": "U+006B",
+                "stage_index": 1,
+                "step": "case:casefold"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 1,
+            "stages": [
+              {
+                "output": "K",
+                "output_codepoints": "U+004B",
+                "stage_index": 0,
+                "step": "normalize:nfkc"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 2,
+            "stages": [
+              {
+                "output": "K",
+                "output_codepoints": "U+004B",
+                "stage_index": 0,
+                "step": "normalize:nfd"
+              },
+              {
+                "output": "k",
+                "output_codepoints": "U+006B",
+                "stage_index": 1,
+                "step": "case:casefold"
+              },
+              {
+                "output": "k",
+                "output_codepoints": "U+006B",
+                "stage_index": 2,
+                "step": "normalize:nfc"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 3,
+            "stages": [
+              {
+                "output": "K",
+                "output_codepoints": "U+212A",
+                "stage_index": 0,
+                "step": "case:upper"
+              }
+            ]
+          }
+        ],
+        "visible_input": "K"
+      },
+      {
+        "input": "ss",
+        "input_codepoints": "U+0073 U+0073",
+        "record_id": "lower-ss",
+        "record_ordinal": 8,
+        "stages_by_policy": [
+          {
+            "policy_ordinal": 0,
+            "stages": [
+              {
+                "output": "ss",
+                "output_codepoints": "U+0073 U+0073",
+                "stage_index": 0,
+                "step": "case:lower"
+              },
+              {
+                "output": "ss",
+                "output_codepoints": "U+0073 U+0073",
+                "stage_index": 1,
+                "step": "case:casefold"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 1,
+            "stages": [
+              {
+                "output": "ss",
+                "output_codepoints": "U+0073 U+0073",
+                "stage_index": 0,
+                "step": "normalize:nfkc"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 2,
+            "stages": [
+              {
+                "output": "ss",
+                "output_codepoints": "U+0073 U+0073",
+                "stage_index": 0,
+                "step": "normalize:nfd"
+              },
+              {
+                "output": "ss",
+                "output_codepoints": "U+0073 U+0073",
+                "stage_index": 1,
+                "step": "case:casefold"
+              },
+              {
+                "output": "ss",
+                "output_codepoints": "U+0073 U+0073",
+                "stage_index": 2,
+                "step": "normalize:nfc"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 3,
+            "stages": [
+              {
+                "output": "SS",
+                "output_codepoints": "U+0053 U+0053",
+                "stage_index": 0,
+                "step": "case:upper"
+              }
+            ]
+          }
+        ],
+        "visible_input": "ss"
+      },
+      {
+        "input": "é",
+        "input_codepoints": "U+00E9",
+        "record_id": "precomposed",
+        "record_ordinal": 9,
+        "stages_by_policy": [
+          {
+            "policy_ordinal": 0,
+            "stages": [
+              {
+                "output": "é",
+                "output_codepoints": "U+00E9",
+                "stage_index": 0,
+                "step": "case:lower"
+              },
+              {
+                "output": "é",
+                "output_codepoints": "U+00E9",
+                "stage_index": 1,
+                "step": "case:casefold"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 1,
+            "stages": [
+              {
+                "output": "é",
+                "output_codepoints": "U+00E9",
+                "stage_index": 0,
+                "step": "normalize:nfkc"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 2,
+            "stages": [
+              {
+                "output": "é",
+                "output_codepoints": "U+0065 U+0301",
+                "stage_index": 0,
+                "step": "normalize:nfd"
+              },
+              {
+                "output": "é",
+                "output_codepoints": "U+0065 U+0301",
+                "stage_index": 1,
+                "step": "case:casefold"
+              },
+              {
+                "output": "é",
+                "output_codepoints": "U+00E9",
+                "stage_index": 2,
+                "step": "normalize:nfc"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 3,
+            "stages": [
+              {
+                "output": "É",
+                "output_codepoints": "U+00C9",
+                "stage_index": 0,
+                "step": "case:upper"
+              }
+            ]
+          }
+        ],
+        "visible_input": "é"
+      },
+      {
+        "input": "É",
+        "input_codepoints": "U+0045 U+0301",
+        "record_id": "upper-decomposed",
+        "record_ordinal": 10,
+        "stages_by_policy": [
+          {
+            "policy_ordinal": 0,
+            "stages": [
+              {
+                "output": "é",
+                "output_codepoints": "U+0065 U+0301",
+                "stage_index": 0,
+                "step": "case:lower"
+              },
+              {
+                "output": "é",
+                "output_codepoints": "U+0065 U+0301",
+                "stage_index": 1,
+                "step": "case:casefold"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 1,
+            "stages": [
+              {
+                "output": "É",
+                "output_codepoints": "U+00C9",
+                "stage_index": 0,
+                "step": "normalize:nfkc"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 2,
+            "stages": [
+              {
+                "output": "É",
+                "output_codepoints": "U+0045 U+0301",
+                "stage_index": 0,
+                "step": "normalize:nfd"
+              },
+              {
+                "output": "é",
+                "output_codepoints": "U+0065 U+0301",
+                "stage_index": 1,
+                "step": "case:casefold"
+              },
+              {
+                "output": "é",
+                "output_codepoints": "U+00E9",
+                "stage_index": 2,
+                "step": "normalize:nfc"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 3,
+            "stages": [
+              {
+                "output": "É",
+                "output_codepoints": "U+0045 U+0301",
+                "stage_index": 0,
+                "step": "case:upper"
+              }
+            ]
+          }
+        ],
+        "visible_input": "E◌́"
+      },
+      {
+        "input": "SS",
+        "input_codepoints": "U+0053 U+0053",
+        "record_id": "upper-ss",
+        "record_ordinal": 11,
+        "stages_by_policy": [
+          {
+            "policy_ordinal": 0,
+            "stages": [
+              {
+                "output": "ss",
+                "output_codepoints": "U+0073 U+0073",
+                "stage_index": 0,
+                "step": "case:lower"
+              },
+              {
+                "output": "ss",
+                "output_codepoints": "U+0073 U+0073",
+                "stage_index": 1,
+                "step": "case:casefold"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 1,
+            "stages": [
+              {
+                "output": "SS",
+                "output_codepoints": "U+0053 U+0053",
+                "stage_index": 0,
+                "step": "normalize:nfkc"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 2,
+            "stages": [
+              {
+                "output": "SS",
+                "output_codepoints": "U+0053 U+0053",
+                "stage_index": 0,
+                "step": "normalize:nfd"
+              },
+              {
+                "output": "ss",
+                "output_codepoints": "U+0073 U+0073",
+                "stage_index": 1,
+                "step": "case:casefold"
+              },
+              {
+                "output": "ss",
+                "output_codepoints": "U+0073 U+0073",
+                "stage_index": 2,
+                "step": "normalize:nfc"
+              }
+            ]
+          },
+          {
+            "policy_ordinal": 3,
+            "stages": [
+              {
+                "output": "SS",
+                "output_codepoints": "U+0053 U+0053",
+                "stage_index": 0,
+                "step": "case:upper"
+              }
+            ]
+          }
+        ],
+        "visible_input": "SS"
+      }
+    ]
+  },
+  "schema": "casefold-observatory.collision-visual-evidence",
+  "schema_version": 1
+}
