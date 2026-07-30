@@ -3,7 +3,13 @@ from __future__ import annotations
 import unittest
 
 from casefold_observatory import (
+    CollisionGraph,
+    CollisionWitness,
+    ExactDuplicateGroup,
+    GlobalCollisionComponent,
     HazardEvidence,
+    IdentifierRecord,
+    PolicyCollisionGroup,
     TransformPolicy,
     TransformResult,
     TransformStageEvidence,
@@ -17,6 +23,12 @@ class ConstructionBoundaryTests(unittest.TestCase):
             (HazardEvidence, "HazardEvidence objects"),
             (TransformStageEvidence, "TransformStageEvidence objects"),
             (TransformResult, "TransformResult objects"),
+            (IdentifierRecord, "IdentifierRecord objects"),
+            (ExactDuplicateGroup, "ExactDuplicateGroup objects"),
+            (CollisionWitness, "CollisionWitness objects"),
+            (PolicyCollisionGroup, "PolicyCollisionGroup objects"),
+            (GlobalCollisionComponent, "GlobalCollisionComponent objects"),
+            (CollisionGraph, "CollisionGraph objects"),
         )
         for model, message in cases:
             with (

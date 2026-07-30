@@ -4,14 +4,28 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "casefold-observatory"
-version = "0.1.0"
-description = "Bounded, explicit Unicode identifier transformation policies"
+version = "0.2.0"
+description = "Bounded, deterministic Unicode identifier collision analysis"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{name = "Omar Ibrahim"}]
 dependencies = []
+keywords = ["unicode", "security", "identifiers", "collision-analysis"]
+
+[project.optional-dependencies]
+dev = [
+    "build==1.5.0",
+    "coverage==7.15.2",
+    "mypy==2.3.0",
+    "ruff==0.16.0",
+    "setuptools==83.0.0",
+]
+
+[project.urls]
+Repository = "https://github.com/omar07ibrahim/case"
+Issues = "https://github.com/omar07ibrahim/case/issues"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

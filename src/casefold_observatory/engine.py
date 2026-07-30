@@ -108,6 +108,19 @@ def _strict_utf8(identifier: str) -> bytes:
     return identifier.encode("utf-8", errors="strict")
 
 
+def _validated_identifier_bytes(identifier: str) -> bytes:
+    if type(identifier) is not str:
+        raise TypeError("identifier must be an exact str")
+    if identifier == "":
+        _raise_transform_error(TransformErrorCode.EMPTY_IDENTIFIER)
+    if len(identifier) > MAX_INPUT_CODEPOINTS:
+        _raise_transform_error(TransformErrorCode.INPUT_TOO_LARGE)
+    encoded = _strict_utf8(identifier)
+    if len(encoded) > MAX_INPUT_UTF8_BYTES:
+        _raise_transform_error(TransformErrorCode.INPUT_TOO_LARGE)
+    return encoded
+
+
 def _enforce_stage_bounds(
     identifier: str,
     *,
@@ -143,22 +156,14 @@ def _reject_hazards(
     )
 
 
-def apply_policy(identifier: str, policy: TransformPolicy) -> TransformResult:
-    """Apply one ordered policy and return bounded, non-echoing evidence."""
-
-    if type(identifier) is not str:
-        raise TypeError("identifier must be an exact str")
+def _evaluate_policy(
+    identifier: str,
+    policy: TransformPolicy,
+) -> tuple[TransformResult, tuple[str, ...]]:
     _validate_policy(policy, require_current_unicode=False)
     if policy.unicode_version != unicodedata.unidata_version:
         _raise_transform_error(TransformErrorCode.POLICY_UNICODE_MISMATCH)
-    if identifier == "":
-        _raise_transform_error(TransformErrorCode.EMPTY_IDENTIFIER)
-
-    if len(identifier) > MAX_INPUT_CODEPOINTS:
-        _raise_transform_error(TransformErrorCode.INPUT_TOO_LARGE)
-    encoded_input = _strict_utf8(identifier)
-    if len(encoded_input) > MAX_INPUT_UTF8_BYTES:
-        _raise_transform_error(TransformErrorCode.INPUT_TOO_LARGE)
+    encoded_input = _validated_identifier_bytes(identifier)
 
     input_hazards = _inspect_hazards(identifier)
     if policy.hazard_handling is HazardHandling.REJECT:
@@ -166,6 +171,7 @@ def apply_policy(identifier: str, policy: TransformPolicy) -> TransformResult:
 
     transformed = identifier
     stages: list[TransformStageEvidence] = []
+    stage_values: list[str] = []
     for stage_index, step in enumerate(policy.steps):
         before = transformed
         transformed = _apply_step(before, step)
@@ -181,14 +187,25 @@ def apply_policy(identifier: str, policy: TransformPolicy) -> TransformResult:
                 after=transformed,
             )
         )
+        stage_values.append(transformed)
 
     output_hazards = _inspect_hazards(transformed)
-    return _create_result(
-        transformed=transformed,
-        policy=policy,
-        input_codepoints=len(identifier),
-        input_utf8_bytes=len(encoded_input),
-        input_hazards=input_hazards,
-        output_hazards=output_hazards,
-        stages=tuple(stages),
+    return (
+        _create_result(
+            transformed=transformed,
+            policy=policy,
+            input_codepoints=len(identifier),
+            input_utf8_bytes=len(encoded_input),
+            input_hazards=input_hazards,
+            output_hazards=output_hazards,
+            stages=tuple(stages),
+        ),
+        tuple(stage_values),
     )
+
+
+def apply_policy(identifier: str, policy: TransformPolicy) -> TransformResult:
+    """Apply one ordered policy and return bounded, non-echoing evidence."""
+
+    result, _stage_values = _evaluate_policy(identifier, policy)
+    return result
