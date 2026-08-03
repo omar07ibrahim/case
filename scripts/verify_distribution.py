@@ -61,7 +61,9 @@ def _extract_generated_sdist(sdist: Path, destination: Path) -> Path:
                 raise RuntimeError("generated sdist contains an unsafe path")
             if member.issym() or member.islnk():
                 raise RuntimeError("generated sdist contains a link")
-        archive.extractall(destination)
+            if not member.isfile() and not member.isdir():
+                raise RuntimeError("generated sdist contains a special file")
+        archive.extractall(destination, filter="data")
 
     roots = [path for path in destination.iterdir() if path.is_dir()]
     if len(roots) != 1:
@@ -101,6 +103,7 @@ def _assert_archive_contract(sdist: Path, wheel: Path) -> None:
         "scripts/verify_distribution.py",
         "tests/test_collision.py",
         "tests/test_collision_properties.py",
+        "tests/test_distribution_script.py",
         "tests/test_visuals.py",
     )
     for required in required_source_files:
