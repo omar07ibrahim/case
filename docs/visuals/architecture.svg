@@ -9,6 +9,8 @@
     .section { fill: #eff6ff; font-size: 18px; font-weight: 700; }
     .body { fill: #dce8f6; font-size: 15px; }
     .small { fill: #9fb2c9; font-size: 12px; }
+    .filled-cell { fill: #eff6ff; font-size: 12px; }
+    .component-label { fill: #eff6ff; font-size: 11px; }
     .mono { font-family: 'DejaVu Sans Mono', monospace; }
   </style>
   <rect width="1600" height="970" fill="#07111f"/>

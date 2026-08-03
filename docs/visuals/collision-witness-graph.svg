@@ -9,12 +9,14 @@
     .section { fill: #eff6ff; font-size: 18px; font-weight: 700; }
     .body { fill: #dce8f6; font-size: 15px; }
     .small { fill: #9fb2c9; font-size: 12px; }
+    .filled-cell { fill: #eff6ff; font-size: 12px; }
+    .component-label { fill: #eff6ff; font-size: 11px; }
     .mono { font-family: 'DejaVu Sans Mono', monospace; }
   </style>
   <rect width="1500" height="900" fill="#07111f"/>
   <text x="54" y="58" class="title">First-merge witness graph</text>
   <text x="54" y="88" class="subtitle">Real API output · exact equality · minimum explanation tree</text>
-  <line x1="54" y1="106" x2="1546" y2="106" stroke="#29425f"/>
+  <line x1="54" y1="106" x2="1446" y2="106" stroke="#29425f"/>
   <rect x="54" y="128" width="282" height="74" rx="12" fill="#0e1b2d" stroke="#29425f"/>
   <rect x="54" y="128" width="5" height="74" rx="2" fill="#42d6c5"/>
   <text x="74" y="155" class="small">RECORDS</text>

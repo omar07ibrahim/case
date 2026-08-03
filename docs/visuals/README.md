@@ -26,6 +26,16 @@ compares every byte and mode, and rejects symlink or special-file outputs. The
 renderer uses only Python's standard library and the local package; it performs
 no network requests and loads no remote fonts, scripts, images, or styles.
 
+### Unicode database boundary
+
+The committed bundle binds Unicode database `15.0.0`.
+Policy IDs intentionally include that version, so byte-for-byte replay requires
+a Python runtime whose `unicodedata.unidata_version` is also
+`15.0.0`. CI performs the exact replay on Python 3.12.
+The installed-package matrix still exercises the engine and static SVG/JSON
+contracts on Python 3.11 through 3.14; only the two exact replay tests skip with
+an explicit version-mismatch reason on a different Unicode database.
+
 ## Evidence relationship
 
 Each SVG embeds a canonical `data_sha256` in its `<metadata>` element. It is the
@@ -38,8 +48,8 @@ SHA-256 of the matching compact, sorted JSON subsection:
 The committed evidence records:
 
 - implementation revision: `8c55335d6db549fbc55319addba33f3a2bda0e96`
-- implementation tree SHA-256: `c6560d331aac6ba7ca9182207bf4d6e65c8e530ff6c384352fc7aff8a435a599`
-- generator SHA-256: `bf974c9a132deb666ca17caab012936ccb9cdf6f094b0797ccfca0f3609c322a`
+- implementation tree SHA-256: `ff52dbd697325304d420429bde0c2e1f4d420e47acb0fdcb1c79750027ea8cb6`
+- generator SHA-256: `7c1edbbcb61cc6fe49742e8fec7d43a69a9cd520e9caca51c4edec37cc5e7056`
 - algorithm: `stage-partition-witness-v1`
 - Unicode database: `15.0.0`
 - first-merge corpus label: `3ccca0815c2deeee3e4d2a61283ab17ca9debb9f4f3f7dd7f501b0c03664aa46`

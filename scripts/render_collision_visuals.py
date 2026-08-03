@@ -47,9 +47,10 @@ from casefold_observatory import (
     create_policy,
 )
 
-GENERATOR_VERSION: Final = 1
+GENERATOR_VERSION: Final = 2
 GENERATOR_PATH: Final = "scripts/render_collision_visuals.py"
 IMPLEMENTATION_PATHS: Final = (
+    "src/casefold_observatory/__init__.py",
     "src/casefold_observatory/collision.py",
     "src/casefold_observatory/engine.py",
     "src/casefold_observatory/model.py",
@@ -500,6 +501,8 @@ def _svg_open(
         "    .section { fill: #eff6ff; font-size: 18px; font-weight: 700; }",
         "    .body { fill: #dce8f6; font-size: 15px; }",
         "    .small { fill: #9fb2c9; font-size: 12px; }",
+        f"    .filled-cell {{ fill: {_INK}; font-size: 12px; }}",
+        f"    .component-label {{ fill: {_INK}; font-size: 11px; }}",
         "    .mono { font-family: 'DejaVu Sans Mono', monospace; }",
         "  </style>",
         f'  <rect width="{width}" height="{height}" fill="{_BACKGROUND}"/>',
@@ -509,6 +512,7 @@ def _svg_open(
 def _header(
     lines: list[str],
     *,
+    width: int,
     title: str,
     subtitle: str,
 ) -> None:
@@ -516,7 +520,7 @@ def _header(
         [
             (f'  <text x="54" y="58" class="title">{_xml(title)}</text>'),
             (f'  <text x="54" y="88" class="subtitle">{_xml(subtitle)}</text>'),
-            (f'  <line x1="54" y1="106" x2="1546" y2="106" stroke="{_GRID}"/>'),
+            (f'  <line x1="54" y1="106" x2="{width - 54}" y2="106" stroke="{_GRID}"/>'),
         ]
     )
 
@@ -602,6 +606,7 @@ def _render_witness_svg(
     )
     _header(
         lines,
+        width=1500,
         title="First-merge witness graph",
         subtitle=("Real API output · exact equality · minimum explanation tree"),
     )
@@ -914,6 +919,7 @@ def _render_landscape_svg(
     )
     _header(
         lines,
+        width=1600,
         title="Multi-policy collision landscape",
         subtitle=(
             "12 reviewed synthetic inputs · 4 ordered policies · real exact groups"
@@ -1022,6 +1028,11 @@ def _render_landscape_svg(
                 f'  <text x="{record_x + 18}" y="{header_y + 62}" '
                 'class="small">stable ID · visible input · code points</text>'
             ),
+            (
+                f'  <text x="{record_x + record_width - 18}" '
+                f'y="{header_y + 35}" text-anchor="end" '
+                'class="small mono">global</text>'
+            ),
         ]
     )
 
@@ -1037,6 +1048,7 @@ def _render_landscape_svg(
         component_color = (
             component_colors[component_id] if component_id is not None else _GRID
         )
+        component_label = component_id if component_id is not None else "isolated"
         lines.extend(
             [
                 (
@@ -1047,6 +1059,11 @@ def _render_landscape_svg(
                 (
                     f'  <text x="{record_x + 14}" y="{y + 21}" '
                     f'class="body">{_xml(str(record["record_id"]))}</text>'
+                ),
+                (
+                    f'  <text x="{record_x + record_width - 14}" y="{y + 21}" '
+                    'text-anchor="end" class="component-label mono">'
+                    f"{_xml(component_label)}</text>"
                 ),
                 (
                     f'  <text x="{record_x + 14}" y="{y + 40}" '
@@ -1068,7 +1085,7 @@ def _render_landscape_svg(
                 fill = _GROUP_FILLS[(policy_ordinal + group_index) % len(_GROUP_FILLS)]
                 stroke = _POLICY_COLORS[policy_ordinal]
                 label = group_id
-                label_class = "small mono"
+                label_class = "filled-cell mono"
             lines.extend(
                 [
                     (
@@ -1102,7 +1119,7 @@ def _render_landscape_svg(
             ),
             (
                 f'  <text x="654" y="{legend_y + 39}" class="body">'
-                "record border = global union component"
+                "record tag + border = global union component"
                 "</text>"
             ),
             (
@@ -1211,6 +1228,7 @@ def _render_architecture_svg(
     )
     _header(
         lines,
+        width=1600,
         title="Collision analysis architecture",
         subtitle=("Bounded trust boundary → exact partitions → minimum witnesses"),
     )
@@ -1454,6 +1472,16 @@ python scripts/render_collision_visuals.py --check
 compares every byte and mode, and rejects symlink or special-file outputs. The
 renderer uses only Python's standard library and the local package; it performs
 no network requests and loads no remote fonts, scripts, images, or styles.
+
+### Unicode database boundary
+
+The committed bundle binds Unicode database `{first_graph["unicode_version"]}`.
+Policy IDs intentionally include that version, so byte-for-byte replay requires
+a Python runtime whose `unicodedata.unidata_version` is also
+`{first_graph["unicode_version"]}`. CI performs the exact replay on Python 3.12.
+The installed-package matrix still exercises the engine and static SVG/JSON
+contracts on Python 3.11 through 3.14; only the two exact replay tests skip with
+an explicit version-mismatch reason on a different Unicode database.
 
 ## Evidence relationship
 

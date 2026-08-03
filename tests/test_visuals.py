@@ -8,6 +8,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+import unicodedata
 import unittest
 from pathlib import Path
 from types import ModuleType
@@ -61,6 +62,7 @@ SVG_DIMENSIONS = {
     ),
 }
 IMPLEMENTATION_PATHS = (
+    "src/casefold_observatory/__init__.py",
     "src/casefold_observatory/collision.py",
     "src/casefold_observatory/engine.py",
     "src/casefold_observatory/model.py",
@@ -71,6 +73,8 @@ SVG_NAMESPACE = "http://www.w3.org/2000/svg"
 class _Renderer(Protocol):
     PROJECT_ROOT: Path
     VISUAL_ROOT: Path
+    _GROUP_FILLS: tuple[str, ...]
+    _INK: str
 
     def _write_one(self, path: Path, content: bytes) -> None: ...
 
@@ -121,9 +125,47 @@ def _integer(value: object) -> int:
     return value
 
 
+def _relative_luminance(color: str) -> float:
+    if len(color) != 7 or not color.startswith("#"):
+        raise ValueError("expected a six-digit hexadecimal color")
+    channels = tuple(int(color[offset : offset + 2], 16) / 255 for offset in (1, 3, 5))
+    linear = tuple(
+        channel / 12.92 if channel <= 0.04045 else ((channel + 0.055) / 1.055) ** 2.4
+        for channel in channels
+    )
+    return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
+
+
+def _contrast_ratio(foreground: str, background: str) -> float:
+    foreground_luminance = _relative_luminance(foreground)
+    background_luminance = _relative_luminance(background)
+    lighter = max(foreground_luminance, background_luminance)
+    darker = min(foreground_luminance, background_luminance)
+    return (lighter + 0.05) / (darker + 0.05)
+
+
 def _evidence() -> dict[str, object]:
     value: object = json.loads(EVIDENCE_PATH.read_text(encoding="utf-8"))
     return _object(value)
+
+
+def _evidence_unicode_version() -> str:
+    payload = _evidence()
+    versions = {
+        _string(_object(_object(payload[name])["graph"])["unicode_version"])
+        for name in ("first_merge", "landscape")
+    }
+    if len(versions) != 1:
+        raise RuntimeError("visual scenarios must bind one Unicode database version")
+    return next(iter(versions))
+
+
+EVIDENCE_UNICODE_VERSION = _evidence_unicode_version()
+EVIDENCE_RUNTIME_REASON = (
+    "exact visual replay requires Unicode database "
+    f"{EVIDENCE_UNICODE_VERSION}; this runtime provides "
+    f"{unicodedata.unidata_version}"
+)
 
 
 def _codepoints(value: str) -> str:
@@ -235,7 +277,7 @@ def _implementation_tree_sha256() -> str:
 
 
 class CollisionVisualContractTests(unittest.TestCase):
-    def test_exact_generated_set_modes_and_byte_check(self) -> None:
+    def test_exact_generated_set_and_modes(self) -> None:
         observed = {
             path.relative_to(VISUAL_ROOT).as_posix()
             for path in VISUAL_ROOT.rglob("*")
@@ -249,6 +291,11 @@ class CollisionVisualContractTests(unittest.TestCase):
             self.assertFalse(stat.S_ISLNK(status.st_mode), relative_path)
             self.assertEqual(stat.S_IMODE(status.st_mode), 0o644, relative_path)
 
+    @unittest.skipUnless(
+        unicodedata.unidata_version == EVIDENCE_UNICODE_VERSION,
+        EVIDENCE_RUNTIME_REASON,
+    )
+    def test_exact_generated_bytes_on_the_evidence_unicode_version(self) -> None:
         completed = subprocess.run(
             (
                 sys.executable,
@@ -290,11 +337,12 @@ class CollisionVisualContractTests(unittest.TestCase):
 
         metadata = _object(payload["generator"])
         self.assertEqual(metadata["generator"], "scripts/render_collision_visuals.py")
-        self.assertEqual(metadata["generator_version"], 1)
+        self.assertEqual(metadata["generator_version"], 2)
         self.assertEqual(
             metadata["source_api"],
             "casefold_observatory.analyze_collisions",
         )
+        self.assertEqual(metadata["source_paths"], list(IMPLEMENTATION_PATHS))
         self.assertEqual(metadata["outputs"], EXPECTED_GENERATED_OUTPUTS)
         self.assertEqual(
             metadata["generator_sha256"],
@@ -334,6 +382,10 @@ class CollisionVisualContractTests(unittest.TestCase):
         self.assertNotIn('"generated_at"', text)
         self.assertNotIn('"timestamp"', text)
 
+    @unittest.skipUnless(
+        unicodedata.unidata_version == EVIDENCE_UNICODE_VERSION,
+        EVIDENCE_RUNTIME_REASON,
+    )
     def test_scenarios_replay_to_the_exact_public_graph(self) -> None:
         payload = _evidence()
         for scenario_name in ("first_merge", "landscape"):
@@ -404,6 +456,31 @@ class CollisionVisualContractTests(unittest.TestCase):
             "not one equivalence class",
             landscape_text,
         )
+        for component in (_object(value) for value in _array(graph["components"])):
+            self.assertIn(_string(component["component_id"]), landscape_text)
+        self.assertIn("isolated", landscape_text)
+        self.assertIn("record tag + border", landscape_text)
+
+    def test_filled_landscape_cells_meet_text_contrast(self) -> None:
+        for fill in renderer._GROUP_FILLS:
+            with self.subTest(fill=fill):
+                self.assertGreaterEqual(
+                    _contrast_ratio(renderer._INK, fill),
+                    4.5,
+                )
+
+        graph = _object(_object(_evidence()["landscape"])["graph"])
+        expected_filled_cells = sum(
+            len(_array(_object(group)["member_record_ordinals"]))
+            for group in _array(graph["policy_groups"])
+        )
+        landscape_text = (VISUAL_ROOT / "policy-collision-landscape.svg").read_text(
+            encoding="utf-8"
+        )
+        self.assertEqual(
+            landscape_text.count('class="filled-cell mono"'),
+            expected_filled_cells,
+        )
 
     def test_svg_metadata_dimensions_and_data_hashes_are_exact(self) -> None:
         payload = _evidence()
@@ -432,6 +509,23 @@ class CollisionVisualContractTests(unittest.TestCase):
                 self.assertEqual(
                     metadata["source_revision"],
                     _object(payload["generator"])["source_revision"],
+                )
+
+    def test_svg_header_dividers_stay_inside_their_viewboxes(self) -> None:
+        for filename, (width, _, _) in SVG_DIMENSIONS.items():
+            with self.subTest(svg=filename):
+                root = ElementTree.fromstring((VISUAL_ROOT / filename).read_bytes())
+                dividers = [
+                    element
+                    for element in root.findall(f"{{{SVG_NAMESPACE}}}line")
+                    if element.attrib.get("y1") == "106"
+                    and element.attrib.get("y2") == "106"
+                ]
+                self.assertEqual(len(dividers), 1)
+                self.assertEqual(dividers[0].attrib.get("x1"), "54")
+                self.assertEqual(
+                    dividers[0].attrib.get("x2"),
+                    str(int(width) - 54),
                 )
 
     def test_svgs_have_no_active_or_remote_assets(self) -> None:

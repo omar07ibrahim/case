@@ -84,6 +84,13 @@ revision. The project configuration enforces its current coverage threshold;
 the README deliberately does not freeze a test count that changes as boundary
 cases are added.
 
+The committed visual bundle binds Unicode database 15.0.0 and is reproduced in
+CI on Python 3.12. The installed package is also tested on Python 3.11, 3.13,
+and 3.14. Those runtimes execute the full engine and static visual-contract
+tests, while the two exact evidence-replay tests report an explicit skip when
+their `unicodedata.unidata_version` differs. Policy IDs include that version by
+design, so silently treating cross-version bytes as equivalent would be wrong.
+
 ## Public API example
 
 This example is executable against the current in-memory API. The input order is

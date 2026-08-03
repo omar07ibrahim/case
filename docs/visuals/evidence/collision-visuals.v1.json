@@ -211,8 +211,8 @@
     "check_command": "python scripts/render_collision_visuals.py --check",
     "command": "python scripts/render_collision_visuals.py",
     "generator": "scripts/render_collision_visuals.py",
-    "generator_sha256": "bf974c9a132deb666ca17caab012936ccb9cdf6f094b0797ccfca0f3609c322a",
-    "generator_version": 1,
+    "generator_sha256": "7c1edbbcb61cc6fe49742e8fec7d43a69a9cd520e9caca51c4edec37cc5e7056",
+    "generator_version": 2,
     "outputs": [
       "docs/visuals/README.md",
       "docs/visuals/evidence/collision-visuals.v1.json",
@@ -222,12 +222,13 @@
     ],
     "source_api": "casefold_observatory.analyze_collisions",
     "source_paths": [
+      "src/casefold_observatory/__init__.py",
       "src/casefold_observatory/collision.py",
       "src/casefold_observatory/engine.py",
       "src/casefold_observatory/model.py"
     ],
     "source_revision": "8c55335d6db549fbc55319addba33f3a2bda0e96",
-    "source_tree_sha256": "c6560d331aac6ba7ca9182207bf4d6e65c8e530ff6c384352fc7aff8a435a599"
+    "source_tree_sha256": "ff52dbd697325304d420429bde0c2e1f4d420e47acb0fdcb1c79750027ea8cb6"
   },
   "landscape": {
     "description": "Reviewed synthetic Unicode identifiers evaluated under four ordered policies. Filled cells are exact final-equality collision groups.",
