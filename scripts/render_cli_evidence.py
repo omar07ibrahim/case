@@ -1166,9 +1166,9 @@ def _audit_outputs(outputs: dict[str, bytes]) -> None:
             _fail("candidate argv is not exact text")
         for channel in ("stdout", "stderr"):
             value = document[channel]
-            if type(value) is not str or not cast(str, value).isascii():
+            if type(value) is not str or not value.isascii():
                 _fail("candidate channel is not ASCII")
-            encoded = cast(str, value).encode("ascii")
+            encoded = value.encode("ascii")
             if document[f"{channel}_bytes"] != len(encoded):
                 _fail("candidate channel byte count changed")
             if document[f"{channel}_sha256"] != _sha256(encoded):
