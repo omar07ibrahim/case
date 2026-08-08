@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import errno
 import os
+import secrets
 import stat
 import tempfile
 import unittest
@@ -196,7 +197,7 @@ class FileCaptureTests(unittest.TestCase):
                 partial(capture_regular_file, source.as_posix(), limit=1),
             )
 
-        with mock.patch.object(filesystem.os, "read", return_value=b"ab"):
+        with mock.patch.object(os, "read", return_value=b"ab"):
             _expect_code(
                 self,
                 FileBoundaryErrorCode.READ_LIMIT,
@@ -217,7 +218,7 @@ class FileCaptureTests(unittest.TestCase):
                     raise InterruptedError
                 return original_read(descriptor, min(count, 1))
 
-            with mock.patch.object(filesystem.os, "read", side_effect=read_one):
+            with mock.patch.object(os, "read", side_effect=read_one):
                 captured = capture_regular_file(source.as_posix(), limit=6)
 
             self.assertEqual(captured.data, b"abcdef")
@@ -231,9 +232,9 @@ class FileCaptureTests(unittest.TestCase):
         for result, code in cases:
             with self.subTest(result_type=type(result).__name__):
                 patcher = (
-                    mock.patch.object(filesystem.os, "read", side_effect=result)
+                    mock.patch.object(os, "read", side_effect=result)
                     if isinstance(result, OSError)
-                    else mock.patch.object(filesystem.os, "read", return_value=result)
+                    else mock.patch.object(os, "read", return_value=result)
                 )
                 with patcher:
                     _expect_code(
@@ -259,7 +260,7 @@ class FileCaptureTests(unittest.TestCase):
                 return info
 
             with mock.patch.object(
-                filesystem.os,
+                os,
                 "fstat",
                 side_effect=changed_open_stat,
             ):
@@ -281,7 +282,7 @@ class FileCaptureTests(unittest.TestCase):
                 return info
 
             with mock.patch.object(
-                filesystem.os,
+                os,
                 "fstat",
                 side_effect=changed_after_read,
             ):
@@ -316,7 +317,7 @@ class FileCaptureTests(unittest.TestCase):
                 )
 
             with mock.patch.object(
-                filesystem.os,
+                os,
                 "stat",
                 side_effect=disappearing_stat,
             ):
@@ -346,7 +347,7 @@ class FileCaptureTests(unittest.TestCase):
                 return info
 
             with mock.patch.object(
-                filesystem.os,
+                os,
                 "fstat",
                 side_effect=swapped_directory,
             ):
@@ -363,19 +364,19 @@ class FileCaptureTests(unittest.TestCase):
 
 class PosixPrimitiveTests(unittest.TestCase):
     def test_platform_and_descriptor_features_fail_closed(self) -> None:
-        with mock.patch.object(filesystem.os, "name", "nt"):
+        with mock.patch.object(os, "name", "nt"):
             _expect_code(
                 self,
                 FileBoundaryErrorCode.UNSUPPORTED_PLATFORM,
                 partial(capture_regular_file, "source", limit=1),
             )
-        with mock.patch.object(filesystem.os, "supports_dir_fd", set()):
+        with mock.patch.object(os, "supports_dir_fd", set()):
             _expect_code(
                 self,
                 FileBoundaryErrorCode.UNSUPPORTED_PLATFORM,
                 partial(capture_regular_file, "source", limit=1),
             )
-        with mock.patch.object(filesystem.os, "O_NOFOLLOW", None):
+        with mock.patch.object(os, "O_NOFOLLOW", None):
             _expect_code(
                 self,
                 FileBoundaryErrorCode.UNSUPPORTED_PLATFORM,
@@ -401,10 +402,10 @@ class PosixPrimitiveTests(unittest.TestCase):
                 )
 
     def test_safe_close_and_cleanup_suppress_only_cleanup_errors(self) -> None:
-        with mock.patch.object(filesystem.os, "close", side_effect=OSError):
+        with mock.patch.object(os, "close", side_effect=OSError):
             filesystem._safe_close(99)
         filesystem._cleanup_temporary(99, None)
-        with mock.patch.object(filesystem.os, "unlink", side_effect=OSError):
+        with mock.patch.object(os, "unlink", side_effect=OSError):
             filesystem._cleanup_temporary(99, "private-temp")
 
 
@@ -422,7 +423,7 @@ class FilePublicationTests(unittest.TestCase):
                     raise InterruptedError
                 return original_write(descriptor, data[:1])
 
-            with mock.patch.object(filesystem.os, "write", side_effect=write_one):
+            with mock.patch.object(os, "write", side_effect=write_one):
                 publish_new_file(destination.as_posix(), b"receipt\n")
 
             info = destination.stat()
@@ -483,7 +484,7 @@ class FilePublicationTests(unittest.TestCase):
             temporary = root / f".casefold-observatory-{token}.tmp"
             temporary.write_bytes(b"occupied")
             with mock.patch.object(
-                filesystem.secrets,
+                secrets,
                 "token_hex",
                 return_value=token,
             ):
@@ -509,7 +510,7 @@ class FilePublicationTests(unittest.TestCase):
             ):
                 destination = Path(directory) / "receipt"
                 with mock.patch.object(
-                    filesystem.os,
+                    os,
                     "write",
                     return_value=result,
                 ):
@@ -531,7 +532,7 @@ class FilePublicationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="casefold-write-error-") as directory:
             destination = Path(directory) / "receipt"
             with mock.patch.object(
-                filesystem.os,
+                os,
                 "write",
                 side_effect=OSError(errno.EIO, "private-path"),
             ):
@@ -553,12 +554,12 @@ class FilePublicationTests(unittest.TestCase):
             destination = root / "receipt"
             with (
                 mock.patch.object(
-                    filesystem.secrets,
+                    secrets,
                     "token_hex",
                     return_value="b" * 32,
                 ),
                 mock.patch.object(
-                    filesystem.os,
+                    os,
                     "write",
                     side_effect=KeyboardInterrupt,
                 ),
@@ -573,7 +574,7 @@ class FilePublicationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="casefold-link-race-") as directory:
             destination = Path(directory) / "receipt"
             with mock.patch.object(
-                filesystem.os,
+                os,
                 "link",
                 side_effect=FileExistsError(errno.EEXIST, "private-path"),
             ):
@@ -586,7 +587,7 @@ class FilePublicationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="casefold-link-error-") as directory:
             destination = Path(directory) / "receipt"
             with mock.patch.object(
-                filesystem.os,
+                os,
                 "link",
                 side_effect=OSError(errno.EPERM, "private-path"),
             ):
@@ -623,7 +624,7 @@ class FilePublicationTests(unittest.TestCase):
                 raise FileExistsError(errno.EEXIST, "private-path")
 
             with mock.patch.object(
-                filesystem.os,
+                os,
                 "link",
                 side_effect=create_alias_then_fail,
             ):
@@ -655,7 +656,7 @@ class FilePublicationTests(unittest.TestCase):
                 original_fsync(descriptor)
 
             with mock.patch.object(
-                filesystem.os,
+                os,
                 "fsync",
                 side_effect=fail_directory_fsync,
             ):
@@ -694,7 +695,7 @@ class FilePublicationTests(unittest.TestCase):
                 original_unlink(path, dir_fd=dir_fd)
 
             with mock.patch.object(
-                filesystem.os,
+                os,
                 "unlink",
                 side_effect=fail_first_unlink,
             ):
@@ -751,7 +752,7 @@ class FilePublicationTests(unittest.TestCase):
                 return result
 
             with mock.patch.object(
-                filesystem.os,
+                os,
                 "fstat",
                 side_effect=forged_link_count,
             ):

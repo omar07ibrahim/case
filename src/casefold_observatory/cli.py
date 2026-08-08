@@ -326,7 +326,7 @@ def _dispatch(argv: tuple[str, ...]) -> tuple[int, bytes, bytes]:
             return EXIT_SUCCESS, _static_output(command), b""
         if type(command) is _AnalyzeCommand:
             return EXIT_SUCCESS, _analyze(command), b""
-        return EXIT_SUCCESS, _verify(command), b""
+        return EXIT_SUCCESS, _verify(cast(_VerifyCommand, command)), b""
     except _UsageError:
         return (
             EXIT_USAGE,

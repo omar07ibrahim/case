@@ -22,12 +22,17 @@ from casefold_observatory.collision import (
     CollisionAnalysisError,
     CollisionErrorCode,
 )
-from casefold_observatory.corpus import CorpusErrorCode, CorpusIngestionError
+from casefold_observatory.corpus import (
+    MAX_CORPUS_SOURCE_BYTES,
+    CorpusErrorCode,
+    CorpusIngestionError,
+)
 from casefold_observatory.filesystem import (
     CapturedFile,
     FileBoundaryError,
     FileBoundaryErrorCode,
 )
+from casefold_observatory.model import HazardHandling, TransformStep
 from casefold_observatory.receipt import (
     DISTRIBUTION_VERSION,
     ReceiptErrorCode,
@@ -209,9 +214,9 @@ class CliParsingTests(unittest.TestCase):
         )
         self.assertEqual(
             tuple(step.value for step in policy.steps),
-            tuple(step.value for step in cli.TransformStep),
+            tuple(step.value for step in TransformStep),
         )
-        self.assertIs(policy.hazard_handling, cli.HazardHandling.PRESERVE)
+        self.assertIs(policy.hazard_handling, HazardHandling.PRESERVE)
 
         invalid = (
             "",
@@ -463,7 +468,7 @@ class CliWorkflowTests(unittest.TestCase):
             self.assertEqual(_json_line(stderr)["code"], "filesystem.symlink")
 
             oversized = root / "oversized"
-            oversized.write_bytes(b"x" * (cli.MAX_CORPUS_SOURCE_BYTES + 1))
+            oversized.write_bytes(b"x" * (MAX_CORPUS_SOURCE_BYTES + 1))
             status, stdout, stderr = _invoke(
                 (
                     "analyze",
@@ -719,8 +724,8 @@ class CliInternalAndInstalledTests(unittest.TestCase):
             "urllib",
         }
         paths = (
-            Path(cast(str, cli.__file__)),
-            Path(cast(str, filesystem.__file__)),
+            Path(cli.__file__),
+            Path(filesystem.__file__),
         )
         for target in paths:
             tree = ast.parse(target.read_text(encoding="utf-8"))
@@ -738,7 +743,7 @@ class CliInternalAndInstalledTests(unittest.TestCase):
                 self.assertNotIn("open", calls)
 
     def test_module_entry_false_and_true_paths_share_cli_main(self) -> None:
-        self.assertTrue(callable(module_entry.main))
+        self.assertTrue(callable(getattr(module_entry, "main", None)))
         with (
             mock.patch.object(cli, "main", return_value=7) as entry,
             self.assertRaises(SystemExit) as caught,
