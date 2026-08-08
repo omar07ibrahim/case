@@ -120,6 +120,17 @@ class CliEvidenceCandidateContractTests(unittest.TestCase):
         self.assertIn("runtime_tree_sha256", source)
         self.assertNotIn('"wheel_bytes"', source)
         self.assertNotIn("CONTRACT_PATH", source)
+        for layout_boundary in (
+            "def _wrap_pixels(",
+            "font.getbbox(value)",
+            "draw.textbbox(position, value, font=font)",
+            "visual transcript wrapping changed captured text",
+            "visual transcript text escaped its measured bounds",
+            '"png_size": [1400, 1120]',
+        ):
+            self.assertIn(layout_boundary, source)
+        self.assertEqual(source.count("draw.text("), 1)
+        self.assertGreaterEqual(source.count("_draw_bounded_text("), 10)
         for media_boundary in (
             "png.getexif()",
             '"n_frames"',

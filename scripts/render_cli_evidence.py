@@ -20,7 +20,6 @@ import re
 import stat
 import subprocess
 import tempfile
-import textwrap
 import unicodedata
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
@@ -626,39 +625,104 @@ def _font(size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
     return ImageFont.load_default(size=size)
 
 
-def _command_lines(command: CapturedCommand, *, width: int) -> list[str]:
-    command_text = "$ " + " ".join(command.argv)
-    lines = textwrap.wrap(
-        command_text,
-        width=width,
+def _text_width(
+    font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
+    value: str,
+) -> int:
+    left, _top, right, _bottom = font.getbbox(value)
+    return right - left
+
+
+def _wrap_pixels(
+    value: str,
+    *,
+    font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
+    maximum_width: int,
+    subsequent_indent: str,
+) -> list[str]:
+    if not value:
+        return [value]
+    lines: list[str] = []
+    remaining = value
+    prefix = ""
+    while remaining:
+        if _text_width(font, prefix) >= maximum_width:
+            _fail("visual continuation indent exceeds its pixel bound")
+        low = 1
+        high = len(remaining)
+        best = 0
+        while low <= high:
+            middle = (low + high) // 2
+            if _text_width(font, prefix + remaining[:middle]) <= maximum_width:
+                best = middle
+                low = middle + 1
+            else:
+                high = middle - 1
+        if best == 0:
+            _fail("one transcript glyph exceeds its pixel bound")
+        lines.append(prefix + remaining[:best])
+        remaining = remaining[best:]
+        prefix = subsequent_indent
+    reconstructed = lines[0] + "".join(
+        line[len(subsequent_indent) :] for line in lines[1:]
+    )
+    if reconstructed != value:
+        _fail("visual transcript wrapping changed captured text")
+    return lines
+
+
+def _command_lines(
+    command: CapturedCommand,
+    *,
+    font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
+    maximum_width: int,
+) -> list[str]:
+    lines = _wrap_pixels(
+        "$ " + " ".join(command.argv),
+        font=font,
+        maximum_width=maximum_width,
         subsequent_indent="  ",
-        break_long_words=False,
-        break_on_hyphens=False,
     )
     lines.append(f"exit | {command.exit_status}")
     for channel_name, payload in (
         ("stdout", command.stdout),
         ("stderr", command.stderr),
     ):
-        if not payload:
-            lines.append(f"{channel_name} | <empty>")
-            continue
-        channel = payload.decode("ascii").rstrip("\n")
+        channel = "<empty>" if not payload else payload.decode("ascii").rstrip("\n")
         lines.extend(
-            textwrap.wrap(
+            _wrap_pixels(
                 f"{channel_name} | {channel}",
-                width=width,
+                font=font,
+                maximum_width=maximum_width,
                 subsequent_indent="         ",
-                break_long_words=False,
-                break_on_hyphens=False,
             )
         )
     return lines
 
 
+def _draw_bounded_text(
+    draw: ImageDraw.ImageDraw,
+    position: tuple[int, int],
+    value: str,
+    *,
+    font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
+    fill: int | tuple[int, int, int],
+    bounds: tuple[int, int, int, int],
+) -> None:
+    box = draw.textbbox(position, value, font=font)
+    left, top, right, bottom = bounds
+    if (
+        box[0] < left
+        or box[1] < top
+        or box[2] > right
+        or box[3] > bottom
+    ):
+        _fail("visual transcript text escaped its measured bounds")
+    draw.text(position, value, font=font, fill=fill)
+
 def _render_png(evidence: JsonObject, commands: tuple[CapturedCommand, ...]) -> bytes:
     width = 1400
-    height = 1060
+    height = 1120
     image = Image.new("RGB", (width, height), _BACKGROUND)
     draw = ImageDraw.Draw(image)
     title_font = _font(32)
@@ -666,17 +730,21 @@ def _render_png(evidence: JsonObject, commands: tuple[CapturedCommand, ...]) -> 
     body_font = _font(18)
 
     draw.rounded_rectangle((40, 34, width - 40, 150), radius=18, fill=_PANEL)
-    draw.text(
+    _draw_bounded_text(
+        draw,
         (70, 56),
         "Verified rasterized CLI transcript",
         font=title_font,
         fill=_INK,
+        bounds=(70, 34, width - 70, 150),
     )
-    draw.text(
+    _draw_bounded_text(
+        draw,
         (72, 108),
         "Captured from the installed wheel; this is not an OS terminal screenshot.",
         font=body_font,
         fill=_MUTED,
+        bounds=(72, 96, width - 72, 148),
     )
 
     receipt_document = cast(JsonObject, evidence["receipt"])
@@ -687,44 +755,79 @@ def _render_png(evidence: JsonObject, commands: tuple[CapturedCommand, ...]) -> 
         f"| receipt {str(receipt_document['sha256'])[:16]}  "
         f"| source {str(fixture_document['sha256'])[:16]}"
     )
-    draw.text((70, 170), provenance, font=body_font, fill=_TEAL)
+    _draw_bounded_text(
+        draw,
+        (70, 170),
+        provenance,
+        font=body_font,
+        fill=_TEAL,
+        bounds=(70, 158, width - 70, 204),
+    )
 
     block_top = 215
-    block_height = 190
+    block_gap = 12
+    line_height = 24
     accent_colors = (_TEAL, _CYAN, _AMBER, _PINK)
-    for index, command in enumerate(commands):
-        top = block_top + index * (block_height + 12)
+    rendered_lines = [
+        _command_lines(
+            command,
+            font=body_font,
+            maximum_width=width - 152,
+        )
+        for command in commands
+    ]
+    next_top = block_top
+    for index, (command, lines) in enumerate(
+        zip(commands, rendered_lines, strict=True)
+    ):
+        top = next_top
+        block_height = 84 + len(lines) * line_height
+        bottom = top + block_height
+        if bottom > height - 70:
+            _fail("PNG transcript panels exceed the canvas")
         draw.rounded_rectangle(
-            (50, top, width - 50, top + block_height),
+            (50, top, width - 50, bottom),
             radius=14,
             fill=_PANEL,
             outline=accent_colors[index],
             width=2,
         )
-        draw.text(
+        _draw_bounded_text(
+            draw,
             (76, top + 18),
             f"{index + 1:02d}  {command.command_id}",
             font=heading_font,
             fill=accent_colors[index],
+            bounds=(76, top + 10, width - 76, top + 54),
         )
-        line_y = top + 56
-        for line in _command_lines(command, width=124):
+        line_y = top + 58
+        for line in lines:
             fill = _GREEN if line == "exit | 0" else _INK
             if line.startswith("exit |") and command.exit_status != 0:
                 fill = _AMBER
-            draw.text((76, line_y), line, font=body_font, fill=fill)
-            line_y += 24
+            _draw_bounded_text(
+                draw,
+                (76, line_y),
+                line,
+                font=body_font,
+                fill=fill,
+                bounds=(76, top + 52, width - 76, bottom - 18),
+            )
+            line_y += line_height
+        next_top = bottom + block_gap
 
-    draw.text(
-        (52, height - 34),
+    footer_y = next_top + 6
+    _draw_bounded_text(
+        draw,
+        (52, footer_y),
         "Canonical ASCII channels; relative fixture paths; no secrets, host paths, or raw source lines.",
         font=body_font,
         fill=_MUTED,
+        bounds=(52, footer_y, width - 52, height - 20),
     )
     buffer = io.BytesIO()
     image.save(buffer, format="PNG", optimize=False, compress_level=9)
     return buffer.getvalue()
-
 
 def _gif_palette() -> list[int]:
     colors = (
@@ -752,38 +855,63 @@ def _render_gif(evidence: JsonObject, commands: tuple[CapturedCommand, ...]) -> 
     title_font = _font(28)
     accent_indices = (5, 6, 7, 8)
     frames: list[Image.Image] = []
+    rendered_lines = [
+        _command_lines(
+            command,
+            font=body_font,
+            maximum_width=width - 124,
+        )
+        for command in commands
+    ]
 
     receipt_document = cast(JsonObject, evidence["receipt"])
-    for index, command in enumerate(commands):
+    for index, (command, lines) in enumerate(
+        zip(commands, rendered_lines, strict=True)
+    ):
         frame = Image.new("P", (width, height), 0)
         frame.putpalette(palette)
         draw = ImageDraw.Draw(frame)
         draw.rounded_rectangle((34, 32, width - 34, height - 32), radius=18, fill=1)
         draw.rectangle((34, 32, width - 34, 110), fill=2)
-        draw.text(
+        _draw_bounded_text(
+            draw,
             (62, 53),
             "Installed-wheel CLI evidence",
             font=title_font,
             fill=3,
+            bounds=(62, 40, width - 62, 100),
         )
-        draw.text(
+        _draw_bounded_text(
+            draw,
             (62, 128),
             f"step {index + 1}/4  |  {command.command_id}",
             font=title_font,
             fill=accent_indices[index],
+            bounds=(62, 118, width - 62, 174),
         )
         line_y = 185
-        for line in _command_lines(command, width=103):
+        for line in lines:
             fill = 9 if line == "exit | 0" else 3
             if line.startswith("exit |") and command.exit_status != 0:
                 fill = 7
-            draw.text((62, line_y), line, font=body_font, fill=fill)
+            _draw_bounded_text(
+                draw,
+                (62, line_y),
+                line,
+                font=body_font,
+                fill=fill,
+                bounds=(62, 176, width - 62, height - 108),
+            )
             line_y += 28
-        draw.text(
+        if line_y > height - 108:
+            _fail("GIF transcript lines exceed the frame")
+        _draw_bounded_text(
+            draw,
             (62, height - 74),
             f"receipt sha256 {receipt_document['sha256']}",
             font=body_font,
             fill=4,
+            bounds=(62, height - 86, width - 62, height - 44),
         )
         frames.append(frame)
 
@@ -799,7 +927,6 @@ def _render_gif(evidence: JsonObject, commands: tuple[CapturedCommand, ...]) -> 
         optimize=False,
     )
     return buffer.getvalue()
-
 
 def _svg_document(
     *,
@@ -1199,7 +1326,7 @@ def _build_outputs(
             "pillow_version": PILLOW_VERSION,
             "pillow_wheel_filename": EXPECTED_PILLOW_WHEEL,
             "pillow_wheel_sha256": EXPECTED_PILLOW_WHEEL_SHA256,
-            "png_size": [1400, 1060],
+            "png_size": [1400, 1120],
             "gif_size": [1200, 650],
             "gif_frame_durations_ms": [1400, 1200, 1400, 1400],
             "gif_frames": 4,
@@ -1358,7 +1485,7 @@ def _audit_outputs(outputs: dict[str, bytes]) -> None:
             _fail("candidate handled failure is not redacted")
 
     png = _image_from_bytes(outputs[PNG_PATH])
-    if png.format != "PNG" or png.mode != "RGB" or png.size != (1400, 1060):
+    if png.format != "PNG" or png.mode != "RGB" or png.size != (1400, 1120):
         _fail("candidate PNG contract changed")
     if png.info or len(png.getexif()) != 0:
         _fail("candidate PNG contains metadata")
