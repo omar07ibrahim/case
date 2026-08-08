@@ -63,7 +63,9 @@ jobs:
           cache-dependency-path: pyproject.toml
 
       - name: Install development tools
-        run: python -m pip install -e ".[dev]"
+        run: |
+          python -m pip install --require-hashes -r requirements/cli-visuals.txt
+          python -m pip install -e ".[dev]"
 
       - name: Lint and type-check
         run: |
@@ -82,3 +84,93 @@ jobs:
 
       - name: Verify source and wheel distributions
         run: python scripts/verify_distribution.py
+
+  cli-evidence-candidate:
+    name: CLI evidence candidate
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SOURCE_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - name: Check out the explicit source revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ env.SOURCE_REVISION }}
+
+      - name: Assert source revision and tree
+        run: |
+          test "$(git rev-parse HEAD)" = "$SOURCE_REVISION"
+          test "${#SOURCE_REVISION}" -eq 40
+          case "$SOURCE_REVISION" in *[!0-9a-f]*) exit 1;; esac
+          test "$(git rev-parse HEAD^{tree})" = "$(git rev-parse "$SOURCE_REVISION^{tree}")"
+          test -z "$(git symbolic-ref -q HEAD || true)"
+
+      - name: Set up canonical evidence Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12.3"
+          cache: pip
+          cache-dependency-path: |
+            pyproject.toml
+            requirements/cli-visuals.txt
+
+      - name: Install hash-locked visual tooling
+        run: |
+          python -m pip install --require-hashes -r requirements/cli-visuals.txt
+          python -m pip install \
+            build==1.5.0 \
+            packaging==26.3 \
+            pyproject-hooks==1.2.0 \
+            setuptools==83.0.0
+
+      - name: Build and install the wheel outside the checkout
+        run: |
+          mkdir -p "$RUNNER_TEMP/cli-source" "$RUNNER_TEMP/cli-wheel"
+          git archive "$SOURCE_REVISION" | tar -x -C "$RUNNER_TEMP/cli-source"
+          (
+            cd "$RUNNER_TEMP/cli-source"
+            SOURCE_DATE_EPOCH=315532800 \
+              python -m build \
+              --wheel \
+              --no-isolation \
+              --outdir "$RUNNER_TEMP/cli-wheel"
+          )
+          wheels=("$RUNNER_TEMP"/cli-wheel/*.whl)
+          test "${#wheels[@]}" -eq 1
+          python -m venv "$RUNNER_TEMP/cli-venv"
+          "$RUNNER_TEMP/cli-venv/bin/python" -m pip install \
+            --no-index \
+            --no-deps \
+            "${wheels[0]}"
+
+      - name: Capture twice and compare candidate bytes
+        run: |
+          wheels=("$RUNNER_TEMP"/cli-wheel/*.whl)
+          python scripts/render_cli_evidence.py render \
+            --venv-bin "$RUNNER_TEMP/cli-venv/bin" \
+            --wheel "${wheels[0]}" \
+            --source-revision "$SOURCE_REVISION" \
+            --output-root "$RUNNER_TEMP/cli-evidence-a"
+          python scripts/render_cli_evidence.py render \
+            --venv-bin "$RUNNER_TEMP/cli-venv/bin" \
+            --wheel "${wheels[0]}" \
+            --source-revision "$SOURCE_REVISION" \
+            --output-root "$RUNNER_TEMP/cli-evidence-b"
+          python scripts/render_cli_evidence.py compare \
+            "$RUNNER_TEMP/cli-evidence-a" \
+            "$RUNNER_TEMP/cli-evidence-b"
+          git diff --exit-code
+          test -z "$(git status --porcelain --untracked-files=all)"
+
+      - name: Upload reviewed candidate boundary
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: case-cli-evidence-candidate
+          path: ${{ runner.temp }}/cli-evidence-a/
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+          include-hidden-files: false

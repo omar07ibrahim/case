@@ -409,31 +409,73 @@ Do not publish a receipt derived from a private namespace merely because the
 raw source file is absent. Low-entropy identifiers, record IDs, source digests,
 semantic digests, and transformed outputs can be guessed or correlated.
 
-## Evidence required for the later CLI visual-adoption milestone
+## CLI visual-evidence candidate and adoption gates
 
-The installed workflow must pass its full contract before a new screenshot,
-terminal image, animation, or receipt fixture is published. A separate later
-milestone will provide real, reproducible evidence generated from the built
-wheel:
+The installed command contract is green before visual adoption. The first stage
+adds a candidate-only renderer and hosted artifact; it does **not** place
+candidate media or a generated receipt in the repository and it does not make a
+README evidence claim. The reviewed source fixture is
+`docs/cli-evidence/fixtures/cli-demo.v1.jsonl` (SHA-256
+`a77c90ed5e767a4e0a8029cad14ed347354a3b939b62ad75c0da091b522a259f`). It
+contains only seven synthetic identifiers selected to exercise lower, case-fold,
+and NFKC-plus-case-fold collisions.
 
-- a reviewed synthetic corpus with no private or personal identifiers;
-- exact captured argv, stdout, stderr, exit status, package version, Unicode
-  version, and receipt hash in a machine-readable manifest;
-- a committed receipt produced by the installed command, not hand-authored;
-- a static PNG alternative and a short GIF derived only from the captured CLI
-  bytes;
-- an updated offline SVG architecture and result diagram generated from the
-  receipt;
-- byte-for-byte regeneration and safe-file-mode checks in CI;
-- no remote fonts, scripts, images, styles, tracking, timestamps, absolute
-  paths, machine identifiers, secrets, or copied third-party assets; and
-- clear captions distinguishing an actual capture, receipt-derived result, and
-  explanatory architecture.
+The canonical capture environment is exact CPython 3.12.3 on Linux x86-64,
+Unicode database 15.0.0, package 0.4.0 installed from the built wheel, and
+Pillow 12.3.0 used only by the renderer. Pillow is installed from
+`requirements/cli-visuals.txt` with the canonical CPython 3.12 manylinux wheel
+SHA-256
+`78cb2c6865a35ab8ff8b75fd122f6033b92a62c82801110e48ddd6c936a45d91`.
+It is not a package runtime dependency. License, wheel, source, and the embedded
+Aileron default-font provenance are recorded in `THIRD_PARTY_NOTICES.md`.
 
-A deterministic renderer may use a separately pinned development-only image
-encoder after license review. It must not add a package runtime dependency.
-Existing visuals remain evidence only for the current in-memory API until they
-are regenerated from an implemented surface.
+The hosted candidate has exactly six files:
+
+1. `docs/cli-evidence/evidence/cli-evidence.v1.json`;
+2. `docs/cli-evidence/evidence/cli-demo.receipt.v1.json`;
+3. `docs/cli-evidence/cli-transcript.png`;
+4. `docs/cli-evidence/cli-demo.gif`;
+5. `docs/cli-evidence/cli-result.svg`; and
+6. `docs/cli-evidence/cli-workflow.svg`.
+
+The machine manifest records the exact argv, stdout bytes, stderr bytes, exit
+status, and channel digests for installed-console analyze, installed-module
+verify, no-clobber rejection, and source-mismatch rejection. It also records the
+installed package identity, wheel filename, installed-runtime per-file digests
+and aggregate runtime-tree digest, Python and Unicode versions, source bindings,
+fixture identity, real receipt identity, renderer identity, and the acyclic
+hash/size inventory of the other five files. The manifest lists itself in the
+artifact inventory but deliberately does not hash itself. Its reviewed identity
+and the hosted archive identity belong in a separate stage-two adoption record.
+
+The analyze capture must prove that the runtime-created receipt was a regular,
+single-link mode-0600 file before its bytes are copied into the candidate. Git
+cannot preserve mode 0600 for a normal blob: an adopted synthetic receipt is a
+regular `100644` repository file. The manifest and captions must state those two
+distinct facts and must never imply that checkout preserves the runtime mode.
+
+The candidate job checks out the explicit pull-request head SHA (or the push SHA),
+asserts that the 40-hex source revision equals checkout HEAD, builds the wheel
+from a clean `git archive` copy with a fixed source epoch, and renders into two
+fresh runner-temporary roots. Both inventories, every file byte, media structure,
+redacted failure channel, safe file mode, receipt hash, and source binding must
+match before upload. The pinned uploader is
+`actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a`
+(v7.0.1). A merge ref or `refs/pull/*/merge` SHA is not valid provenance.
+
+Stage two must download that hosted artifact, independently validate the archive,
+manifest, receipt replay inputs, PNG, GIF, SVGs, hashes, modes, privacy scans, and
+absence of host paths or secrets, then adopt those exact six bytes together with
+a separate canonical adoption-provenance record. Only then may README and docs
+embed them with captions distinguishing a verified rasterized CLI transcript
+(not an OS screenshot), a receipt-derived result, and an explanatory workflow.
+Final CI must capture twice again, compare every adopted byte, enforce the exact
+inventory, and leave the checkout clean.
+
+No evidence file may contain a remote font, script, image, stylesheet, tracking
+identifier, timestamp, absolute host path, machine identifier, secret, or copied
+third-party asset. Existing `docs/visuals` files remain evidence for the
+in-memory API; the CLI evidence is a separate source-bound bundle.
 
 ## Security and correctness nonclaims
 

@@ -1,0 +1,8 @@
+{"schema":"casefold-observatory.identifier-corpus","schema_version":1}
+{"identifier":"A","record_id":"ascii-a"}
+{"identifier":"K","record_id":"ascii-k"}
+{"identifier":"\u00df","record_id":"eszett"}
+{"identifier":"\uff21","record_id":"fullwidth-a"}
+{"identifier":"\u212a","record_id":"kelvin-sign"}
+{"identifier":"ss","record_id":"lower-ss"}
+{"identifier":"SS","record_id":"upper-ss"}
