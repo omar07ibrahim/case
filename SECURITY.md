@@ -2,31 +2,30 @@
 
 ## Current support status
 
-The supported tree contains four implemented, dependency-free library layers:
+The supported tree contains the dependency-free in-memory policy, collision,
+corpus, and receipt layers plus one installed POSIX command boundary. The CLI
+provides explicit-policy analysis, receipt replay, descriptor-relative stable
+regular-file reads, and durable no-clobber mode-0600 receipt publication.
 
-- bounded evaluation of explicit Unicode normalization and case policies;
-- bounded, deterministic in-memory collision analysis with exact-duplicate
-  groups, per-policy minimal witness trees, and cross-policy union components;
-- strict ingestion of a caller-supplied UTF-8 JSON Lines corpus byte string; and
-- canonical receipt creation plus replay verification from caller-supplied
-  receipt and source bytes.
-
-There is no filesystem ingestion or output, CLI, browser UI, network service,
-or general-purpose renderer for caller data. The repository does include a
-deterministic documentation renderer for its fixed, reviewed synthetic fixtures;
-it is not a product interface. Controls described below for future surfaces are
-requirements, not claims about existing functionality. The historical Flask
+There is no browser UI, network service, general-purpose renderer for caller
+data, Windows race-safety claim, stdin corpus or receipt, stdout receipt,
+overwrite mode, implicit policy, or configuration discovery. The repository
+does include a deterministic documentation renderer for fixed, reviewed
+synthetic fixtures; it is not a product interface. The historical Flask
 prototype is unsupported and must not be deployed.
 
 ## Current trust boundary
 
 Every identifier, record ID, policy object, source byte string, receipt byte
-string, and caller-provided container is untrusted. The public analyzer accepts
-exact tuples of validated objects. The receipt API accepts exact `bytes`,
-revalidates factory-owned state, and verifies only a graph recomputed from the
-captured source bytes; receipt JSON is never trust-deserialized into a graph. It
-does not read files, write reports, open sockets, invoke a shell, or render
-untrusted text.
+string, argument, and pathname is untrusted. The public byte APIs retain their
+pure exact-type boundaries. The installed CLI pins and walks path components
+with directory descriptors, rejects traversal, links and special files, captures
+a single stable descriptor once, and trust-reconstructs receipts only by replay.
+
+The CLI does not read stdin, emit a receipt to stdout, discover configuration,
+open sockets, invoke a shell, overwrite a destination, or render untrusted text.
+Success and handled-failure channels are canonical ASCII and never echo paths,
+identifiers, transformed values, source lines, parser tokens, or policy strings.
 
 Record IDs are limited to 64 lowercase ASCII characters matching
 `[a-z][a-z0-9._-]*` and must be unique. They define canonical record ordinals;
@@ -59,6 +58,8 @@ The analyzer fails closed when any configured bound is exceeded:
 | Corpus physical lines | 2,049 | One header plus at most 2,048 records |
 | JSON nesting | 16 levels | Preflight depth outside strings |
 | Canonical receipt | 16,777,216 bytes | Complete ASCII JSON plus final LF |
+| Descriptor read request | 65,536 bytes | Maximum per already-open regular-file read |
+| CLI policy argument | 256 ASCII bytes | Complete explicit hazard-and-step specification |
 
 Limits are part of the implementation, not capacity guidance for a hostile
 multi-tenant service. The library runs synchronously in the caller's process;
@@ -150,28 +151,27 @@ Current reject/preserve handling covers the documented control, format, and
 bidirectional-control classifications. Preserved text still requires safe,
 visible rendering before a human can review it.
 
-## Requirements for future filesystem and rendering layers
+## Implemented POSIX filesystem boundary and future rendering layers
 
-The in-memory corpus and receipt boundaries already use strict bounded decoding,
-a versioned canonical schema, exact-source and semantic digests, complete policy
-documents, producer identity, and Unicode data binding. Receipts are integrity
-evidence, not proof of origin, unless separately signed or authenticated.
+The in-memory boundaries use strict bounded decoding, a versioned canonical
+schema, exact-source and semantic digests, complete policy documents, producer
+identity, and Unicode data binding. Receipts remain integrity evidence, not
+proof of origin, unless separately signed or authenticated.
 
-Any future file and CLI layer must preserve those rules while adding safe file
-handling and publication. The
-[portable receipt contract](docs/portable-receipt-contract.md) distinguishes the
-implemented byte API from those still-design-only boundaries.
+The POSIX CLI requires directory-descriptor and no-follow primitives. Directory
+and final components are checked before and after descriptor opening; source
+files must be stable, regular, and single-link. Reads stop at the configured
+limit plus one byte. Receipt publication uses a same-directory exclusive 0600
+temporary file, complete-write loop, file fsync, no-clobber hard-link publish,
+two directory fsyncs, and invocation-owned temporary cleanup. An existing
+destination, link, special file, alias, pathname race, mutation, or I/O failure
+is rejected without exposing its path. See the
+[portable receipt contract](docs/portable-receipt-contract.md).
 
-Terminal output must prevent ANSI/control interpretation and show controls,
-bidirectional marks, invisible code points, and ambiguous whitespace visibly.
-CSV export must defend against formula injection. HTML and SVG must escape
-untrusted text rather than interpreting it as markup or script. Any future
-browser interface must work offline, load no remote runtime assets, and enforce
-a restrictive Content Security Policy.
-
-Filesystem output must use safe atomic publication, reject or explicitly handle
-links and special files, avoid input/output aliasing, and prevent path
-traversal. Analysis and evidence regeneration must not require network access.
+Future CSV, HTML, SVG, and browser surfaces must safely render controls and
+invisible text, defend against formula or markup interpretation, work offline,
+load no remote runtime assets, and enforce a restrictive Content Security
+Policy. Analysis and evidence regeneration do not require network access.
 
 Published fixtures, screenshots, recordings, and generated diagrams must use
 reviewed synthetic or openly licensed data, contain no secrets or personal

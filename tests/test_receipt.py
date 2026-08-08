@@ -118,7 +118,7 @@ class ReceiptPublicApiTests(unittest.TestCase):
         self.assertEqual(RECEIPT_SCHEMA, "casefold-observatory.analysis-receipt")
         self.assertEqual(RECEIPT_SCHEMA_VERSION, 1)
         self.assertEqual(DISTRIBUTION_NAME, "casefold-observatory")
-        self.assertEqual(DISTRIBUTION_VERSION, "0.3.0")
+        self.assertEqual(DISTRIBUTION_VERSION, "0.4.0")
         self.assertEqual(CORPUS_FORMAT_VERSION, 1)
         self.assertEqual(MAX_RECEIPT_BYTES, 16_777_216)
         self.assertEqual(receipt.schema, RECEIPT_SCHEMA)

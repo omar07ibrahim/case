@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import stat
 import subprocess
 import sys
 import tarfile
@@ -79,9 +80,12 @@ def _assert_archive_contract(sdist: Path, wheel: Path) -> None:
 
     required_package_files = (
         "casefold_observatory/__init__.py",
+        "casefold_observatory/__main__.py",
+        "casefold_observatory/cli.py",
         "casefold_observatory/collision.py",
         "casefold_observatory/corpus.py",
         "casefold_observatory/engine.py",
+        "casefold_observatory/filesystem.py",
         "casefold_observatory/model.py",
         "casefold_observatory/py.typed",
         "casefold_observatory/receipt.py",
@@ -107,7 +111,9 @@ def _assert_archive_contract(sdist: Path, wheel: Path) -> None:
         "tests/test_collision.py",
         "tests/test_collision_properties.py",
         "tests/test_corpus.py",
+        "tests/test_cli.py",
         "tests/test_distribution_script.py",
+        "tests/test_filesystem.py",
         "tests/test_receipt.py",
         "tests/test_visuals.py",
     )
@@ -196,6 +202,57 @@ print(
     payload: object = json.loads(completed.stdout)
     if not isinstance(payload, dict):
         raise TypeError("installed-wheel probe returned a non-object")
+
+    source_path = workdir / "cli-source.jsonl"
+    receipt_path = workdir / "cli-result.receipt.json"
+    source_path.write_bytes(
+        b'{"schema":"casefold-observatory.identifier-corpus",'
+        b'"schema_version":1}\n'
+        b'{"identifier":"SS","record_id":"upper"}\n'
+        b'{"identifier":"\\u00df","record_id":"eszett"}\n'
+        b'{"identifier":"ss","record_id":"lower"}\n'
+    )
+    console = venv_python.with_name("casefold-observatory")
+    if not console.is_file():
+        raise RuntimeError("wheel omitted the installed console script")
+    analyzed = _run(
+        console.as_posix(),
+        "analyze",
+        "--source",
+        source_path.as_posix(),
+        "--policy",
+        "reject@case:lower,case:casefold",
+        "--receipt",
+        receipt_path.as_posix(),
+        cwd=workdir,
+    )
+    verified = _run(
+        venv_python.as_posix(),
+        "-m",
+        "casefold_observatory",
+        "verify",
+        "--source",
+        source_path.as_posix(),
+        "--receipt",
+        receipt_path.as_posix(),
+        cwd=workdir,
+    )
+    if analyzed.stderr or verified.stderr:
+        raise RuntimeError("installed CLI wrote to stderr on success")
+    analyzed_payload: object = json.loads(analyzed.stdout)
+    verified_payload: object = json.loads(verified.stdout)
+    if not isinstance(analyzed_payload, dict) or not isinstance(
+        verified_payload,
+        dict,
+    ):
+        raise TypeError("installed CLI returned a non-object")
+    payload["cli_analyze_status"] = analyzed_payload.get("status")
+    payload["cli_verify_status"] = verified_payload.get("status")
+    payload["cli_digest_parity"] = (
+        analyzed_payload.get("receipt_sha256")
+        == verified_payload.get("receipt_sha256")
+    )
+    payload["cli_receipt_mode"] = stat.S_IMODE(receipt_path.stat().st_mode)
     return payload
 
 
@@ -250,6 +307,10 @@ def main() -> None:
 
     expected = {
         "algorithm": "stage-partition-witness-v1",
+        "cli_analyze_status": "analyzed",
+        "cli_digest_parity": True,
+        "cli_receipt_mode": 0o600,
+        "cli_verify_status": "verified",
         "component_members": [0, 1, 2],
         "policy_group_members": [0, 1, 2],
         "receipt_schema": "casefold-observatory.analysis-receipt",

@@ -43,7 +43,7 @@ from casefold_observatory.model import (
 )
 
 DISTRIBUTION_NAME = "casefold-observatory"
-DISTRIBUTION_VERSION = "0.3.0"
+DISTRIBUTION_VERSION = "0.4.0"
 RECEIPT_SCHEMA = "casefold-observatory.analysis-receipt"
 RECEIPT_SCHEMA_VERSION = 1
 MAX_RECEIPT_BYTES = 16_777_216

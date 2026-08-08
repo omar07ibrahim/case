@@ -2,17 +2,17 @@
 
 ## Status
 
-> **IN-MEMORY BYTE CONTRACT IMPLEMENTED IN 0.3.0.**
+> **IN-MEMORY BYTE CONTRACT IMPLEMENTED IN 0.3.0; POSIX CLI IMPLEMENTED IN
+> 0.4.0.**
 >
 > The supported package accepts a bounded JSON Lines corpus as exact caller-owned
-> bytes, creates a canonical portable receipt, and verifies it by replaying the
-> same source bytes. It performs no filesystem access. The command, pathname,
-> persistence, terminal-output, and visual-evidence sections below remain a
-> design contract only and do not describe an installed surface.
+> bytes, creates and replays a canonical portable receipt, and exposes the same
+> workflow through installed `casefold-observatory` and module entry points. The
+> command, terminal, and POSIX filesystem sections below are implemented. The
+> visual-evidence adoption section remains future work.
 
-Normative words in the corpus, digest, canonical receipt, Unicode, verification,
-and library-error sections describe the implemented byte API. Normative words
-under proposed command and POSIX filesystem headings describe future work.
+Normative words in the corpus, receipt, command, terminal, verification, error,
+and POSIX filesystem sections describe implemented version 1 behavior.
 
 The design preserves the existing collision algorithm, canonical record
 ordinals, policy order, resource accounting, redacted errors, semantic corpus
@@ -21,17 +21,20 @@ bytes without changing the meaning of CollisionGraph.semantic_corpus_sha256.
 
 ## Intended scope
 
-Version 1 provides one deliberately narrow in-memory workflow:
+Version 1 provides one deliberately narrow offline workflow:
 
-1. accept one bounded UTF-8 JSON Lines corpus as exact `bytes`;
+1. capture one bounded UTF-8 JSON Lines corpus from a stable POSIX descriptor or
+   accept the same exact `bytes` through the library API;
 2. accept explicitly ordered policies for the active Unicode database;
-3. run the existing in-memory collision analyzer;
+3. run the in-memory collision analyzer;
 4. project the complete graph and execution identity into canonical JSON bytes;
-5. verify canonical receipt bytes against exact source bytes by recomputation.
+5. durably publish a new receipt without clobber, or return those bytes to a
+   library caller; and
+6. verify canonical receipt bytes against the same captured source by replay.
 
-The implemented layer has no filesystem access, network access, service mode,
-browser interface, plugin system, user configuration, signing key, implicit
-policy, command-line input, persistence, or generic renderer for caller data.
+The implemented layer has no network access, service mode, browser interface,
+plugin system, user configuration, signing key, implicit policy, stdin corpus,
+stdout receipt, overwrite mode, or generic renderer for caller data.
 
 ## Corpus JSON Lines schema
 
@@ -78,7 +81,7 @@ unique. identifier retains the existing non-empty, 1,024-code-point and
 2,048-UTF-8-byte limits. The header-only corpus is valid and represents zero
 records.
 
-### In-memory ingestion bounds
+### Corpus and descriptor bounds
 
 | Resource | Version 1 limit | Accounting rule |
 | --- | ---: | --- |
@@ -86,6 +89,8 @@ records.
 | One physical line | 8,192 bytes | Bytes through its terminator, or through EOF for the final line |
 | Physical lines | 2,049 | One header plus at most 2,048 record lines |
 | JSON nesting | 16 levels | Preflight depth outside JSON strings before object decoding |
+| Descriptor read request | 65,536 bytes | Maximum requested from an already-open regular-file descriptor |
+| CLI policy argument | 256 ASCII bytes | Complete explicit hazard-and-step specification |
 | Records | 2,048 | Existing analyzer limit |
 | Aggregate decoded identifiers | 524,288 UTF-8 bytes | Existing analyzer limit |
 
@@ -93,10 +98,10 @@ All existing policy, transform-application, transformed-data, group, witness,
 and component limits continue to apply. Corpus-byte limits are additional rejection boundaries, not enlarged analyzer
 capacity.
 
-A future filesystem reader may consume a file in fixed-size chunks, but version 1 does
-not claim arbitrary, unbounded, asynchronous, or constant-memory streaming. It
-may retain at most the bounded source bytes while producing the in-memory
-record tuple.
+The filesystem reader consumes the already-open descriptor in fixed-size chunks,
+but version 1 does not claim arbitrary, unbounded, asynchronous, or
+constant-memory streaming. It retains at most the bounded source bytes while
+producing the in-memory record tuple.
 
 ## Two separate corpus digests
 
@@ -163,7 +168,8 @@ schema version is 1. The top-level object has exactly six keys:
 
 Angle-bracketed strings above describe fields; they are not literal accepted
 values. The implementation emits the complete existing canonical
-policy document, including its current bounds. policies preserves caller order (and would preserve future command order), and each policy_id MUST equal SHA-256 of the existing canonical
+policy document, including its current bounds. policies preserves caller or CLI
+argument order, and each policy_id MUST equal SHA-256 of the existing canonical
 policy bytes.
 
 The graph object is a portable projection of every current CollisionGraph
@@ -201,8 +207,8 @@ does not depend on floating-point formatting.
 
 Creation rejects a receipt larger than the bound before returning it. A verifier
 rejects an oversized receipt before parsing and rejects noncanonical bytes even
-if a generic JSON parser would assign them similar values. Any future command
-must complete the same check before publication.
+if a generic JSON parser would assign them similar values. The analyze command
+completes the same check before publication.
 
 The receipt MUST NOT contain timestamps, local or absolute paths, hostnames,
 usernames, environment variables, Python patch versions, machine identifiers,
@@ -229,12 +235,10 @@ database 15.0.0 and replayed exactly on Python 3.12. This design document does
 not change those files, their generator-owned schema, their hashes, or their
 documented skip behavior on another Unicode database.
 
-## Proposed installed command
+## Installed command
 
-> **NOT IMPLEMENTED:** there is currently no casefold-observatory console
-> script and no python -m casefold_observatory command.
+The console script and module entry point are byte-for-byte equivalent:
 
-The proposed commands are:
 
 ~~~console
 casefold-observatory analyze --source CORPUS.jsonl --policy reject@case:lower,case:casefold --receipt RESULT.receipt.json
@@ -253,9 +257,16 @@ steps. analyze requires one through eight repeated --policy arguments and
 preserves their order. Hazard handling is explicit in every argument; there is
 no implicit policy or locale.
 
-Version 1 deliberately does not accept a source or receipt through -, emit a
-receipt to stdout, overwrite an existing destination, read configuration from
-the working directory or home directory, invoke a shell, or use the network.
+The exact top-level forms are `--help`, `--version`, `analyze`, and
+`verify`. Options use separate tokens; short options and `--option=value`
+forms are rejected. Analyze requires exactly one `--source`, exactly one
+`--receipt`, and one through eight `--policy` pairs in any option order.
+Verify requires exactly one `--source` and one `--receipt` pair in either
+order. A subcommand accepts `--help` only as its sole following token.
+
+Version 1 does not accept a source or receipt through `-`, emit a receipt to
+stdout, overwrite an existing destination, read configuration from the working
+directory or home directory, invoke a shell, or use the network.
 
 ### Terminal output
 
@@ -273,12 +284,16 @@ Successful verify writes:
 ~~~
 
 On a handled failure stdout is empty and stderr contains one bounded canonical
-ASCII JSON line with a stable code and, where applicable, only numeric ordinal
-context. It MUST NOT echo a path, record ID, identifier, transformed value,
-source line, policy argument, or raw parser token. Help and version output are
-static ASCII text. No output contains ANSI control sequences or color.
+ASCII JSON line. Its exact base object is
+`{"code":"<namespace.code>","status":"error"}`; applicable numeric
+`physical_line_ordinal`, `input_record_ordinal`,
+`canonical_record_ordinal`, and `policy_ordinal` keys are added and the
+complete object is serialized with sorted keys, compact separators, ASCII
+escaping, and one final LF. It never echoes a path, record ID, identifier,
+transformed value, source line, policy argument, or raw parser token. Help and
+version output are static ASCII text. No output contains ANSI controls or color.
 
-Proposed exit statuses are:
+Exit statuses are:
 
 | Status | Meaning |
 | ---: | --- |
@@ -291,8 +306,9 @@ Proposed exit statuses are:
 
 ## POSIX filesystem boundary
 
-> **NOT IMPLEMENTED:** these requirements apply only to a future file command.
-> The supported in-memory API performs no filesystem access.
+The installed command implements this boundary. It fails closed on non-POSIX
+systems or when required descriptor-relative, no-follow, link, or directory
+primitives are unavailable. The in-memory APIs remain filesystem-free.
 
 ### Safe reads
 
@@ -378,27 +394,27 @@ receipt is returned.
 
 A receipt is not a redacted export. It contains record IDs, policy documents,
 semantic and source digests, collision relations, and transformed values.
-Transformed values can equal or reveal source identifiers. The byte API makes
-no persistence or file-mode guarantee. A future mode-0600 output would reduce
-accidental local disclosure but provide no encryption, memory isolation, or
-secure erasure.
+Transformed values can equal or reveal source identifiers. The byte API makes no persistence or file-mode guarantee. The installed
+analyze command publishes new receipts at mode 0600; that reduces accidental
+local disclosure but provides no encryption, memory isolation, or secure
+erasure.
 
 Library-owned errors expose stable categories and bounded numeric context only.
-Any future CLI must preserve that rule. Generic JSON exceptions, Unicode decode exceptions, OSError path
-messages, argument parser echoes, and tracebacks must not cross the CLI
-boundary. Caller-owned exception context and process inspection remain outside
-that guarantee.
+The CLI preserves that rule. Generic JSON exceptions, Unicode decode
+exceptions, OSError path messages, argument echoes, and tracebacks do not cross
+the command boundary. Caller-owned exception context and process inspection
+remain outside that guarantee.
 
 Do not publish a receipt derived from a private namespace merely because the
 raw source file is absent. Low-entropy identifiers, record IDs, source digests,
 semantic digests, and transformed outputs can be guessed or correlated.
 
-## Evidence required after a filesystem or CLI implementation
+## Evidence required for the later CLI visual-adoption milestone
 
-No new screenshot, terminal image, animation, or receipt fixture should be
-published before the corresponding installed workflow exists and passes its
-tests. The implementation milestone must later provide real, reproducible
-evidence generated from the built wheel:
+The installed workflow must pass its full contract before a new screenshot,
+terminal image, animation, or receipt fixture is published. A separate later
+milestone will provide real, reproducible evidence generated from the built
+wheel:
 
 - a reviewed synthetic corpus with no private or personal identifiers;
 - exact captured argv, stdout, stderr, exit status, package version, Unicode
@@ -421,8 +437,7 @@ are regenerated from an implemented surface.
 
 ## Security and correctness nonclaims
 
-The future receipt, even when implemented and successfully verified, will not
-be:
+The implemented receipt, even when successfully verified, is not:
 
 - a signature, MAC, proof of origin, trusted timestamp, freshness proof,
   authorization record, or proof that a trusted machine ran the command;

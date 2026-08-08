@@ -6,15 +6,14 @@ for security review of usernames, routing keys, dataset labels, package names,
 and other namespaces where an unexpected equivalence can become an
 authorization or integrity problem.
 
-> **Phase 2b is implemented:** the dependency-free library now accepts a strict,
-> bounded UTF-8 JSON Lines corpus as caller-supplied bytes, computes the complete
-> collision graph, emits canonical ASCII JSON receipt bytes, and verifies a
-> receipt by replaying the source. It still performs no filesystem, CLI, network,
-> or browser work.
+> **Phase 2c is implemented:** the dependency-free package accepts a strict,
+> bounded UTF-8 JSON Lines corpus, computes the complete collision graph, emits
+> canonical ASCII JSON receipt bytes, and verifies a receipt by replaying the
+> source. An installed POSIX CLI now adds hardened descriptor-relative reads and
+> durable no-clobber receipt publication. It performs no network or browser work.
 >
-> The implemented in-memory byte contract and the still-design-only filesystem
-> and command boundaries are documented in the
-> [portable receipt contract](docs/portable-receipt-contract.md).
+> The implemented byte, command, and POSIX filesystem boundaries are documented
+> in the [portable receipt contract](docs/portable-receipt-contract.md).
 
 It is not a generic case converter, a confusable-character detector, or a claim
 that one Unicode policy is universally correct.
@@ -51,7 +50,12 @@ decided from complete Python strings, never from hashes.
 - canonical, 16 MiB-bounded ASCII JSON receipts with complete graph and policy
   projection, distinct exact-source and semantic digests, producer identity,
   active-Unicode binding, and replay verification;
-- no runtime dependencies and no filesystem or network access.
+- an installed `analyze`/`verify` CLI with exact explicit-policy grammar,
+  descriptor-relative no-follow reads, single-link regular-file enforcement,
+  mutation detection, mode-0600 no-clobber publication, and canonical redacted
+  terminal channels;
+- no runtime dependencies, implicit configuration, shell execution, or network
+  access.
 
 The architecture and current graph semantics are illustrated with
 source-controlled, reproducible assets:
@@ -93,6 +97,25 @@ The authoritative result is the output of these commands at the checked-out
 revision. The project configuration enforces its current coverage threshold;
 the README deliberately does not freeze a test count that changes as boundary
 cases are added.
+
+The installed POSIX workflow uses explicit files and never accepts `-`:
+
+```bash
+.venv/bin/casefold-observatory analyze \
+  --source corpus.jsonl \
+  --policy reject@case:lower,case:casefold \
+  --receipt result.receipt.json
+
+.venv/bin/python -m casefold_observatory verify \
+  --source corpus.jsonl \
+  --receipt result.receipt.json
+```
+
+Both entry points emit only a bounded canonical ASCII summary on success.
+Handled failures leave stdout empty, write one redacted JSON line to stderr,
+and never echo a pathname, identifier, source line, or policy argument. Receipt
+publication requires an absent destination and produces a durable mode-0600
+regular file.
 
 The committed visual bundle binds Unicode database 15.0.0 and is reproduced in
 CI on Python 3.12. The installed package is also tested on Python 3.11, 3.13,
@@ -200,8 +223,9 @@ commit private namespace exports without an appropriate data-handling plan.
 3. **Reproducible ingestion and receipts** — implemented in phase 2b as a pure
    in-memory bytes API with strict bounds, deterministic serialization, and
    bindings to exact input bytes, policies, producer version, and Unicode data.
-4. **Command-line workflow** — the future contract specifies safe terminal
-   output and no-clobber persistence, but no installed CLI exists yet.
+4. **Command-line workflow** — implemented in phase 2c for POSIX systems with
+   descriptor-relative stable reads, exact policy arguments, replay verification,
+   redacted canonical channels, and durable no-clobber receipt publication.
 5. **Offline interface** — local-only assets, escaped visible rendering of
    controls and invisible code points, and a restrictive Content Security
    Policy.
