@@ -4,6 +4,7 @@ import ast
 import copy
 import hashlib
 import inspect
+from functools import partial
 import json
 import os
 import subprocess
@@ -280,7 +281,8 @@ class ReceiptVerificationBoundaryTests(unittest.TestCase):
             with self.subTest(code=code, prefix=value[:12]):
                 error = _expect_failure(
                     self,
-                    lambda: verify_collision_receipt(
+                    partial(
+                        verify_collision_receipt,
                         value,
                         _SAMPLE_SOURCE,
                     ),
@@ -566,7 +568,7 @@ class ReceiptForgedStateTests(unittest.TestCase):
             with self.subTest(owner=owner, attribute=attribute):
                 _expect_failure(
                     self,
-                    lambda: canonical_receipt_bytes(receipt),
+                    partial(canonical_receipt_bytes, receipt),
                 )
 
         forged = object.__new__(CollisionReceipt)
@@ -637,7 +639,8 @@ class ReceiptForgedStateTests(unittest.TestCase):
             )
             _expect_failure(
                 self,
-                lambda: receipt_module._duplicate_group_document(
+                partial(
+                    receipt_module._duplicate_group_document,
                     fresh_duplicate,
                     record_count=record_count,
                 ),
@@ -668,7 +671,8 @@ class ReceiptForgedStateTests(unittest.TestCase):
             )
             _expect_failure(
                 self,
-                lambda: receipt_module._policy_group_document(
+                partial(
+                    receipt_module._policy_group_document,
                     fresh_policy_group,
                     record_count=record_count,
                     policy_ids=policy_ids,
@@ -708,7 +712,8 @@ class ReceiptForgedStateTests(unittest.TestCase):
             )
             _expect_failure(
                 self,
-                lambda: receipt_module._witness_document(
+                partial(
+                    receipt_module._witness_document,
                     fresh_witness,
                     record_count=record_count,
                     policy_ids=policy_ids,
@@ -736,7 +741,8 @@ class ReceiptForgedStateTests(unittest.TestCase):
             )
             _expect_failure(
                 self,
-                lambda: receipt_module._component_document(
+                partial(
+                    receipt_module._component_document,
                     fresh_component,
                     record_count=record_count,
                     policy_count=len(policy_ids),
