@@ -120,6 +120,16 @@ class CliEvidenceCandidateContractTests(unittest.TestCase):
         self.assertIn("runtime_tree_sha256", source)
         self.assertNotIn('"wheel_bytes"', source)
         self.assertNotIn("CONTRACT_PATH", source)
+        for media_boundary in (
+            "png.getexif()",
+            '"n_frames"',
+            '"loop"',
+            '"disposal_method"',
+            '"dispose_extent"',
+            '"transparency"',
+            "decoded_frame.load()",
+        ):
+            self.assertIn(media_boundary, source)
         for output in CANDIDATE_OUTPUTS:
             self.assertIn(f'"{output}"', source)
 

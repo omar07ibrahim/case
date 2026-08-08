@@ -1360,25 +1360,51 @@ def _audit_outputs(outputs: dict[str, bytes]) -> None:
     png = _image_from_bytes(outputs[PNG_PATH])
     if png.format != "PNG" or png.mode != "RGB" or png.size != (1400, 1060):
         _fail("candidate PNG contract changed")
-    if png.info:
+    if png.info or len(png.getexif()) != 0:
         _fail("candidate PNG contains metadata")
 
     gif = Image.open(io.BytesIO(outputs[GIF_PATH]))
-    if gif.format != "GIF" or gif.size != (1200, 650):
+    if (
+        gif.format != "GIF"
+        or gif.size != (1200, 650)
+        or getattr(gif, "n_frames", None) != 4
+        or gif.info.get("loop") != 0
+    ):
         _fail("candidate GIF contract changed")
-    frame_count = 0
+    forbidden_gif_metadata = {
+        "comment",
+        "exif",
+        "icc_profile",
+        "transparency",
+    }
+    expected_durations = [1400, 1200, 1400, 1400]
     durations: list[int] = []
-    while True:
-        durations.append(cast(int, gif.info.get("duration", 0)))
-        frame_count += 1
-        try:
-            gif.seek(frame_count)
-        except EOFError:
-            break
-    if frame_count != 4 or durations != [1400, 1200, 1400, 1400]:
-        _fail("candidate GIF timing contract changed")
-    if "comment" in gif.info:
-        _fail("candidate GIF contains a comment extension")
+    for frame_index, expected_duration in enumerate(expected_durations):
+        gif.seek(frame_index)
+        if forbidden_gif_metadata.intersection(gif.info):
+            _fail("candidate GIF contains forbidden metadata")
+        if len(gif.getexif()) != 0:
+            _fail("candidate GIF contains EXIF metadata")
+        if getattr(gif, "disposal_method", None) != 2:
+            _fail("candidate GIF disposal contract changed")
+        if getattr(gif, "dispose_extent", None) != (0, 0, 1200, 650):
+            _fail("candidate GIF frame is not full-canvas")
+        duration = gif.info.get("duration")
+        if type(duration) is not int or duration != expected_duration:
+            _fail("candidate GIF timing contract changed")
+        durations.append(duration)
+        decoded_frame = gif.convert("RGB")
+        decoded_frame.load()
+        if decoded_frame.mode != "RGB" or decoded_frame.size != (1200, 650):
+            _fail("candidate GIF frame decode changed")
+    try:
+        gif.seek(len(expected_durations))
+    except EOFError:
+        pass
+    else:
+        _fail("candidate GIF has an unexpected extra frame")
+    if durations != expected_durations:
+        _fail("candidate GIF duration inventory changed")
 
     for relative_path in (RESULT_SVG_PATH, WORKFLOW_SVG_PATH):
         svg = outputs[relative_path]

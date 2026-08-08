@@ -469,6 +469,11 @@ descriptor. The bounded reader compares descriptor identity, type, link count,
 size, modification time, and change time before and after a maximum-plus-one
 read, then confirms the pathname still names that same inode.
 
+The PNG must decode at its exact RGB dimensions with no text, time, EXIF, ICC,
+or other metadata. Every GIF frame must fully decode at the exact full-canvas
+dimensions with the reviewed duration, loop count zero, disposal method two, and
+no transparency, comment, EXIF, or ICC metadata.
+
 Both inventories, every file byte, media structure, redacted failure channel,
 safe file mode, receipt hash, and source binding must match before upload. The
 pinned uploader is
