@@ -13,6 +13,9 @@ from typing import NoReturn
 READ_CHUNK_BYTES = 65_536
 TEMPORARY_NAME_ATTEMPTS = 16
 
+_REQUIRED_DIR_FD_FUNCTIONS = (os.open, os.stat, os.link, os.unlink)
+_REQUIRED_FOLLOW_SYMLINK_FUNCTIONS = (os.stat, os.link)
+
 _DIRECTORY_FLAGS = ("O_CLOEXEC", "O_DIRECTORY", "O_NOFOLLOW", "O_RDONLY")
 _FILE_FLAGS = ("O_CLOEXEC", "O_NOFOLLOW", "O_NONBLOCK", "O_RDONLY")
 _OUTPUT_FLAGS = (
@@ -86,13 +89,12 @@ def _require_posix_primitives() -> None:
         _raise_file(FileBoundaryErrorCode.UNSUPPORTED_PLATFORM)
     for name in {*_DIRECTORY_FLAGS, *_FILE_FLAGS, *_OUTPUT_FLAGS}:
         _required_flag(name)
-    if (
-        os.open not in os.supports_dir_fd
-        or os.stat not in os.supports_dir_fd
-        or os.link not in os.supports_dir_fd
-        or os.unlink not in os.supports_dir_fd
-        or os.stat not in os.supports_follow_symlinks
-        or os.link not in os.supports_follow_symlinks
+    if any(
+        function not in os.supports_dir_fd
+        for function in _REQUIRED_DIR_FD_FUNCTIONS
+    ) or any(
+        function not in os.supports_follow_symlinks
+        for function in _REQUIRED_FOLLOW_SYMLINK_FUNCTIONS
     ):
         _raise_file(FileBoundaryErrorCode.UNSUPPORTED_PLATFORM)
 

@@ -12,7 +12,7 @@ from types import SimpleNamespace
 from typing import cast
 from unittest import mock
 
-import casefold_observatory.filesystem as filesystem
+from casefold_observatory import filesystem
 from casefold_observatory.filesystem import (
     FileBoundaryError,
     FileBoundaryErrorCode,

@@ -395,7 +395,7 @@ def _dispatch(argv: tuple[str, ...]) -> tuple[int, bytes, bytes]:
             b"",
             _error_line("internal.interrupted"),
         )
-    except Exception:
+    except Exception:  # noqa: BLE001 - public boundary must redact unknown errors.
         return (
             EXIT_INTERNAL,
             b"",
@@ -442,5 +442,5 @@ def main(
         if error:
             _write_all(error_stream, error)
         return status
-    except (Exception, KeyboardInterrupt):
+    except (Exception, KeyboardInterrupt):  # noqa: BLE001 - fail closed.
         return EXIT_INTERNAL

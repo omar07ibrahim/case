@@ -17,8 +17,7 @@ from typing import BinaryIO, cast
 from unittest import mock
 
 import casefold_observatory.__main__ as module_entry
-import casefold_observatory.cli as cli
-import casefold_observatory.filesystem as filesystem
+from casefold_observatory import cli, filesystem
 from casefold_observatory.collision import (
     CollisionAnalysisError,
     CollisionErrorCode,
@@ -222,8 +221,7 @@ class CliParsingTests(unittest.TestCase):
             "reject@",
             "reject@case:lower,",
             "reject@private:step",
-            "reject@case:lower,case:lower,case:lower,case:lower,"
-            "case:lower,case:lower,case:lower,case:lower,case:lower",
+            "reject@" + ",".join(("case:lower",) * 9),
             "reject@case:lower\N{SNOWMAN}",
             "reject@" + "x" * (cli.MAX_POLICY_ARGUMENT_BYTES + 1),
         )
