@@ -155,6 +155,7 @@ class CliEvidenceCandidateContractTests(unittest.TestCase):
     @unittest.skipUnless(PILLOW_AVAILABLE, "canonical Pillow is not installed")
     def test_text_placement_normalizes_negative_glyph_bearings(self) -> None:
         from PIL import ImageFont
+
         from scripts import render_cli_evidence as renderer
 
         class NegativeBearingFont:
