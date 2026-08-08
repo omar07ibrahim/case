@@ -148,7 +148,7 @@ class CapturedCommand:
 
 
 def _fail(message: str) -> NoReturn:
-    raise RuntimeError(message)
+    raise RuntimeError(message) from None
 
 
 def _sha256(value: bytes) -> str:
@@ -179,21 +179,66 @@ def _xml(value: object) -> str:
     return html.escape(str(value), quote=True)
 
 
+def _stable_file_identity(value: os.stat_result) -> tuple[int, ...]:
+    return (
+        value.st_dev,
+        value.st_ino,
+        value.st_mode,
+        value.st_nlink,
+        value.st_size,
+        value.st_mtime_ns,
+        value.st_ctime_ns,
+    )
+
+
 def _read_regular(path: Path, *, maximum: int) -> bytes:
     try:
-        status = os.lstat(path)
-    except FileNotFoundError:
-        _fail("required evidence input is missing")
-    if (
-        stat.S_ISLNK(status.st_mode)
-        or not stat.S_ISREG(status.st_mode)
-        or status.st_nlink != 1
-        or status.st_size > maximum
-    ):
-        _fail("evidence input must be one bounded single-link regular file")
-    data = path.read_bytes()
-    if len(data) != status.st_size:
-        _fail("evidence input changed during capture")
+        descriptor = os.open(path, os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW)
+    except OSError:
+        _fail("required evidence input could not be opened safely")
+
+    try:
+        before = os.fstat(descriptor)
+        if (
+            not stat.S_ISREG(before.st_mode)
+            or before.st_nlink != 1
+            or before.st_size > maximum
+        ):
+            _fail("evidence input must be one bounded single-link regular file")
+
+        chunks: list[bytes] = []
+        remaining = maximum + 1
+        while remaining:
+            try:
+                chunk = os.read(descriptor, min(65_536, remaining))
+            except InterruptedError:
+                continue
+            if not chunk:
+                break
+            chunks.append(chunk)
+            remaining -= len(chunk)
+        data = b"".join(chunks)
+
+        after = os.fstat(descriptor)
+        try:
+            path_after = os.stat(path, follow_symlinks=False)
+        except OSError:
+            _fail("evidence input path changed during capture")
+        if (
+            len(data) > maximum
+            or len(data) != before.st_size
+            or _stable_file_identity(before) != _stable_file_identity(after)
+            or _stable_file_identity(after) != _stable_file_identity(path_after)
+            or not stat.S_ISREG(path_after.st_mode)
+        ):
+            _fail("evidence input changed during capture")
+    except OSError:
+        _fail("evidence input could not be read safely")
+    finally:
+        try:
+            os.close(descriptor)
+        except OSError:
+            _fail("evidence input descriptor could not be closed safely")
     return data
 
 
@@ -284,8 +329,60 @@ def _runtime_probe(
 import hashlib
 import importlib.metadata
 import json
+import os
 import platform
+import stat
 import unicodedata
+
+
+def stable_identity(value):
+    return (
+        value.st_dev,
+        value.st_ino,
+        value.st_mode,
+        value.st_nlink,
+        value.st_size,
+        value.st_mtime_ns,
+        value.st_ctime_ns,
+    )
+
+
+def read_regular(path):
+    descriptor = os.open(path, os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW)
+    try:
+        before = os.fstat(descriptor)
+        if (
+            not stat.S_ISREG(before.st_mode)
+            or before.st_nlink != 1
+            or before.st_size > 2_000_000
+        ):
+            raise RuntimeError("installed runtime file boundary changed")
+        chunks = []
+        remaining = 2_000_001
+        while remaining:
+            try:
+                chunk = os.read(descriptor, min(65_536, remaining))
+            except InterruptedError:
+                continue
+            if not chunk:
+                break
+            chunks.append(chunk)
+            remaining -= len(chunk)
+        data = b"".join(chunks)
+        after = os.fstat(descriptor)
+        path_after = os.stat(path, follow_symlinks=False)
+        if (
+            len(data) > 2_000_000
+            or len(data) != before.st_size
+            or stable_identity(before) != stable_identity(after)
+            or stable_identity(after) != stable_identity(path_after)
+            or not stat.S_ISREG(path_after.st_mode)
+        ):
+            raise RuntimeError("installed runtime file changed during capture")
+        return data
+    finally:
+        os.close(descriptor)
+
 
 distribution = importlib.metadata.distribution("casefold-observatory")
 runtime_files = {}
@@ -294,7 +391,7 @@ for entry in sorted(distribution.files or (), key=str):
     if relative.startswith("casefold_observatory/") and (
         relative.endswith(".py") or relative == "casefold_observatory/py.typed"
     ):
-        data = distribution.locate_file(entry).read_bytes()
+        data = read_regular(distribution.locate_file(entry))
         runtime_files[relative] = hashlib.sha256(data).hexdigest()
 runtime_tree = hashlib.sha256(
     (json.dumps(runtime_files, sort_keys=True, separators=(",", ":")) + "\\n").encode(

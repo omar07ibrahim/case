@@ -94,7 +94,18 @@ class CliEvidenceCandidateContractTests(unittest.TestCase):
             imports.isdisjoint({"http", "requests", "socket", "urllib", "webbrowser"})
         )
         self.assertNotIn("shell=True", source)
+        self.assertNotIn(".read_bytes()", source)
         self.assertNotIn("datetime", imports)
+        for boundary in (
+            "os.O_NOFOLLOW",
+            "os.O_CLOEXEC",
+            "os.fstat",
+            "maximum + 1",
+            "st_mtime_ns",
+            "st_ctime_ns",
+            "follow_symlinks=False",
+        ):
+            self.assertIn(boundary, source)
         self.assertIn('EXPECTED_PYTHON: Final = "3.12.3"', source)
         self.assertIn('EXPECTED_UNICODE: Final = "15.0.0"', source)
         self.assertIn('EXPECTED_PILLOW: Final = "12.3.0"', source)

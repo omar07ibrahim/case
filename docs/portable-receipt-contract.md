@@ -457,9 +457,13 @@ distinct facts and must never imply that checkout preserves the runtime mode.
 The candidate job checks out the explicit pull-request head SHA (or the push SHA),
 asserts that the 40-hex source revision equals checkout HEAD, builds the wheel
 from a clean `git archive` copy with a fixed source epoch, and renders into two
-fresh runner-temporary roots. Both inventories, every file byte, media structure,
-redacted failure channel, safe file mode, receipt hash, and source binding must
-match before upload. The pinned uploader is
+fresh runner-temporary roots. Every renderer input is captured through an O_NOFOLLOW and close-on-exec
+descriptor. The bounded reader compares descriptor identity, type, link count,
+size, modification time, and change time before and after a maximum-plus-one
+read, then confirms the pathname still names that same inode.
+
+Both inventories, every file byte, media structure, redacted failure channel,
+safe file mode, receipt hash, and source binding must match before upload. The pinned uploader is
 `actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a`
 (v7.0.1). A merge ref or `refs/pull/*/merge` SHA is not valid provenance.
 
