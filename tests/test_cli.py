@@ -138,6 +138,15 @@ class CliParsingTests(unittest.TestCase):
             ("analyze", "--source", "source", "--receipt", "receipt"),
             (
                 "analyze",
+                "--receipt",
+                "receipt",
+                "--policy",
+                "reject@case:lower",
+                "--policy",
+                "preserve@case:upper",
+            ),
+            (
+                "analyze",
                 "--source",
                 "source",
                 "--source",
@@ -181,6 +190,20 @@ class CliParsingTests(unittest.TestCase):
                 "source",
                 "--source",
                 "second",
+            ),
+            (
+                "verify",
+                "--receipt",
+                "receipt",
+                "--receipt",
+                "second",
+            ),
+            (
+                "verify",
+                "--source",
+                "source",
+                "--receipt",
+                "-",
             ),
             (
                 "verify",

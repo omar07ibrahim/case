@@ -186,9 +186,11 @@ def _parse_verify(argv: tuple[str, ...]) -> _VerifyCommand | _StaticRequest:
         else:
             _raise_usage()
         index += 2
-    if source_path is None or receipt_path is None:
-        _raise_usage()
-    return _VerifyCommand(source_path=source_path, receipt_path=receipt_path)
+    # Exact arity plus duplicate and unknown-option rejection establish both fields.
+    return _VerifyCommand(
+        source_path=cast(str, source_path),
+        receipt_path=cast(str, receipt_path),
+    )
 
 
 def _parse_command(argv: tuple[str, ...]) -> _Command:

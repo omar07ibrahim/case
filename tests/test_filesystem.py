@@ -187,6 +187,63 @@ class FileCaptureTests(unittest.TestCase):
                 ),
             )
 
+    def test_parent_descriptor_failures_are_classified(self) -> None:
+        with mock.patch.object(
+            os,
+            "open",
+            side_effect=FileNotFoundError(errno.ENOENT, "private-path"),
+        ):
+            _expect_code(
+                self,
+                FileBoundaryErrorCode.IO_ERROR,
+                partial(capture_regular_file, "source", limit=1),
+            )
+
+        original_fstat = os.fstat
+
+        def non_directory_base(descriptor: int) -> os.stat_result:
+            result = original_fstat(descriptor)
+            return _fake_stat(
+                result,
+                st_mode=stat.S_IFREG | stat.S_IMODE(result.st_mode),
+            )
+
+        with mock.patch.object(os, "fstat", side_effect=non_directory_base):
+            _expect_code(
+                self,
+                FileBoundaryErrorCode.DIRECTORY_COMPONENT,
+                partial(capture_regular_file, "source", limit=1),
+            )
+
+        with tempfile.TemporaryDirectory(prefix="casefold-parent-open-") as directory:
+            root = Path(directory)
+            nested = root / "nested"
+            nested.mkdir()
+            (nested / "source").write_bytes(b"x")
+            original_open = os.open
+
+            def denied_nested_open(
+                path: str | bytes,
+                flags: int,
+                mode: int = 0o777,
+                *,
+                dir_fd: int | None = None,
+            ) -> int:
+                if path == nested.name and dir_fd is not None:
+                    raise PermissionError(errno.EACCES, "private-path")
+                return original_open(path, flags, mode, dir_fd=dir_fd)
+
+            with mock.patch.object(os, "open", side_effect=denied_nested_open):
+                _expect_code(
+                    self,
+                    FileBoundaryErrorCode.IO_ERROR,
+                    partial(
+                        capture_regular_file,
+                        (nested / "source").as_posix(),
+                        limit=1,
+                    ),
+                )
+
     def test_size_is_early_rejected_and_limit_plus_one_is_authoritative(self) -> None:
         with tempfile.TemporaryDirectory(prefix="casefold-size-limit-") as directory:
             source = Path(directory) / "source"
@@ -242,6 +299,45 @@ class FileCaptureTests(unittest.TestCase):
                         code,
                         partial(filesystem._read_bounded, 0, 1),
                     )
+
+    def test_file_open_and_descriptor_errors_are_classified(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="casefold-file-open-") as directory:
+            source = Path(directory) / "source"
+            source.write_bytes(b"x")
+            original_open = os.open
+
+            def denied_file_open(
+                path: str | bytes,
+                flags: int,
+                mode: int = 0o777,
+                *,
+                dir_fd: int | None = None,
+            ) -> int:
+                if path == source.name and dir_fd is not None:
+                    raise PermissionError(errno.EACCES, "private-path")
+                return original_open(path, flags, mode, dir_fd=dir_fd)
+
+            with mock.patch.object(os, "open", side_effect=denied_file_open):
+                _expect_code(
+                    self,
+                    FileBoundaryErrorCode.IO_ERROR,
+                    partial(capture_regular_file, source.as_posix(), limit=1),
+                )
+
+            original_fstat = os.fstat
+
+            def denied_file_fstat(descriptor: int) -> os.stat_result:
+                result = original_fstat(descriptor)
+                if stat.S_ISREG(result.st_mode):
+                    raise OSError(errno.EIO, "private-path")
+                return result
+
+            with mock.patch.object(os, "fstat", side_effect=denied_file_fstat):
+                _expect_code(
+                    self,
+                    FileBoundaryErrorCode.IO_ERROR,
+                    partial(capture_regular_file, source.as_posix(), limit=1),
+                )
 
     def test_open_and_post_read_identity_races_are_rejected(self) -> None:
         with tempfile.TemporaryDirectory(prefix="casefold-file-races-") as directory:
@@ -327,6 +423,41 @@ class FileCaptureTests(unittest.TestCase):
                     partial(capture_regular_file, source.as_posix(), limit=6),
                 )
 
+    def test_post_read_path_replacement_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="casefold-path-swap-") as directory:
+            source = Path(directory) / "source"
+            source.write_bytes(b"stable")
+            original_stat = os.stat
+            final_stats = 0
+
+            def replaced_stat(
+                path: str | bytes | int,
+                *,
+                dir_fd: int | None = None,
+                follow_symlinks: bool = True,
+            ) -> os.stat_result:
+                nonlocal final_stats
+                result = original_stat(
+                    path,
+                    dir_fd=dir_fd,
+                    follow_symlinks=follow_symlinks,
+                )
+                if path == source.name and dir_fd is not None:
+                    final_stats += 1
+                    if final_stats == 2:
+                        return _fake_stat(
+                            result,
+                            st_mtime_ns=result.st_mtime_ns + 1,
+                        )
+                return result
+
+            with mock.patch.object(os, "stat", side_effect=replaced_stat):
+                _expect_code(
+                    self,
+                    FileBoundaryErrorCode.CONCURRENT_MUTATION,
+                    partial(capture_regular_file, source.as_posix(), limit=6),
+                )
+
     def test_directory_identity_swap_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory(prefix="casefold-dir-race-") as directory:
             root = Path(directory)
@@ -361,6 +492,39 @@ class FileCaptureTests(unittest.TestCase):
                     ),
                 )
 
+    def test_opened_directory_type_swap_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="casefold-dir-type-race-") as directory:
+            root = Path(directory)
+            nested = root / "nested"
+            nested.mkdir()
+            (nested / "source").write_bytes(b"x")
+            nested_info = nested.stat()
+            original_fstat = os.fstat
+
+            def swapped_directory_type(descriptor: int) -> os.stat_result:
+                info = original_fstat(descriptor)
+                if (
+                    stat.S_ISDIR(info.st_mode)
+                    and info.st_ino == nested_info.st_ino
+                    and info.st_dev == nested_info.st_dev
+                ):
+                    return _fake_stat(
+                        info,
+                        st_mode=stat.S_IFREG | stat.S_IMODE(info.st_mode),
+                    )
+                return info
+
+            with mock.patch.object(os, "fstat", side_effect=swapped_directory_type):
+                _expect_code(
+                    self,
+                    FileBoundaryErrorCode.CONCURRENT_MUTATION,
+                    partial(
+                        capture_regular_file,
+                        (nested / "source").as_posix(),
+                        limit=1,
+                    ),
+                )
+
 
 class PosixPrimitiveTests(unittest.TestCase):
     def test_platform_and_descriptor_features_fail_closed(self) -> None:
@@ -371,6 +535,12 @@ class PosixPrimitiveTests(unittest.TestCase):
                 partial(capture_regular_file, "source", limit=1),
             )
         with mock.patch.object(os, "supports_dir_fd", set()):
+            _expect_code(
+                self,
+                FileBoundaryErrorCode.UNSUPPORTED_PLATFORM,
+                partial(capture_regular_file, "source", limit=1),
+            )
+        with mock.patch.object(os, "supports_follow_symlinks", set()):
             _expect_code(
                 self,
                 FileBoundaryErrorCode.UNSUPPORTED_PLATFORM,
@@ -440,6 +610,57 @@ class FilePublicationTests(unittest.TestCase):
             destination = Path(directory) / "empty"
             publish_new_file(destination.as_posix(), b"")
             self.assertEqual(destination.read_bytes(), b"")
+
+    def test_destination_and_reservation_errors_are_redacted(self) -> None:
+        with tempfile.TemporaryDirectory(
+            prefix="casefold-destination-stat-"
+        ) as directory:
+            destination = Path(directory) / "receipt"
+            original_stat = os.stat
+
+            def denied_destination_stat(
+                path: str | bytes | int,
+                *,
+                dir_fd: int | None = None,
+                follow_symlinks: bool = True,
+            ) -> os.stat_result:
+                if path == destination.name and dir_fd is not None:
+                    raise PermissionError(errno.EACCES, "private-path")
+                return original_stat(
+                    path,
+                    dir_fd=dir_fd,
+                    follow_symlinks=follow_symlinks,
+                )
+
+            with mock.patch.object(os, "stat", side_effect=denied_destination_stat):
+                _expect_code(
+                    self,
+                    FileBoundaryErrorCode.IO_ERROR,
+                    partial(publish_new_file, destination.as_posix(), b"x"),
+                )
+
+        with tempfile.TemporaryDirectory(prefix="casefold-temp-open-") as directory:
+            destination = Path(directory) / "receipt"
+            original_open = os.open
+
+            def denied_temporary_open(
+                path: str | bytes,
+                flags: int,
+                mode: int = 0o777,
+                *,
+                dir_fd: int | None = None,
+            ) -> int:
+                if isinstance(path, str) and path.startswith(".casefold-observatory-"):
+                    raise PermissionError(errno.EACCES, "private-path")
+                return original_open(path, flags, mode, dir_fd=dir_fd)
+
+            with mock.patch.object(os, "open", side_effect=denied_temporary_open):
+                _expect_code(
+                    self,
+                    FileBoundaryErrorCode.IO_ERROR,
+                    partial(publish_new_file, destination.as_posix(), b"x"),
+                )
+            self.assertFalse(destination.exists())
 
     def test_existing_destination_symlink_and_alias_never_clobber(self) -> None:
         with tempfile.TemporaryDirectory(prefix="casefold-no-clobber-") as directory:
@@ -739,6 +960,33 @@ class FilePublicationTests(unittest.TestCase):
                     partial(publish_new_file, destination.as_posix(), b"x"),
                 )
             self.assertEqual(destination.read_bytes(), b"x")
+
+    def test_temporary_inode_cannot_alias_an_input(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="casefold-temp-alias-") as directory:
+            root = Path(directory)
+            destination = root / "receipt"
+            temporary = root / ".casefold-observatory-owned.tmp"
+            temporary.write_bytes(b"")
+            descriptor = os.open(temporary, os.O_WRONLY)
+            info = os.fstat(descriptor)
+
+            with mock.patch.object(
+                filesystem,
+                "_reserve_temporary",
+                return_value=(descriptor, temporary.name),
+            ):
+                _expect_code(
+                    self,
+                    FileBoundaryErrorCode.ALIAS,
+                    partial(
+                        publish_new_file,
+                        destination.as_posix(),
+                        b"x",
+                        forbidden_identities=((info.st_dev, info.st_ino),),
+                    ),
+                )
+            self.assertFalse(destination.exists())
+            self.assertFalse(temporary.exists())
 
     def test_temporary_inode_must_be_single_link_regular_file(self) -> None:
         with tempfile.TemporaryDirectory(prefix="casefold-temp-inode-") as directory:
