@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import ast
 import hashlib
+import importlib.util
 import json
 import tomllib
 import unittest
@@ -12,6 +13,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 CLI_ROOT = PROJECT_ROOT / "docs" / "cli-evidence"
 FIXTURE_PATH = CLI_ROOT / "fixtures" / "cli-demo.v1.jsonl"
 GENERATOR_PATH = PROJECT_ROOT / "scripts" / "render_cli_evidence.py"
+PILLOW_AVAILABLE = importlib.util.find_spec("PIL") is not None
 CONTRACT_PATH = PROJECT_ROOT / "docs" / "portable-receipt-contract.md"
 WORKFLOW_PATH = PROJECT_ROOT / ".github" / "workflows" / "ci.yml"
 REQUIREMENTS_PATH = PROJECT_ROOT / "requirements" / "cli-visuals.txt"
@@ -123,12 +125,18 @@ class CliEvidenceCandidateContractTests(unittest.TestCase):
         for layout_boundary in (
             "def _wrap_pixels(",
             "font.getbbox(value)",
-            "draw.textbbox(position, value, font=font)",
+            "draw.textbbox(placement.draw_position, value, font=font)",
             "visual transcript wrapping changed captured text",
             "visual transcript text escaped its measured bounds",
             '"png_size": [1400, 1120]',
+            "def _text_placement(",
+            "def _gif_layout(",
+            "layout.canvas_height",
+            "_text_dimensions(body_font, line)[1]",
         ):
             self.assertIn(layout_boundary, source)
+        self.assertNotIn("height = 650", source)
+        self.assertNotIn('"gif_size": [1200, 650]', source)
         self.assertEqual(source.count("draw.text("), 1)
         self.assertGreaterEqual(source.count("_draw_bounded_text("), 10)
         for media_boundary in (
@@ -143,6 +151,59 @@ class CliEvidenceCandidateContractTests(unittest.TestCase):
             self.assertIn(media_boundary, source)
         for output in CANDIDATE_OUTPUTS:
             self.assertIn(f'"{output}"', source)
+
+    @unittest.skipUnless(PILLOW_AVAILABLE, "canonical Pillow is not installed")
+    def test_text_placement_normalizes_negative_glyph_bearings(self) -> None:
+        from PIL import ImageFont
+        from scripts import render_cli_evidence as renderer
+
+        class NegativeBearingFont:
+            def getbbox(self, value: str) -> tuple[int, int, int, int]:
+                self_value = value
+                if self_value != "j":
+                    raise AssertionError("unexpected test glyph")
+                return (-4, 7, 9, 22)
+
+        font = cast(ImageFont.ImageFont, NegativeBearingFont())
+        placement = renderer._text_placement(font, "j", (100, 200))
+
+        self.assertEqual(placement.draw_position, (104, 193))
+        self.assertEqual(placement.ink_bounds, (100, 200, 113, 215))
+
+    @unittest.skipUnless(PILLOW_AVAILABLE, "canonical Pillow is not installed")
+    def test_gif_layout_selects_the_tallest_measured_phase(self) -> None:
+        from scripts import render_cli_evidence as renderer
+
+        layout = renderer._gif_layout(
+            ((11,), (8, 30, 9), (20, 20)),
+            footer_height=13,
+        )
+
+        self.assertEqual(layout.phase_bottoms, (196, 248, 233))
+        self.assertEqual(layout.tallest_phase, 1)
+        self.assertEqual(
+            layout.footer_top,
+            layout.phase_bottoms[1] + renderer._GIF_TRANSCRIPT_FOOTER_GAP,
+        )
+
+    @unittest.skipUnless(PILLOW_AVAILABLE, "canonical Pillow is not installed")
+    def test_gif_layout_preserves_exact_footer_and_canvas_gaps(self) -> None:
+        from scripts import render_cli_evidence as renderer
+
+        layout = renderer._gif_layout(((14, 13),), footer_height=12)
+
+        self.assertEqual(
+            layout.footer_top - max(layout.phase_bottoms),
+            renderer._GIF_TRANSCRIPT_FOOTER_GAP,
+        )
+        self.assertEqual(
+            layout.panel_bottom - layout.footer_bottom,
+            renderer._GIF_FOOTER_PANEL_GAP,
+        )
+        self.assertEqual(
+            layout.canvas_height - layout.panel_bottom,
+            renderer._GIF_CANVAS_BOTTOM_GAP,
+        )
 
     def test_stage_one_keeps_candidate_bytes_out_of_repository(self) -> None:
         actual_files = {
@@ -173,6 +234,8 @@ class CliEvidenceCandidateContractTests(unittest.TestCase):
         self.assertIn("verified rasterized CLI transcript", contract)
         self.assertIn("source commit and tree identities", contract)
         self.assertIn('("Aileron", "Regular")', contract)
+        self.assertIn("actual ink\nbounding-box top-left", contract)
+        self.assertIn("tallest measured phase", contract)
         for output in CANDIDATE_OUTPUTS:
             self.assertIn(f"`{output}`", contract)
 

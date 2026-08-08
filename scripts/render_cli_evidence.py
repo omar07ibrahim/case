@@ -625,12 +625,152 @@ def _font(size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
     return ImageFont.load_default(size=size)
 
 
+@dataclass(frozen=True, slots=True)
+class TextPlacement:
+    draw_position: tuple[int, int]
+    ink_bounds: tuple[int, int, int, int]
+
+
+@dataclass(frozen=True, slots=True)
+class GifLayout:
+    canvas_height: int
+    panel_bottom: int
+    footer_top: int
+    footer_bottom: int
+    phase_line_tops: tuple[tuple[int, ...], ...]
+    phase_bottoms: tuple[int, ...]
+    tallest_phase: int
+
+
+_GIF_WIDTH: Final = 1200
+_GIF_PANEL_TOP: Final = 32
+_GIF_TRANSCRIPT_TOP: Final = 185
+_GIF_LINE_GAP: Final = 8
+_GIF_TRANSCRIPT_FOOTER_GAP: Final = 32
+_GIF_FOOTER_PANEL_GAP: Final = 30
+_GIF_CANVAS_BOTTOM_GAP: Final = 32
+
+
+def _font_bbox(
+    font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
+    value: str,
+) -> tuple[int, int, int, int]:
+    box = font.getbbox(value)
+    if len(box) != 4 or not all(type(coordinate) is int for coordinate in box):
+        _fail("visual font returned a non-integral pixel box")
+    return cast(tuple[int, int, int, int], box)
+
+
+def _text_dimensions(
+    font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
+    value: str,
+) -> tuple[int, int]:
+    left, top, right, bottom = _font_bbox(font, value)
+    width = right - left
+    height = bottom - top
+    if width <= 0 or height <= 0:
+        _fail("visual text has an empty or invalid pixel box")
+    return width, height
+
+
 def _text_width(
     font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
     value: str,
-) -> float | int:
-    left, _top, right, _bottom = font.getbbox(value)
-    return right - left
+) -> int:
+    if not value:
+        return 0
+    return _text_dimensions(font, value)[0]
+
+
+def _text_placement(
+    font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
+    value: str,
+    position: tuple[int, int],
+) -> TextPlacement:
+    left, top, right, bottom = _font_bbox(font, value)
+    width = right - left
+    height = bottom - top
+    if width <= 0 or height <= 0:
+        _fail("visual text has an empty or invalid pixel box")
+    return TextPlacement(
+        draw_position=(position[0] - left, position[1] - top),
+        ink_bounds=(
+            position[0],
+            position[1],
+            position[0] + width,
+            position[1] + height,
+        ),
+    )
+
+
+def _gif_layout(
+    line_heights_by_phase: tuple[tuple[int, ...], ...],
+    *,
+    footer_height: int,
+) -> GifLayout:
+    if not line_heights_by_phase or footer_height <= 0:
+        _fail("GIF layout inputs are empty or invalid")
+
+    phase_line_tops: list[tuple[int, ...]] = []
+    phase_bottoms: list[int] = []
+    for line_heights in line_heights_by_phase:
+        if not line_heights:
+            _fail("GIF phase has no transcript lines")
+        cursor = _GIF_TRANSCRIPT_TOP
+        line_tops: list[int] = []
+        for line_height in line_heights:
+            if line_height <= 0:
+                _fail("GIF transcript line has an invalid pixel height")
+            line_tops.append(cursor)
+            cursor += line_height + _GIF_LINE_GAP
+        phase_line_tops.append(tuple(line_tops))
+        phase_bottoms.append(cursor - _GIF_LINE_GAP)
+
+    tallest_phase = max(
+        range(len(phase_bottoms)),
+        key=lambda index: phase_bottoms[index],
+    )
+    transcript_bottom = phase_bottoms[tallest_phase]
+    footer_top = transcript_bottom + _GIF_TRANSCRIPT_FOOTER_GAP
+    footer_bottom = footer_top + footer_height
+    panel_bottom = footer_bottom + _GIF_FOOTER_PANEL_GAP
+    canvas_height = panel_bottom + _GIF_CANVAS_BOTTOM_GAP
+    return GifLayout(
+        canvas_height=canvas_height,
+        panel_bottom=panel_bottom,
+        footer_top=footer_top,
+        footer_bottom=footer_bottom,
+        phase_line_tops=tuple(phase_line_tops),
+        phase_bottoms=tuple(phase_bottoms),
+        tallest_phase=tallest_phase,
+    )
+
+
+def _gif_plan(
+    commands: tuple[CapturedCommand, ...],
+    *,
+    body_font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
+    footer_text: str,
+) -> tuple[tuple[tuple[str, ...], ...], GifLayout]:
+    rendered_lines = tuple(
+        tuple(
+            _command_lines(
+                command,
+                font=body_font,
+                maximum_width=_GIF_WIDTH - 124,
+            )
+        )
+        for command in commands
+    )
+    line_heights_by_phase = tuple(
+        tuple(_text_dimensions(body_font, line)[1] for line in lines)
+        for lines in rendered_lines
+    )
+    layout = _gif_layout(
+        line_heights_by_phase,
+        footer_height=_text_dimensions(body_font, footer_text)[1],
+    )
+    return rendered_lines, layout
 
 
 def _wrap_pixels(
@@ -709,11 +849,16 @@ def _draw_bounded_text(
     fill: int | tuple[int, int, int],
     bounds: tuple[int, int, int, int],
 ) -> None:
-    box = draw.textbbox(position, value, font=font)
+    placement = _text_placement(font, value, position)
+    box = draw.textbbox(placement.draw_position, value, font=font)
+    if box != placement.ink_bounds:
+        _fail("font and drawing pixel bounds disagree")
     left, top, right, bottom = bounds
-    if box[0] < left or box[1] < top or box[2] > right or box[3] > bottom:
-        _fail("visual transcript text escaped its measured bounds")
-    draw.text(position, value, font=font, fill=fill)
+    if box[0] < left or box[2] > right:
+        _fail("visual transcript text escaped its measured bounds: horizontal")
+    if box[1] < top or box[3] > bottom:
+        _fail("visual transcript text escaped its measured bounds: vertical")
+    draw.text(placement.draw_position, value, font=font, fill=fill)
 
 
 def _render_png(evidence: JsonObject, commands: tuple[CapturedCommand, ...]) -> bytes:
@@ -845,31 +990,39 @@ def _gif_palette() -> list[int]:
 
 
 def _render_gif(evidence: JsonObject, commands: tuple[CapturedCommand, ...]) -> bytes:
-    width = 1200
-    height = 650
+    width = _GIF_WIDTH
     palette = _gif_palette()
     body_font = _font(18)
     title_font = _font(28)
     accent_indices = (5, 6, 7, 8)
     frames: list[Image.Image] = []
-    rendered_lines = [
-        _command_lines(
-            command,
-            font=body_font,
-            maximum_width=width - 124,
-        )
-        for command in commands
-    ]
 
     receipt_document = cast(JsonObject, evidence["receipt"])
-    for index, (command, lines) in enumerate(
-        zip(commands, rendered_lines, strict=True)
+    footer_text = f"receipt sha256 {receipt_document['sha256']}"
+    rendered_lines, layout = _gif_plan(
+        commands,
+        body_font=body_font,
+        footer_text=footer_text,
+    )
+    height = layout.canvas_height
+
+    for index, (command, lines, line_tops) in enumerate(
+        zip(
+            commands,
+            rendered_lines,
+            layout.phase_line_tops,
+            strict=True,
+        )
     ):
         frame = Image.new("P", (width, height), 0)
         frame.putpalette(palette)
         draw = ImageDraw.Draw(frame)
-        draw.rounded_rectangle((34, 32, width - 34, height - 32), radius=18, fill=1)
-        draw.rectangle((34, 32, width - 34, 110), fill=2)
+        draw.rounded_rectangle(
+            (34, _GIF_PANEL_TOP, width - 34, layout.panel_bottom),
+            radius=18,
+            fill=1,
+        )
+        draw.rectangle((34, _GIF_PANEL_TOP, width - 34, 110), fill=2)
         _draw_bounded_text(
             draw,
             (62, 53),
@@ -884,31 +1037,33 @@ def _render_gif(evidence: JsonObject, commands: tuple[CapturedCommand, ...]) -> 
             f"step {index + 1}/4  |  {command.command_id}",
             font=title_font,
             fill=accent_indices[index],
-            bounds=(62, 118, width - 62, 174),
+            bounds=(62, 118, width - 62, _GIF_TRANSCRIPT_TOP - 11),
         )
-        line_y = 185
-        for line in lines:
+        for line, line_top in zip(lines, line_tops, strict=True):
             fill = 9 if line == "exit | 0" else 3
             if line.startswith("exit |") and command.exit_status != 0:
                 fill = 7
+            line_height = _text_dimensions(body_font, line)[1]
             _draw_bounded_text(
                 draw,
-                (62, line_y),
+                (62, line_top),
                 line,
                 font=body_font,
                 fill=fill,
-                bounds=(62, 176, width - 62, height - 108),
+                bounds=(62, line_top, width - 62, line_top + line_height),
             )
-            line_y += 28
-        if line_y > height - 108:
-            _fail("GIF transcript lines exceed the frame")
+        if (
+            line_tops[-1] + _text_dimensions(body_font, lines[-1])[1]
+            != layout.phase_bottoms[index]
+        ):
+            _fail("GIF phase bottom does not match its measured transcript")
         _draw_bounded_text(
             draw,
-            (62, height - 74),
-            f"receipt sha256 {receipt_document['sha256']}",
+            (62, layout.footer_top),
+            footer_text,
             font=body_font,
             fill=4,
-            bounds=(62, height - 86, width - 62, height - 44),
+            bounds=(62, layout.footer_top, width - 62, layout.footer_bottom),
         )
         frames.append(frame)
 
@@ -1282,6 +1437,13 @@ def _build_outputs(
     if receipt_bytes != _canonical_json(receipt, pretty=False):
         _fail("installed command produced a noncanonical receipt")
 
+    receipt_sha256 = _sha256(receipt_bytes)
+    _, gif_layout = _gif_plan(
+        commands,
+        body_font=_font(18),
+        footer_text=f"receipt sha256 {receipt_sha256}",
+    )
+
     evidence: JsonObject = {
         "analyze_summary": analyze_summary,
         "artifact_inventory": list(OUTPUT_PATHS),
@@ -1317,7 +1479,7 @@ def _build_outputs(
             "bytes": len(receipt_bytes),
             "capture_mode": "0600",
             "path": RECEIPT_PATH,
-            "sha256": _sha256(receipt_bytes),
+            "sha256": receipt_sha256,
             "single_link": True,
         },
         "renderer": {
@@ -1325,7 +1487,7 @@ def _build_outputs(
             "pillow_wheel_filename": EXPECTED_PILLOW_WHEEL,
             "pillow_wheel_sha256": EXPECTED_PILLOW_WHEEL_SHA256,
             "png_size": [1400, 1120],
-            "gif_size": [1200, 650],
+            "gif_size": [_GIF_WIDTH, gif_layout.canvas_height],
             "gif_frame_durations_ms": [1400, 1200, 1400, 1400],
             "gif_frames": 4,
         },
@@ -1435,8 +1597,68 @@ def _audit_outputs(outputs: dict[str, bytes]) -> None:
         }:
             _fail("candidate output identity mismatch")
 
+    raw_commands = manifest.get("commands")
+    if type(raw_commands) is not list:
+        _fail("candidate command inventory is not a list")
+    commands = cast(list[object], raw_commands)
+    audited_commands: list[CapturedCommand] = []
+    for raw_command in commands:
+        if type(raw_command) is not dict:
+            _fail("candidate command is not an object")
+        document = cast(JsonObject, raw_command)
+        command_id = document.get("id")
+        exit_status = document.get("exit_status")
+        argv_value = document.get("argv")
+        if type(command_id) is not str or type(exit_status) is not int:
+            _fail("candidate command identity changed")
+        if type(argv_value) is not list or not argv_value:
+            _fail("candidate argv is not exact text")
+        argv = cast(list[object], argv_value)
+        if not all(type(value) is str for value in argv):
+            _fail("candidate argv is not exact text")
+
+        captured_channels: dict[str, bytes] = {}
+        for channel in ("stdout", "stderr"):
+            value = document.get(channel)
+            if type(value) is not str or not value.isascii():
+                _fail("candidate channel is not ASCII")
+            encoded = value.encode("ascii")
+            if document.get(f"{channel}_bytes") != len(encoded):
+                _fail("candidate channel byte count changed")
+            if document.get(f"{channel}_sha256") != _sha256(encoded):
+                _fail("candidate channel digest changed")
+            captured_channels[channel] = encoded
+        audited_commands.append(
+            CapturedCommand(
+                command_id=command_id,
+                argv=tuple(cast(str, value) for value in argv),
+                exit_status=exit_status,
+                stdout=captured_channels["stdout"],
+                stderr=captured_channels["stderr"],
+            )
+        )
+
+    if tuple(command.command_id for command in audited_commands) != (
+        EXPECTED_COMMAND_IDS
+    ):
+        _fail("candidate command IDs changed")
+    if tuple(command.exit_status for command in audited_commands) != (
+        EXPECTED_STATUSES
+    ):
+        _fail("candidate command statuses changed")
+    for command_id, code in EXPECTED_FAILURES:
+        command = next(
+            command for command in audited_commands if command.command_id == command_id
+        )
+        if command.stdout:
+            _fail("candidate handled failure wrote stdout")
+        error = json.loads(command.stderr)
+        if error != {"code": code, "status": "error"}:
+            _fail("candidate handled failure is not redacted")
+
     receipt_document = cast(JsonObject, manifest["receipt"])
-    if receipt_document.get("sha256") != _sha256(outputs[RECEIPT_PATH]):
+    receipt_sha256 = _sha256(outputs[RECEIPT_PATH])
+    if receipt_document.get("sha256") != receipt_sha256:
         _fail("candidate receipt identity mismatch")
     if outputs[RECEIPT_PATH] != _canonical_json(
         json.loads(outputs[RECEIPT_PATH]),
@@ -1444,40 +1666,16 @@ def _audit_outputs(outputs: dict[str, bytes]) -> None:
     ):
         _fail("candidate receipt is not canonical ASCII JSON")
 
-    commands = cast(list[object], manifest["commands"])
-    if tuple(cast(JsonObject, command)["id"] for command in commands) != (
-        EXPECTED_COMMAND_IDS
-    ):
-        _fail("candidate command IDs changed")
-    if tuple(cast(JsonObject, command)["exit_status"] for command in commands) != (
-        EXPECTED_STATUSES
-    ):
-        _fail("candidate command statuses changed")
-    for command in commands:
-        document = cast(JsonObject, command)
-        argv = cast(list[object], document["argv"])
-        if not argv or not all(type(value) is str for value in argv):
-            _fail("candidate argv is not exact text")
-        for channel in ("stdout", "stderr"):
-            value = document[channel]
-            if type(value) is not str or not value.isascii():
-                _fail("candidate channel is not ASCII")
-            encoded = value.encode("ascii")
-            if document[f"{channel}_bytes"] != len(encoded):
-                _fail("candidate channel byte count changed")
-            if document[f"{channel}_sha256"] != _sha256(encoded):
-                _fail("candidate channel digest changed")
-    for command_id, code in EXPECTED_FAILURES:
-        document = next(
-            cast(JsonObject, command)
-            for command in commands
-            if cast(JsonObject, command)["id"] == command_id
-        )
-        if document["stdout"] != "":
-            _fail("candidate handled failure wrote stdout")
-        error = json.loads(cast(str, document["stderr"]))
-        if error != {"code": code, "status": "error"}:
-            _fail("candidate handled failure is not redacted")
+    _, expected_gif_layout = _gif_plan(
+        tuple(audited_commands),
+        body_font=_font(18),
+        footer_text=f"receipt sha256 {receipt_sha256}",
+    )
+    expected_gif_size = (_GIF_WIDTH, expected_gif_layout.canvas_height)
+    if renderer_document.get("png_size") != [1400, 1120]:
+        _fail("candidate PNG manifest dimensions changed")
+    if renderer_document.get("gif_size") != list(expected_gif_size):
+        _fail("candidate GIF manifest dimensions changed")
 
     png = _image_from_bytes(outputs[PNG_PATH])
     if png.format != "PNG" or png.mode != "RGB" or png.size != (1400, 1120):
@@ -1488,7 +1686,7 @@ def _audit_outputs(outputs: dict[str, bytes]) -> None:
     gif = Image.open(io.BytesIO(outputs[GIF_PATH]))
     if (
         gif.format != "GIF"
-        or gif.size != (1200, 650)
+        or gif.size != expected_gif_size
         or getattr(gif, "n_frames", None) != 4
         or gif.info.get("loop") != 0
     ):
@@ -1509,7 +1707,7 @@ def _audit_outputs(outputs: dict[str, bytes]) -> None:
             _fail("candidate GIF contains EXIF metadata")
         if getattr(gif, "disposal_method", None) != 2:
             _fail("candidate GIF disposal contract changed")
-        if getattr(gif, "dispose_extent", None) != (0, 0, 1200, 650):
+        if getattr(gif, "dispose_extent", None) != (0, 0, *expected_gif_size):
             _fail("candidate GIF frame is not full-canvas")
         duration = gif.info.get("duration")
         if type(duration) is not int or duration != expected_duration:
@@ -1517,7 +1715,7 @@ def _audit_outputs(outputs: dict[str, bytes]) -> None:
         durations.append(duration)
         decoded_frame = gif.convert("RGB")
         decoded_frame.load()
-        if decoded_frame.mode != "RGB" or decoded_frame.size != (1200, 650):
+        if decoded_frame.mode != "RGB" or decoded_frame.size != expected_gif_size:
             _fail("candidate GIF frame decode changed")
     try:
         gif.seek(len(expected_durations))
