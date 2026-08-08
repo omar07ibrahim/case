@@ -24,7 +24,7 @@ import unicodedata
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final, NoReturn, cast
+from typing import Final, Literal, NoReturn, cast
 
 from PIL import Image, ImageDraw, ImageFont
 from PIL import __version__ as PILLOW_VERSION
@@ -138,6 +138,7 @@ _SVG_GREEN: Final = "#7ee787"
 _SVG_GRID: Final = "#29425f"
 
 JsonObject = dict[str, object]
+FontMode = Literal["1", "L"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -651,11 +652,19 @@ _GIF_FOOTER_PANEL_GAP: Final = 30
 _GIF_CANVAS_BOTTOM_GAP: Final = 32
 
 
+def _font_mode_for_draw(draw: ImageDraw.ImageDraw) -> FontMode:
+    if draw.mode in ("1", "P", "I", "F"):
+        return "1"
+    return "L"
+
+
 def _font_bbox(
     font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
     value: str,
+    *,
+    font_mode: FontMode,
 ) -> tuple[int, int, int, int]:
-    box = font.getbbox(value)
+    box = font.getbbox(value, font_mode)
     if len(box) != 4 or not all(type(coordinate) is int for coordinate in box):
         _fail("visual font returned a non-integral pixel box")
     return cast(tuple[int, int, int, int], box)
@@ -664,8 +673,10 @@ def _font_bbox(
 def _text_dimensions(
     font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
     value: str,
+    *,
+    font_mode: FontMode,
 ) -> tuple[int, int]:
-    left, top, right, bottom = _font_bbox(font, value)
+    left, top, right, bottom = _font_bbox(font, value, font_mode=font_mode)
     width = right - left
     height = bottom - top
     if width <= 0 or height <= 0:
@@ -676,10 +687,12 @@ def _text_dimensions(
 def _text_width(
     font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
     value: str,
+    *,
+    font_mode: FontMode,
 ) -> int:
     if not value:
         return 0
-    left, top, right, bottom = _font_bbox(font, value)
+    left, top, right, bottom = _font_bbox(font, value, font_mode=font_mode)
     width = right - left
     height = bottom - top
     if width < 0 or height < 0:
@@ -693,8 +706,10 @@ def _text_placement(
     font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
     value: str,
     position: tuple[int, int],
+    *,
+    font_mode: FontMode,
 ) -> TextPlacement:
-    left, top, right, bottom = _font_bbox(font, value)
+    left, top, right, bottom = _font_bbox(font, value, font_mode=font_mode)
     width = right - left
     height = bottom - top
     if width <= 0 or height <= 0:
@@ -764,18 +779,19 @@ def _gif_plan(
             _command_lines(
                 command,
                 font=body_font,
+                font_mode="1",
                 maximum_width=_GIF_WIDTH - 124,
             )
         )
         for command in commands
     )
     line_heights_by_phase = tuple(
-        tuple(_text_dimensions(body_font, line)[1] for line in lines)
+        tuple(_text_dimensions(body_font, line, font_mode="1")[1] for line in lines)
         for lines in rendered_lines
     )
     layout = _gif_layout(
         line_heights_by_phase,
-        footer_height=_text_dimensions(body_font, footer_text)[1],
+        footer_height=_text_dimensions(body_font, footer_text, font_mode="1")[1],
     )
     return rendered_lines, layout
 
@@ -784,6 +800,7 @@ def _wrap_pixels(
     value: str,
     *,
     font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
+    font_mode: FontMode,
     maximum_width: int,
     subsequent_indent: str,
 ) -> list[str]:
@@ -793,14 +810,21 @@ def _wrap_pixels(
     remaining = value
     prefix = ""
     while remaining:
-        if _text_width(font, prefix) >= maximum_width:
+        if _text_width(font, prefix, font_mode=font_mode) >= maximum_width:
             _fail("visual continuation indent exceeds its pixel bound")
         low = 1
         high = len(remaining)
         best = 0
         while low <= high:
             middle = (low + high) // 2
-            if _text_width(font, prefix + remaining[:middle]) <= maximum_width:
+            if (
+                _text_width(
+                    font,
+                    prefix + remaining[:middle],
+                    font_mode=font_mode,
+                )
+                <= maximum_width
+            ):
                 best = middle
                 low = middle + 1
             else:
@@ -822,11 +846,13 @@ def _command_lines(
     command: CapturedCommand,
     *,
     font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
+    font_mode: FontMode,
     maximum_width: int,
 ) -> list[str]:
     lines = _wrap_pixels(
         "$ " + " ".join(command.argv),
         font=font,
+        font_mode=font_mode,
         maximum_width=maximum_width,
         subsequent_indent="  ",
     )
@@ -840,6 +866,7 @@ def _command_lines(
             _wrap_pixels(
                 f"{channel_name} | {channel}",
                 font=font,
+                font_mode=font_mode,
                 maximum_width=maximum_width,
                 subsequent_indent="         ",
             )
@@ -856,7 +883,13 @@ def _draw_bounded_text(
     fill: int | tuple[int, int, int],
     bounds: tuple[int, int, int, int],
 ) -> None:
-    placement = _text_placement(font, value, position)
+    font_mode = _font_mode_for_draw(draw)
+    placement = _text_placement(
+        font,
+        value,
+        position,
+        font_mode=font_mode,
+    )
     box = draw.textbbox(placement.draw_position, value, font=font)
     if box != placement.ink_bounds:
         _fail("font and drawing pixel bounds disagree")
@@ -920,6 +953,7 @@ def _render_png(evidence: JsonObject, commands: tuple[CapturedCommand, ...]) -> 
         _command_lines(
             command,
             font=body_font,
+            font_mode=_font_mode_for_draw(draw),
             maximum_width=width - 152,
         )
         for command in commands
@@ -1050,7 +1084,7 @@ def _render_gif(evidence: JsonObject, commands: tuple[CapturedCommand, ...]) -> 
             fill = 9 if line == "exit | 0" else 3
             if line.startswith("exit |") and command.exit_status != 0:
                 fill = 7
-            line_height = _text_dimensions(body_font, line)[1]
+            line_height = _text_dimensions(body_font, line, font_mode="1")[1]
             _draw_bounded_text(
                 draw,
                 (62, line_top),
@@ -1060,7 +1094,7 @@ def _render_gif(evidence: JsonObject, commands: tuple[CapturedCommand, ...]) -> 
                 bounds=(62, line_top, width - 62, line_top + line_height),
             )
         if (
-            line_tops[-1] + _text_dimensions(body_font, lines[-1])[1]
+            line_tops[-1] + _text_dimensions(body_font, lines[-1], font_mode="1")[1]
             != layout.phase_bottoms[index]
         ):
             _fail("GIF phase bottom does not match its measured transcript")

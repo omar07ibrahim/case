@@ -474,11 +474,14 @@ or other metadata. Every GIF frame must fully decode at the exact full-canvas
 dimensions with the reviewed duration, loop count zero, disposal method two, and
 no transparency, comment, EXIF, or ICC metadata. Transcript wrapping is
 measured with the exact font's pixel bounding boxes rather than character
-counts. The renderer normalizes every requested text position to the actual ink
-bounding-box top-left, including glyphs with negative horizontal or vertical
-bearings. Every drawn line is rejected if its measured left, top, right, or bottom
-edge escapes the reviewed panel and canvas padding; captured text is continued
-without truncation and reconstructs to the exact original channel text. The GIF
+counts. The font bounding box uses the exact Pillow raster mode derived from
+the target drawing surface (`"1"` for the palette GIF and `"L"` for the RGB
+PNG), and must equal `ImageDraw.textbbox` before drawing. The renderer
+normalizes every requested text position to the actual ink bounding-box top-left,
+including glyphs with negative horizontal or vertical bearings. Every drawn line
+is rejected if its measured left, top, right, or bottom edge escapes the reviewed
+panel and canvas padding; captured text is continued without truncation and
+reconstructs to the exact original channel text. The GIF
 uses one deterministic full-canvas height derived from the tallest measured phase:
 the exact line boxes, inter-line gaps, receipt-footer gap and height, panel bottom
 padding, and canvas bottom padding are all included and asserted.

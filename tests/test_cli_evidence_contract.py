@@ -55,6 +55,8 @@ class _TextPlacementFactory(Protocol):
         value: str,
         position: tuple[int, int],
         /,
+        *,
+        font_mode: str,
     ) -> _TextPlacementResult: ...
 
 
@@ -64,7 +66,13 @@ class _TextWidthFactory(Protocol):
         font: object,
         value: str,
         /,
+        *,
+        font_mode: str,
     ) -> int: ...
+
+
+class _FontModeFactory(Protocol):
+    def __call__(self, draw: object, /) -> str: ...
 
 
 class _GifLayoutResult(Protocol):
@@ -171,15 +179,16 @@ class CliEvidenceCandidateContractTests(unittest.TestCase):
         self.assertNotIn("CONTRACT_PATH", source)
         for layout_boundary in (
             "def _wrap_pixels(",
-            "font.getbbox(value)",
+            "font.getbbox(value, font_mode)",
             "draw.textbbox(placement.draw_position, value, font=font)",
             "visual transcript wrapping changed captured text",
             "visual transcript text escaped its measured bounds",
             '"png_size": [1400, 1120]',
             "def _text_placement(",
+            "def _font_mode_for_draw(",
             "def _gif_layout(",
             "layout.canvas_height",
-            "_text_dimensions(body_font, line)[1]",
+            '_text_dimensions(body_font, line, font_mode="1")[1]',
             "height == 0 and not value.isspace()",
         ):
             self.assertIn(layout_boundary, source)
@@ -205,16 +214,19 @@ class CliEvidenceCandidateContractTests(unittest.TestCase):
         from PIL import ImageFont
 
         class NegativeBearingFont:
-            def getbbox(self, value: str) -> tuple[int, int, int, int]:
-                self_value = value
-                if self_value != "j":
-                    raise AssertionError("unexpected test glyph")
+            def getbbox(
+                self,
+                value: str,
+                font_mode: str,
+            ) -> tuple[int, int, int, int]:
+                if value != "j" or font_mode != "L":
+                    raise AssertionError("unexpected test measurement")
                 return (-4, 7, 9, 22)
 
         namespace = _renderer_namespace()
         place_text = cast(_TextPlacementFactory, namespace["_text_placement"])
         font = cast(ImageFont.ImageFont, NegativeBearingFont())
-        placement = place_text(font, "j", (100, 200))
+        placement = place_text(font, "j", (100, 200), font_mode="L")
 
         self.assertEqual(placement.draw_position, (104, 193))
         self.assertEqual(placement.ink_bounds, (100, 200, 113, 215))
@@ -226,11 +238,37 @@ class CliEvidenceCandidateContractTests(unittest.TestCase):
         namespace = _renderer_namespace()
         measure_width = cast(_TextWidthFactory, namespace["_text_width"])
         font = ImageFont.load_default(size=18)
-        left, top, right, bottom = font.getbbox("         ")
+        left, top, right, bottom = font.getbbox("         ", "1")
 
         self.assertGreater(right - left, 0)
         self.assertEqual(bottom - top, 0)
-        self.assertGreater(measure_width(font, "         "), 0)
+        self.assertGreater(measure_width(font, "         ", font_mode="1"), 0)
+
+    @unittest.skipUnless(PILLOW_AVAILABLE, "canonical Pillow is not installed")
+    def test_palette_draw_and_font_use_the_same_raster_mode(self) -> None:
+        from PIL import Image, ImageDraw, ImageFont
+
+        namespace = _renderer_namespace()
+        choose_font_mode = cast(_FontModeFactory, namespace["_font_mode_for_draw"])
+        place_text = cast(_TextPlacementFactory, namespace["_text_placement"])
+        font = ImageFont.load_default(size=28)
+        frame = Image.new("P", (600, 100), 0)
+        draw = ImageDraw.Draw(frame)
+        value = "Installed-wheel CLI evidence"
+        font_mode = choose_font_mode(draw)
+
+        self.assertEqual(font_mode, "1")
+        self.assertNotEqual(font.getbbox(value), font.getbbox(value, font_mode))
+        self.assertEqual(
+            draw.textbbox((0, 0), value, font=font),
+            font.getbbox(value, font_mode),
+        )
+
+        placement = place_text(font, value, (62, 53), font_mode=font_mode)
+        self.assertEqual(
+            draw.textbbox(placement.draw_position, value, font=font),
+            placement.ink_bounds,
+        )
 
     @unittest.skipUnless(PILLOW_AVAILABLE, "canonical Pillow is not installed")
     def test_gif_layout_selects_the_tallest_measured_phase(self) -> None:
@@ -302,6 +340,7 @@ class CliEvidenceCandidateContractTests(unittest.TestCase):
         self.assertIn('("Aileron", "Regular")', contract)
         self.assertIn("actual ink\nbounding-box top-left", contract)
         self.assertIn("tallest measured phase", contract)
+        self.assertIn("raster mode derived from\nthe target drawing surface", contract)
         for output in CANDIDATE_OUTPUTS:
             self.assertIn(f"`{output}`", contract)
 
