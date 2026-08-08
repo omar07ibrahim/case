@@ -107,11 +107,18 @@ class CliEvidenceCandidateContractTests(unittest.TestCase):
         ):
             self.assertIn(boundary, source)
         self.assertIn('EXPECTED_PYTHON: Final = "3.12.3"', source)
+        self.assertIn('EXPECTED_SYSTEM: Final = "Linux"', source)
+        self.assertIn('EXPECTED_MACHINE: Final = "x86_64"', source)
         self.assertIn('EXPECTED_UNICODE: Final = "15.0.0"', source)
         self.assertIn('EXPECTED_PILLOW: Final = "12.3.0"', source)
+        self.assertIn("EXPECTED_PILLOW_WHEEL_SHA256", source)
+        self.assertIn("EXPECTED_FONT_NAME", source)
+        self.assertIn("EXPECTED_BUILD_DISTRIBUTIONS", source)
+        self.assertIn("ImageFont.load_default", source)
+        self.assertIn(".getname()", source)
         self.assertIn("runtime_files", source)
         self.assertIn("runtime_tree_sha256", source)
-        self.assertNotIn("wheel_sha256", source)
+        self.assertNotIn('"wheel_bytes"', source)
         self.assertNotIn("CONTRACT_PATH", source)
         for output in CANDIDATE_OUTPUTS:
             self.assertIn(f'"{output}"', source)
@@ -143,6 +150,8 @@ class CliEvidenceCandidateContractTests(unittest.TestCase):
         self.assertIn("regular `100644` repository file", contract)
         self.assertIn("Stage two must download that hosted artifact", contract)
         self.assertIn("verified rasterized CLI transcript", contract)
+        self.assertIn("source commit and tree identities", contract)
+        self.assertIn('("Aileron", "Regular")', contract)
         for output in CANDIDATE_OUTPUTS:
             self.assertIn(f"`{output}`", contract)
 
@@ -154,6 +163,7 @@ class CliEvidenceCandidateContractTests(unittest.TestCase):
                 "# Canonical CLI visual renderer only: CPython 3.12, Linux x86_64.\n"
                 "# Not installed by, or declared as a runtime dependency of, the "
                 "package.\n"
+                "--only-binary=:all:\n"
                 "Pillow==12.3.0 \\\n"
                 f"    --hash=sha256:{PILLOW_SHA256}\n"
             ),
@@ -171,6 +181,7 @@ class CliEvidenceCandidateContractTests(unittest.TestCase):
         self.assertIn("Pillow 12.3.0", notices)
         self.assertIn(PILLOW_SHA256, notices)
         self.assertIn("Aileron Regular", notices)
+        self.assertIn('getname()` resolves exactly to `("Aileron",', notices)
         self.assertIn("No Rights Reserved", notices)
 
     def test_hosted_candidate_uses_explicit_head_and_exact_uploader(self) -> None:
@@ -183,7 +194,11 @@ class CliEvidenceCandidateContractTests(unittest.TestCase):
         self.assertIn("ref: ${{ env.SOURCE_REVISION }}", workflow)
         self.assertIn('test "$(git rev-parse HEAD)" = "$SOURCE_REVISION"', workflow)
         self.assertIn("git rev-parse HEAD^{tree}", workflow)
+        self.assertIn("id: source_identity", workflow)
+        self.assertIn('echo "tree=$source_tree" >> "$GITHUB_OUTPUT"', workflow)
+        self.assertIn("runs-on: ubuntu-24.04", workflow)
         self.assertIn('python-version: "3.12.3"', workflow)
+        self.assertEqual(workflow.count("--source-tree"), 2)
         self.assertEqual(
             workflow.count("scripts/render_cli_evidence.py render"),
             2,
@@ -193,7 +208,11 @@ class CliEvidenceCandidateContractTests(unittest.TestCase):
             1,
         )
         self.assertIn(f"actions/upload-artifact@{UPLOAD_ARTIFACT_SHA}", workflow)
-        self.assertIn("name: case-cli-evidence-candidate", workflow)
+        self.assertIn(
+            "name: case-cli-evidence-candidate-${{ github.run_id }}-"
+            "${{ github.run_attempt }}",
+            workflow,
+        )
         self.assertIn("compression-level: 0", workflow)
         self.assertIn("git status --porcelain --untracked-files=all", workflow)
 

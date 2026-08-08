@@ -20,16 +20,18 @@ CLI.
   https://github.com/python-pillow/Pillow/blob/12.3.0/LICENSE
 
 The hash-locked installation input is
-[`requirements/cli-visuals.txt`](requirements/cli-visuals.txt). Published
-repository artifacts contain only the encoded images, not the Pillow wheel or
-Pillow source.
+[`requirements/cli-visuals.txt`](requirements/cli-visuals.txt). It requires a
+binary distribution and rejects a source fallback. The evidence manifest records
+the exact canonical wheel filename and SHA-256. Published repository artifacts
+contain only the encoded images, not the Pillow wheel or Pillow source.
 
 ## Embedded Aileron Regular subset used by Pillow
 
 `PIL.ImageFont.load_default(size=...)` in Pillow 12.3.0 loads Pillow's embedded,
 limited-character-set copy of Aileron Regular when FreeType support is
 available. The CLI evidence renderer uses that API only for ASCII transcript
-text.
+text and fails unless `getname()` resolves exactly to `("Aileron",
+"Regular")`.
 
 - Pillow API provenance:
   https://pillow.readthedocs.io/en/stable/reference/ImageFont.html

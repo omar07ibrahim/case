@@ -422,12 +422,14 @@ and NFKC-plus-case-fold collisions.
 
 The canonical capture environment is exact CPython 3.12.3 on Linux x86-64,
 Unicode database 15.0.0, package 0.4.0 installed from the built wheel, and
-Pillow 12.3.0 used only by the renderer. Pillow is installed from
+Pillow 12.3.0 used only by the renderer. Pillow is installed binary-only from
 `requirements/cli-visuals.txt` with the canonical CPython 3.12 manylinux wheel
 SHA-256
 `78cb2c6865a35ab8ff8b75fd122f6033b92a62c82801110e48ddd6c936a45d91`.
-It is not a package runtime dependency. License, wheel, source, and the embedded
-Aileron default-font provenance are recorded in `THIRD_PARTY_NOTICES.md`.
+It is not a package runtime dependency. The renderer also requires
+`ImageFont.load_default(...).getname()` to resolve exactly to
+`("Aileron", "Regular")`. License, wheel, source, and embedded-font provenance
+are recorded in `THIRD_PARTY_NOTICES.md`.
 
 The hosted candidate has exactly six files:
 
@@ -442,9 +444,11 @@ The machine manifest records the exact argv, stdout bytes, stderr bytes, exit
 status, and channel digests for installed-console analyze, installed-module
 verify, no-clobber rejection, and source-mismatch rejection. It also records the
 installed package identity, wheel filename, installed-runtime per-file digests
-and aggregate runtime-tree digest, Python and Unicode versions, source bindings,
-fixture identity, real receipt identity, renderer identity, and the acyclic
-hash/size inventory of the other five files. The manifest lists itself in the
+and aggregate runtime-tree digest, Python and Unicode versions, exact build-tool
+versions, canonical Pillow wheel filename and digest, resolved font family and
+style, source commit and tree identities, source bindings, fixture identity,
+real receipt identity, renderer identity, and the acyclic hash/size inventory
+of the other five files. The manifest lists itself in the
 artifact inventory but deliberately does not hash itself. Its reviewed identity
 and the hosted archive identity belong in a separate stage-two adoption record.
 
@@ -454,18 +458,23 @@ cannot preserve mode 0600 for a normal blob: an adopted synthetic receipt is a
 regular `100644` repository file. The manifest and captions must state those two
 distinct facts and must never imply that checkout preserves the runtime mode.
 
-The candidate job checks out the explicit pull-request head SHA (or the push SHA),
-asserts that the 40-hex source revision equals checkout HEAD, builds the wheel
-from a clean `git archive` copy with a fixed source epoch, and renders into two
-fresh runner-temporary roots. Every renderer input is captured through an O_NOFOLLOW and close-on-exec
+The candidate job is pinned to `ubuntu-24.04`, checks out the explicit
+pull-request head SHA (or the push SHA), asserts that the 40-hex source revision
+equals checkout HEAD, derives and validates the exact 40-hex HEAD tree, builds
+the wheel from a clean `git archive` copy with a fixed source epoch, and passes
+both source objects into two fresh runner-temporary renders.
+
+Every renderer input is captured through an O_NOFOLLOW and close-on-exec
 descriptor. The bounded reader compares descriptor identity, type, link count,
 size, modification time, and change time before and after a maximum-plus-one
 read, then confirms the pathname still names that same inode.
 
 Both inventories, every file byte, media structure, redacted failure channel,
-safe file mode, receipt hash, and source binding must match before upload. The pinned uploader is
+safe file mode, receipt hash, and source binding must match before upload. The
+pinned uploader is
 `actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a`
-(v7.0.1). A merge ref or `refs/pull/*/merge` SHA is not valid provenance.
+(v7.0.1). The artifact name includes the immutable workflow run ID and attempt.
+A merge ref or `refs/pull/*/merge` SHA is not valid provenance.
 
 Stage two must download that hosted artifact, independently validate the archive,
 manifest, receipt replay inputs, PNG, GIF, SVGs, hashes, modes, privacy scans, and

@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import html
+import importlib.metadata
 import io
 import json
 import os
@@ -69,11 +70,27 @@ SOURCE_BINDINGS: Final = (
 )
 
 EXPECTED_IMPLEMENTATION: Final = "CPython"
+EXPECTED_SYSTEM: Final = "Linux"
+EXPECTED_MACHINE: Final = "x86_64"
 EXPECTED_PYTHON: Final = "3.12.3"
 EXPECTED_UNICODE: Final = "15.0.0"
 EXPECTED_PACKAGE: Final = "casefold-observatory"
 EXPECTED_PACKAGE_VERSION: Final = "0.4.0"
 EXPECTED_PILLOW: Final = "12.3.0"
+EXPECTED_PILLOW_WHEEL: Final = (
+    "pillow-12.3.0-cp312-cp312-manylinux_2_27_x86_64."
+    "manylinux_2_28_x86_64.whl"
+)
+EXPECTED_PILLOW_WHEEL_SHA256: Final = (
+    "78cb2c6865a35ab8ff8b75fd122f6033b92a62c82801110e48ddd6c936a45d91"
+)
+EXPECTED_FONT_NAME: Final = ("Aileron", "Regular")
+EXPECTED_BUILD_DISTRIBUTIONS: Final = (
+    ("build", "1.5.0"),
+    ("packaging", "26.3"),
+    ("pyproject-hooks", "1.2.0"),
+    ("setuptools", "83.0.0"),
+)
 EXPECTED_COMMAND_IDS: Final = (
     "analyze",
     "verify",
@@ -447,15 +464,32 @@ print(
     return document
 
 
-def _validate_renderer_runtime() -> None:
+def _validate_renderer_runtime() -> dict[str, str]:
     if platform.python_implementation() != EXPECTED_IMPLEMENTATION:
         _fail("visual renderer requires canonical CPython")
     if platform.python_version() != EXPECTED_PYTHON:
         _fail("visual renderer requires exact CPython 3.12.3")
+    if (
+        platform.system() != EXPECTED_SYSTEM
+        or platform.machine() != EXPECTED_MACHINE
+    ):
+        _fail("visual renderer requires canonical Linux x86-64")
     if unicodedata.unidata_version != EXPECTED_UNICODE:
         _fail("visual renderer requires Unicode database 15.0.0")
     if PILLOW_VERSION != EXPECTED_PILLOW:
         _fail("visual renderer requires exact Pillow 12.3.0")
+    if _font(18).getname() != EXPECTED_FONT_NAME:
+        _fail("visual renderer requires embedded Aileron Regular")
+    try:
+        build_versions = {
+            distribution: importlib.metadata.version(distribution)
+            for distribution, _expected in EXPECTED_BUILD_DISTRIBUTIONS
+        }
+    except importlib.metadata.PackageNotFoundError:
+        _fail("visual renderer build environment is incomplete")
+    if build_versions != dict(EXPECTED_BUILD_DISTRIBUTIONS):
+        _fail("visual renderer build environment changed")
+    return build_versions
 
 
 def _analyze_argv() -> tuple[str, ...]:
@@ -1077,6 +1111,7 @@ def _render_workflow_svg(evidence: JsonObject) -> bytes:
         "schema_version": 1,
         "source_sha256": fixture_document["sha256"],
         "source_revision": evidence["source_revision"],
+        "source_tree": evidence["source_tree"],
     }
     return _svg_document(
         width=1600,
@@ -1096,10 +1131,13 @@ def _build_outputs(
     venv_bin: Path,
     wheel: Path,
     source_revision: str,
+    source_tree: str,
 ) -> dict[str, bytes]:
-    _validate_renderer_runtime()
+    build_environment = _validate_renderer_runtime()
     if _REVISION.fullmatch(source_revision) is None:
         _fail("source revision must be one lowercase 40-character commit")
+    if _REVISION.fullmatch(source_tree) is None:
+        _fail("source tree must be one lowercase 40-character object")
     fixture = _read_regular(PROJECT_ROOT / FIXTURE_PATH, maximum=65_536)
     _read_regular(wheel, maximum=32_000_000)
     bindings = _source_bindings()
@@ -1122,6 +1160,7 @@ def _build_outputs(
     evidence: JsonObject = {
         "analyze_summary": analyze_summary,
         "artifact_inventory": list(OUTPUT_PATHS),
+        "build_environment": build_environment,
         "commands": [command.document() for command in commands],
         "fixture": {
             "bytes": len(fixture),
@@ -1129,8 +1168,10 @@ def _build_outputs(
             "sha256": _sha256(fixture),
         },
         "font": {
+            "family": EXPECTED_FONT_NAME[0],
             "implementation": "Pillow ImageFont.load_default(size), embedded limited Aileron Regular",
             "provenance": "https://pillow.readthedocs.io/en/stable/reference/ImageFont.html",
+            "style": EXPECTED_FONT_NAME[1],
             "upstream": "https://dotcolon.net/fonts/aileron/",
         },
         "package": {
@@ -1139,6 +1180,10 @@ def _build_outputs(
             "runtime_tree_sha256": runtime["runtime_tree_sha256"],
             "version": runtime["package_version"],
             "wheel_filename": wheel.name,
+        },
+        "platform": {
+            "machine": platform.machine(),
+            "system": platform.system(),
         },
         "python_implementation": runtime["implementation"],
         "python_version": runtime["python_version"],
@@ -1152,6 +1197,8 @@ def _build_outputs(
         },
         "renderer": {
             "pillow_version": PILLOW_VERSION,
+            "pillow_wheel_filename": EXPECTED_PILLOW_WHEEL,
+            "pillow_wheel_sha256": EXPECTED_PILLOW_WHEEL_SHA256,
             "png_size": [1400, 1060],
             "gif_size": [1200, 650],
             "gif_frame_durations_ms": [1400, 1200, 1400, 1400],
@@ -1161,6 +1208,7 @@ def _build_outputs(
         "schema_version": 1,
         "source_bindings": bindings,
         "source_revision": source_revision,
+        "source_tree": source_tree,
         "unicode_version": runtime["unicode_version"],
     }
 
@@ -1225,6 +1273,33 @@ def _audit_outputs(outputs: dict[str, bytes]) -> None:
         _fail("candidate manifest version changed")
     if manifest.get("artifact_inventory") != list(OUTPUT_PATHS):
         _fail("candidate manifest inventory changed")
+    for source_key in ("source_revision", "source_tree"):
+        source_object = manifest.get(source_key)
+        if type(source_object) is not str or _REVISION.fullmatch(source_object) is None:
+            _fail("candidate source object identity changed")
+    if manifest.get("build_environment") != dict(EXPECTED_BUILD_DISTRIBUTIONS):
+        _fail("candidate build environment identity changed")
+    if manifest.get("platform") != {
+        "machine": EXPECTED_MACHINE,
+        "system": EXPECTED_SYSTEM,
+    }:
+        _fail("candidate platform identity changed")
+    font_document = cast(JsonObject, manifest.get("font"))
+    if (
+        font_document.get("family"),
+        font_document.get("style"),
+    ) != EXPECTED_FONT_NAME:
+        _fail("candidate font identity changed")
+    renderer_document = cast(JsonObject, manifest.get("renderer"))
+    if renderer_document.get("pillow_version") != EXPECTED_PILLOW:
+        _fail("candidate Pillow version changed")
+    if renderer_document.get("pillow_wheel_filename") != EXPECTED_PILLOW_WHEEL:
+        _fail("candidate Pillow wheel identity changed")
+    if (
+        renderer_document.get("pillow_wheel_sha256")
+        != EXPECTED_PILLOW_WHEEL_SHA256
+    ):
+        _fail("candidate Pillow wheel digest changed")
     generated_files = cast(JsonObject, manifest.get("generated_files"))
     if set(generated_files) != set(HASHED_OUTPUT_PATHS):
         _fail("candidate manifest hash inventory is not acyclic and exact")
@@ -1417,7 +1492,7 @@ def _compare_roots(left: Path, right: Path) -> None:
             _fail("independent candidate renders are not byte-identical")
 
 
-def _adopted_source_revision() -> str:
+def _adopted_source_identity() -> tuple[str, str]:
     manifest_bytes = _read_regular(
         PROJECT_ROOT / MANIFEST_PATH,
         maximum=_MAX_OUTPUT_BYTES[MANIFEST_PATH],
@@ -1428,14 +1503,18 @@ def _adopted_source_revision() -> str:
         _fail("adopted manifest is not JSON")
     if type(value) is not dict:
         _fail("adopted manifest is not an object")
-    revision = cast(JsonObject, value).get("source_revision")
+    manifest = cast(JsonObject, value)
+    revision = manifest.get("source_revision")
+    source_tree = manifest.get("source_tree")
     if type(revision) is not str or _REVISION.fullmatch(revision) is None:
         _fail("adopted manifest source revision is invalid")
-    return revision
+    if type(source_tree) is not str or _REVISION.fullmatch(source_tree) is None:
+        _fail("adopted manifest source tree is invalid")
+    return revision, source_tree
 
 
 def _check_adopted(*, venv_bin: Path, wheel: Path) -> None:
-    source_revision = _adopted_source_revision()
+    source_revision, source_tree = _adopted_source_identity()
     with (
         tempfile.TemporaryDirectory(prefix="casefold-cli-check-a-") as left_directory,
         tempfile.TemporaryDirectory(prefix="casefold-cli-check-b-") as right_directory,
@@ -1448,6 +1527,7 @@ def _check_adopted(*, venv_bin: Path, wheel: Path) -> None:
                 venv_bin=venv_bin,
                 wheel=wheel,
                 source_revision=source_revision,
+                source_tree=source_tree,
             ),
         )
         _write_outputs(
@@ -1456,6 +1536,7 @@ def _check_adopted(*, venv_bin: Path, wheel: Path) -> None:
                 venv_bin=venv_bin,
                 wheel=wheel,
                 source_revision=source_revision,
+                source_tree=source_tree,
             ),
         )
         _compare_roots(left, right)
@@ -1477,6 +1558,7 @@ def _parser() -> argparse.ArgumentParser:
     render.add_argument("--venv-bin", required=True, type=Path)
     render.add_argument("--wheel", required=True, type=Path)
     render.add_argument("--source-revision", required=True)
+    render.add_argument("--source-tree", required=True)
     render.add_argument("--output-root", required=True, type=Path)
 
     compare = subparsers.add_parser("compare")
@@ -1496,6 +1578,7 @@ def main() -> int:
             venv_bin=arguments.venv_bin,
             wheel=arguments.wheel,
             source_revision=arguments.source_revision,
+            source_tree=arguments.source_tree,
         )
         _write_outputs(arguments.output_root, outputs)
         print("CLI evidence candidate rendered (6 files)")
