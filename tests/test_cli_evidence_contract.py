@@ -338,7 +338,7 @@ class CliEvidenceCandidateContractTests(unittest.TestCase):
         self.assertIn("verified rasterized CLI transcript", contract)
         self.assertIn("source commit and tree identities", contract)
         self.assertIn('("Aileron", "Regular")', contract)
-        self.assertIn("actual ink\nbounding-box top-left", contract)
+        self.assertIn("actual ink bounding-box top-left", contract)
         self.assertIn("tallest measured phase", contract)
         self.assertIn("raster mode derived from\nthe target drawing surface", contract)
         for output in CANDIDATE_OUTPUTS:
