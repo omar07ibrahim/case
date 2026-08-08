@@ -473,7 +473,11 @@ def _validate_renderer_runtime() -> dict[str, str]:
         _fail("visual renderer requires Unicode database 15.0.0")
     if PILLOW_VERSION != EXPECTED_PILLOW:
         _fail("visual renderer requires exact Pillow 12.3.0")
-    if _font(18).getname() != EXPECTED_FONT_NAME:
+    resolved_font = _font(18)
+    if (
+        not isinstance(resolved_font, ImageFont.FreeTypeFont)
+        or resolved_font.getname() != EXPECTED_FONT_NAME
+    ):
         _fail("visual renderer requires embedded Aileron Regular")
     try:
         build_versions = {
@@ -624,7 +628,7 @@ def _font(size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
 def _text_width(
     font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
     value: str,
-) -> int:
+) -> float | int:
     left, _top, right, _bottom = font.getbbox(value)
     return right - left
 
