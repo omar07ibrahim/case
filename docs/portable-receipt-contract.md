@@ -2,18 +2,17 @@
 
 ## Status
 
-> **DESIGN CONTRACT — NOT IMPLEMENTED YET.**
+> **IN-MEMORY BYTE CONTRACT IMPLEMENTED IN 0.3.0.**
 >
-> The current supported package accepts bounded in-memory IdentifierRecord and
-> TransformPolicy tuples and returns a CollisionGraph. It has no corpus-file
-> parser, portable receipt serializer or verifier, installed command-line
-> entry point, or filesystem output layer. This document specifies a proposed
-> version 1 boundary for a future milestone; it does not expand the current
-> support statement or turn the checked-in visual-evidence JSON into a receipt.
+> The supported package accepts a bounded JSON Lines corpus as exact caller-owned
+> bytes, creates a canonical portable receipt, and verifies it by replaying the
+> same source bytes. It performs no filesystem access. The command, pathname,
+> persistence, terminal-output, and visual-evidence sections below remain a
+> design contract only and do not describe an installed surface.
 
-Normative words such as MUST and MUST NOT describe the future implementation.
-Until that implementation, no command, file extension, exit code, or persistence
-guarantee in this document is available.
+Normative words in the corpus, digest, canonical receipt, Unicode, verification,
+and library-error sections describe the implemented byte API. Normative words
+under proposed command and POSIX filesystem headings describe future work.
 
 The design preserves the existing collision algorithm, canonical record
 ordinals, policy order, resource accounting, redacted errors, semantic corpus
@@ -22,18 +21,17 @@ bytes without changing the meaning of CollisionGraph.semantic_corpus_sha256.
 
 ## Intended scope
 
-Version 1 is intended to provide one deliberately narrow offline workflow:
+Version 1 provides one deliberately narrow in-memory workflow:
 
-1. read one bounded, regular UTF-8 JSON Lines corpus;
-2. create explicitly ordered policies for the active Unicode database;
+1. accept one bounded UTF-8 JSON Lines corpus as exact `bytes`;
+2. accept explicitly ordered policies for the active Unicode database;
 3. run the existing in-memory collision analyzer;
-4. serialize the complete graph and execution identity into canonical JSON;
-5. publish that receipt without overwriting an existing path; and
-6. verify it by rereading the exact source bytes and recomputing the result.
+4. project the complete graph and execution identity into canonical JSON bytes;
+5. verify canonical receipt bytes against exact source bytes by recomputation.
 
-The proposed layer has no network access, service mode, browser interface,
-plugin system, user configuration, signing key, implicit policy, stdin corpus,
-stdout receipt, overwrite flag, or generic renderer for caller-controlled data.
+The implemented layer has no filesystem access, network access, service mode,
+browser interface, plugin system, user configuration, signing key, implicit
+policy, command-line input, persistence, or generic renderer for caller data.
 
 ## Corpus JSON Lines schema
 
@@ -50,8 +48,9 @@ MUST contain one record object:
 {"identifier":"ss","record_id":"lower"}
 ~~~
 
-The example is synthetic and illustrative. It is not a checked-in input fixture
-and cannot be processed by the current package.
+The example is synthetic and illustrative. It is not a checked-in input
+fixture; callers can pass the equivalent bytes to
+`create_collision_receipt(source_bytes, policies)`.
 
 ### Encoding and line rules
 
@@ -79,7 +78,7 @@ unique. identifier retains the existing non-empty, 1,024-code-point and
 2,048-UTF-8-byte limits. The header-only corpus is valid and represents zero
 records.
 
-### Proposed ingestion bounds
+### In-memory ingestion bounds
 
 | Resource | Version 1 limit | Accounting rule |
 | --- | ---: | --- |
@@ -87,22 +86,21 @@ records.
 | One physical line | 8,192 bytes | Bytes through its terminator, or through EOF for the final line |
 | Physical lines | 2,049 | One header plus at most 2,048 record lines |
 | JSON nesting | 16 levels | Preflight depth outside JSON strings before object decoding |
-| Read chunk | 65,536 bytes | Maximum requested from the already-open descriptor per read |
 | Records | 2,048 | Existing analyzer limit |
 | Aggregate decoded identifiers | 524,288 UTF-8 bytes | Existing analyzer limit |
 
 All existing policy, transform-application, transformed-data, group, witness,
-and component limits continue to apply. File limits are additional rejection
-boundaries, not enlarged analyzer capacity.
+and component limits continue to apply. Corpus-byte limits are additional rejection boundaries, not enlarged analyzer
+capacity.
 
-The future reader may consume a file in fixed-size chunks, but version 1 does
+A future filesystem reader may consume a file in fixed-size chunks, but version 1 does
 not claim arbitrary, unbounded, asynchronous, or constant-memory streaming. It
 may retain at most the bounded source bytes while producing the in-memory
 record tuple.
 
 ## Two separate corpus digests
 
-A future receipt MUST keep these identities distinct:
+A receipt keeps these identities distinct:
 
 - source.sha256 is lowercase SHA-256 of the complete original source byte
   sequence, without normalization or domain rewriting. source.byte_count is
@@ -164,9 +162,8 @@ schema version is 1. The top-level object has exactly six keys:
 ~~~
 
 Angle-bracketed strings above describe fields; they are not literal accepted
-values. The future implementation MUST emit the complete existing canonical
-policy document, including its current bounds. policies preserves command-line
-policy order, and each policy_id MUST equal SHA-256 of the existing canonical
+values. The implementation emits the complete existing canonical
+policy document, including its current bounds. policies preserves caller order (and would preserve future command order), and each policy_id MUST equal SHA-256 of the existing canonical
 policy bytes.
 
 The graph object is a portable projection of every current CollisionGraph
@@ -202,9 +199,10 @@ sort_keys=True, separators=(",", ":"), and allow_nan=False, followed by one LF.
 The schema admits only objects, arrays, strings, exact integers, and null, so it
 does not depend on floating-point formatting.
 
-A receipt larger than the bound is rejected before publication. A verifier MUST
-reject noncanonical receipt bytes even if a generic JSON parser would assign
-them similar values.
+Creation rejects a receipt larger than the bound before returning it. A verifier
+rejects an oversized receipt before parsing and rejects noncanonical bytes even
+if a generic JSON parser would assign them similar values. Any future command
+must complete the same check before publication.
 
 The receipt MUST NOT contain timestamps, local or absolute paths, hostnames,
 usernames, environment variables, Python patch versions, machine identifiers,
@@ -233,7 +231,7 @@ documented skip behavior on another Unicode database.
 
 ## Proposed installed command
 
-> **NOT IMPLEMENTED YET:** there is currently no casefold-observatory console
+> **NOT IMPLEMENTED:** there is currently no casefold-observatory console
 > script and no python -m casefold_observatory command.
 
 The proposed commands are:
@@ -293,8 +291,8 @@ Proposed exit statuses are:
 
 ## POSIX filesystem boundary
 
-These requirements apply only to the future file command. The current
-in-memory API performs no filesystem access.
+> **NOT IMPLEMENTED:** these requirements apply only to a future file command.
+> The supported in-memory API performs no filesystem access.
 
 ### Safe reads
 
@@ -353,10 +351,10 @@ transaction spanning the source file and output filesystem.
 
 ## Verification algorithm
 
-A conforming future verifier performs these steps in order:
+A conforming verifier performs these steps in order:
 
-1. Safe-open and bounded-read the receipt.
-2. Preflight JSON depth, reject duplicate keys and wrong exact types, and
+1. Require exact receipt `bytes` and enforce the complete byte bound.
+2. Preflight ASCII JSON depth, reject duplicate keys and wrong exact types, and
    require exact schema keys and canonical bytes.
 3. Require the receipt producer distribution and version to equal the executing
    installed distribution.
@@ -364,9 +362,9 @@ A conforming future verifier performs these steps in order:
    construction. Compare its full canonical document and policy ID with the
    embedded values while preserving policy order.
 5. Require the graph, policies, and active runtime Unicode versions to match.
-6. Safe-open and bounded-read the source once.
+6. Require exact source `bytes` and enforce the complete byte bound.
 7. Compare byte_count and source SHA-256 using constant-time digest comparison.
-8. Parse the captured source bytes and invoke the existing analyzer.
+8. Parse those captured source bytes and invoke the existing analyzer.
 9. Build the expected canonical receipt from that trusted result.
 10. Require exact byte equality with the supplied canonical receipt and emit
     only the safe success summary.
@@ -380,12 +378,13 @@ receipt is returned.
 
 A receipt is not a redacted export. It contains record IDs, policy documents,
 semantic and source digests, collision relations, and transformed values.
-Transformed values can equal or reveal source identifiers. Mode 0600 reduces
-accidental local disclosure but provides no encryption, memory isolation, or
+Transformed values can equal or reveal source identifiers. The byte API makes
+no persistence or file-mode guarantee. A future mode-0600 output would reduce
+accidental local disclosure but provide no encryption, memory isolation, or
 secure erasure.
 
-Library- and CLI-owned errors must expose stable categories and bounded numeric
-context only. Generic JSON exceptions, Unicode decode exceptions, OSError path
+Library-owned errors expose stable categories and bounded numeric context only.
+Any future CLI must preserve that rule. Generic JSON exceptions, Unicode decode exceptions, OSError path
 messages, argument parser echoes, and tracebacks must not cross the CLI
 boundary. Caller-owned exception context and process inspection remain outside
 that guarantee.
@@ -394,7 +393,7 @@ Do not publish a receipt derived from a private namespace merely because the
 raw source file is absent. Low-entropy identifiers, record IDs, source digests,
 semantic digests, and transformed outputs can be guessed or correlated.
 
-## Evidence required after implementation
+## Evidence required after a filesystem or CLI implementation
 
 No new screenshot, terminal image, animation, or receipt fixture should be
 published before the corresponding installed workflow exists and passes its

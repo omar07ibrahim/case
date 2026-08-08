@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "casefold-observatory"
-version = "0.2.0"
+version = "0.3.0"
 description = "Bounded, deterministic Unicode identifier collision analysis"
 readme = "README.md"
 requires-python = ">=3.11"

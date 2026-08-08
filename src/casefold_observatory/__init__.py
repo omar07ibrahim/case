@@ -1,4 +1,4 @@
-"""Explicit, bounded Unicode identifier transformation policies."""
+"""Bounded Unicode identifier collision analysis and portable receipts."""
 
 from casefold_observatory.collision import (
     COLLISION_ALGORITHM,
@@ -23,6 +23,18 @@ from casefold_observatory.collision import (
     analyze_collisions,
     create_identifier_record,
 )
+from casefold_observatory.corpus import (
+    CORPUS_FORMAT,
+    CORPUS_FORMAT_VERSION,
+    CORPUS_SCHEMA,
+    CORPUS_SCHEMA_VERSION,
+    MAX_CORPUS_LINE_BYTES,
+    MAX_CORPUS_LINES,
+    MAX_CORPUS_SOURCE_BYTES,
+    MAX_JSON_DEPTH,
+    CorpusErrorCode,
+    CorpusIngestionError,
+)
 from casefold_observatory.engine import apply_policy, canonical_policy_bytes
 from casefold_observatory.model import (
     MAX_INPUT_CODEPOINTS,
@@ -42,9 +54,29 @@ from casefold_observatory.model import (
     TransformStep,
     create_policy,
 )
+from casefold_observatory.receipt import (
+    DISTRIBUTION_NAME,
+    DISTRIBUTION_VERSION,
+    MAX_RECEIPT_BYTES,
+    RECEIPT_SCHEMA,
+    RECEIPT_SCHEMA_VERSION,
+    CollisionReceipt,
+    ReceiptErrorCode,
+    ReceiptSource,
+    ReceiptVerificationError,
+    canonical_receipt_bytes,
+    create_collision_receipt,
+    verify_collision_receipt,
+)
 
 __all__ = [
     "COLLISION_ALGORITHM",
+    "CORPUS_FORMAT",
+    "CORPUS_FORMAT_VERSION",
+    "CORPUS_SCHEMA",
+    "CORPUS_SCHEMA_VERSION",
+    "DISTRIBUTION_NAME",
+    "DISTRIBUTION_VERSION",
     "MAX_ANALYSIS_COMPONENTS",
     "MAX_ANALYSIS_POLICIES",
     "MAX_ANALYSIS_POLICY_GROUPS",
@@ -53,17 +85,27 @@ __all__ = [
     "MAX_ANALYSIS_TRANSFORMED_UTF8_BYTES",
     "MAX_ANALYSIS_TRANSFORM_APPLICATIONS",
     "MAX_ANALYSIS_WITNESSES",
+    "MAX_CORPUS_LINES",
+    "MAX_CORPUS_LINE_BYTES",
+    "MAX_CORPUS_SOURCE_BYTES",
     "MAX_INPUT_CODEPOINTS",
     "MAX_INPUT_UTF8_BYTES",
+    "MAX_JSON_DEPTH",
     "MAX_POLICY_STEPS",
+    "MAX_RECEIPT_BYTES",
     "MAX_RECORD_ID_CHARS",
     "MAX_STAGE_CODEPOINTS",
     "MAX_STAGE_UTF8_BYTES",
     "MAX_UNICODE_VERSION_CHARS",
+    "RECEIPT_SCHEMA",
+    "RECEIPT_SCHEMA_VERSION",
     "CollisionAnalysisError",
     "CollisionErrorCode",
     "CollisionGraph",
+    "CollisionReceipt",
     "CollisionWitness",
+    "CorpusErrorCode",
+    "CorpusIngestionError",
     "ExactDuplicateGroup",
     "GlobalCollisionComponent",
     "HazardEvidence",
@@ -72,6 +114,9 @@ __all__ = [
     "IdentifierRecord",
     "IdentifierTransformError",
     "PolicyCollisionGroup",
+    "ReceiptErrorCode",
+    "ReceiptSource",
+    "ReceiptVerificationError",
     "TransformErrorCode",
     "TransformPolicy",
     "TransformResult",
@@ -81,6 +126,9 @@ __all__ = [
     "analyze_collisions",
     "apply_policy",
     "canonical_policy_bytes",
+    "canonical_receipt_bytes",
+    "create_collision_receipt",
     "create_identifier_record",
     "create_policy",
+    "verify_collision_receipt",
 ]

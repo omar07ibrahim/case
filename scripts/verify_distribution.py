@@ -80,9 +80,11 @@ def _assert_archive_contract(sdist: Path, wheel: Path) -> None:
     required_package_files = (
         "casefold_observatory/__init__.py",
         "casefold_observatory/collision.py",
+        "casefold_observatory/corpus.py",
         "casefold_observatory/engine.py",
         "casefold_observatory/model.py",
         "casefold_observatory/py.typed",
+        "casefold_observatory/receipt.py",
     )
     for required in required_package_files:
         if not any(name.endswith(required) for name in sdist_names):
@@ -94,6 +96,7 @@ def _assert_archive_contract(sdist: Path, wheel: Path) -> None:
         "README.md",
         "SECURITY.md",
         "docs/collision-graph-contract.md",
+        "docs/portable-receipt-contract.md",
         "docs/visuals/README.md",
         "docs/visuals/architecture.svg",
         "docs/visuals/collision-witness-graph.svg",
@@ -103,7 +106,9 @@ def _assert_archive_contract(sdist: Path, wheel: Path) -> None:
         "scripts/verify_distribution.py",
         "tests/test_collision.py",
         "tests/test_collision_properties.py",
+        "tests/test_corpus.py",
         "tests/test_distribution_script.py",
+        "tests/test_receipt.py",
         "tests/test_visuals.py",
     )
     for required in required_source_files:
@@ -134,8 +139,11 @@ import casefold_observatory
 from casefold_observatory import (
     TransformStep,
     analyze_collisions,
+    canonical_receipt_bytes,
+    create_collision_receipt,
     create_identifier_record,
     create_policy,
+    verify_collision_receipt,
 )
 
 module_path = Path(casefold_observatory.__file__).resolve()
@@ -152,12 +160,27 @@ records = tuple(
 )
 policy = create_policy((TransformStep.LOWER, TransformStep.CASEFOLD))
 graph = analyze_collisions(records, (policy,))
+source = (
+    b'{"schema":"casefold-observatory.identifier-corpus","schema_version":1}\\n'
+    b'{"identifier":"SS","record_id":"upper"}\\n'
+    b'{"identifier":"\\u00df","record_id":"eszett"}\\n'
+    b'{"identifier":"ss","record_id":"lower"}\\n'
+)
+receipt_bytes = canonical_receipt_bytes(
+    create_collision_receipt(source, (policy,))
+)
+verified_receipt = verify_collision_receipt(receipt_bytes, source)
 print(
     json.dumps(
         {
             "algorithm": graph.algorithm,
             "component_members": graph.components[0].member_record_ordinals,
             "policy_group_members": graph.policy_groups[0].member_record_ordinals,
+            "receipt_schema": verified_receipt.schema,
+            "receipt_source_bytes": verified_receipt.source.byte_count,
+            "receipt_verified": (
+                canonical_receipt_bytes(verified_receipt) == receipt_bytes
+            ),
             "record_ids": graph.record_ids,
             "version": metadata.version("casefold-observatory"),
             "witness_stages": [
@@ -229,6 +252,9 @@ def main() -> None:
         "algorithm": "stage-partition-witness-v1",
         "component_members": [0, 1, 2],
         "policy_group_members": [0, 1, 2],
+        "receipt_schema": "casefold-observatory.analysis-receipt",
+        "receipt_source_bytes": 196,
+        "receipt_verified": True,
         "record_ids": ["eszett", "lower", "upper"],
         "version": expected_version,
         "witness_stages": [0, 1],

@@ -6,15 +6,15 @@ for security review of usernames, routing keys, dataset labels, package names,
 and other namespaces where an unexpected equivalence can become an
 authorization or integrity problem.
 
-> **Phase 2a is implemented:** the installed library validates bounded in-memory
-> records, evaluates one or more ordered policies, and returns deterministic
-> collision groups, connected components, and minimal stage witnesses. File
-> ingestion, portable receipts, a CLI, and an offline UI remain future work.
+> **Phase 2b is implemented:** the dependency-free library now accepts a strict,
+> bounded UTF-8 JSON Lines corpus as caller-supplied bytes, computes the complete
+> collision graph, emits canonical ASCII JSON receipt bytes, and verifies a
+> receipt by replaying the source. It still performs no filesystem, CLI, network,
+> or browser work.
 >
-> The proposed version 1 corpus, receipt, and CLI boundaries are documented in
-> the [portable receipt contract](docs/portable-receipt-contract.md). That
-> contract is **NOT IMPLEMENTED YET** and does not describe an available command
-> or file format.
+> The implemented in-memory byte contract and the still-design-only filesystem
+> and command boundaries are documented in the
+> [portable receipt contract](docs/portable-receipt-contract.md).
 
 It is not a generic case converter, a confusable-character detector, or a claim
 that one Unicode policy is universally correct.
@@ -46,7 +46,12 @@ decided from complete Python strings, never from hashes.
   policy ordinals;
 - explicit reject or preserve handling for controls, format characters, and
   bidirectional controls;
-- no runtime dependencies and no network requirement.
+- strict 4 MiB corpus-byte ingestion with bounded physical lines, line count,
+  JSON depth, exact schemas, and redacted failures;
+- canonical, 16 MiB-bounded ASCII JSON receipts with complete graph and policy
+  projection, distinct exact-source and semantic digests, producer identity,
+  active-Unicode binding, and replay verification;
+- no runtime dependencies and no filesystem or network access.
 
 The architecture and current graph semantics are illustrated with
 source-controlled, reproducible assets:
@@ -168,9 +173,11 @@ ordered policy; stages from different policies are not chronological.
 
 The graph carries the algorithm identifier, runtime Unicode version, policy
 IDs, and a domain-separated, length-prefixed SHA-256 digest of the canonical
-in-memory record model. That semantic digest is an integrity handle for this
-model only. It is not a digest of source-file bytes and provides no
-authentication, anonymity, or freshness.
+in-memory record model. A receipt separately carries SHA-256 and byte count for
+the exact caller-supplied corpus bytes. Line endings, JSON whitespace, escape
+spelling, and input order therefore change the source digest without changing
+the semantic digest when they decode to the same canonical records. Neither
+digest provides authentication, anonymity, or freshness.
 
 The current diagrams are regenerated from reviewed repository inputs and
 describe implemented behavior. They are not UI screenshots or evidence of a
@@ -188,14 +195,12 @@ commit private namespace exports without an appropriate data-handling plan.
 
 1. **Bounded transformation policies** — implemented.
 2. **In-memory collision graph and minimal witnesses** — implemented in phase
-   2a; portable graph serialization is next. The checked-in documentation
-   fixtures are generator-owned evidence, not a public receipt format.
-3. **Reproducible ingestion and receipts** — the design-only
-   [portable receipt contract](docs/portable-receipt-contract.md) specifies
-   bounded input, deterministic serialization, and bindings to exact input
-   bytes, policies, implementation version, and Unicode data version. It is
-   **not implemented yet**.
-4. **Command-line workflow** — the same future contract specifies safe terminal
+   2a. The checked-in documentation fixtures remain generator-owned evidence,
+   not public receipts.
+3. **Reproducible ingestion and receipts** — implemented in phase 2b as a pure
+   in-memory bytes API with strict bounds, deterministic serialization, and
+   bindings to exact input bytes, policies, producer version, and Unicode data.
+4. **Command-line workflow** — the future contract specifies safe terminal
    output and no-clobber persistence, but no installed CLI exists yet.
 5. **Offline interface** — local-only assets, escaped visible rendering of
    controls and invisible code points, and a restrictive Content Security

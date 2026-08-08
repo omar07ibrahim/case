@@ -2,27 +2,31 @@
 
 ## Current support status
 
-The supported tree contains two implemented, dependency-free library layers:
+The supported tree contains four implemented, dependency-free library layers:
 
-- bounded evaluation of explicit Unicode normalization and case policies; and
+- bounded evaluation of explicit Unicode normalization and case policies;
 - bounded, deterministic in-memory collision analysis with exact-duplicate
-  groups, per-policy minimal witness trees, and cross-policy union components.
+  groups, per-policy minimal witness trees, and cross-policy union components;
+- strict ingestion of a caller-supplied UTF-8 JSON Lines corpus byte string; and
+- canonical receipt creation plus replay verification from caller-supplied
+  receipt and source bytes.
 
-There is currently no source-file ingestion, portable receipt format, CLI,
-browser UI, network service, or general-purpose renderer for caller data. The
-repository does include a deterministic documentation renderer for its fixed,
-reviewed synthetic fixtures; it is not a product interface. Controls described
-below for future surfaces are requirements, not claims about existing
-functionality. The historical Flask prototype is unsupported and must not be
-deployed.
+There is no filesystem ingestion or output, CLI, browser UI, network service,
+or general-purpose renderer for caller data. The repository does include a
+deterministic documentation renderer for its fixed, reviewed synthetic fixtures;
+it is not a product interface. Controls described below for future surfaces are
+requirements, not claims about existing functionality. The historical Flask
+prototype is unsupported and must not be deployed.
 
 ## Current trust boundary
 
-Every identifier, record ID, policy object, and caller-provided container is
-untrusted. The public analyzer accepts exact tuples of validated
-`IdentifierRecord` and `TransformPolicy` objects and returns Python objects in
-the same process. It does not read files, write reports, open sockets, invoke a
-shell, or render untrusted text.
+Every identifier, record ID, policy object, source byte string, receipt byte
+string, and caller-provided container is untrusted. The public analyzer accepts
+exact tuples of validated objects. The receipt API accepts exact `bytes`,
+revalidates factory-owned state, and verifies only a graph recomputed from the
+captured source bytes; receipt JSON is never trust-deserialized into a graph. It
+does not read files, write reports, open sockets, invoke a shell, or render
+untrusted text.
 
 Record IDs are limited to 64 lowercase ASCII characters matching
 `[a-z][a-z0-9._-]*` and must be unique. They define canonical record ordinals;
@@ -50,6 +54,11 @@ The analyzer fails closed when any configured bound is exceeded:
 | Policy collision groups | 8,192 | Cumulative across policies |
 | Witnesses | 20,480 | Exact-duplicate and transform witnesses combined |
 | Global components | 1,024 | Non-singleton union components |
+| Corpus source | 4,194,304 bytes | Complete caller-supplied byte string |
+| Corpus physical line | 8,192 bytes | Including LF/CRLF, or through final EOF |
+| Corpus physical lines | 2,049 | One header plus at most 2,048 records |
+| JSON nesting | 16 levels | Preflight depth outside strings |
+| Canonical receipt | 16,777,216 bytes | Complete ASCII JSON plus final LF |
 
 Limits are part of the implementation, not capacity guidance for a hostile
 multi-tenant service. The library runs synchronously in the caller's process;
@@ -73,9 +82,11 @@ without echoing record IDs or identifiers:
 - `policy_ordinal` refers to the caller's policy tuple position.
 
 These namespaces are intentionally distinct. A caller must not relabel an input
-ordinal as a canonical ordinal in logs or reports. Underlying transformation
-failures are represented by a stable `transform_error_code`; a library-owned
-collision error does not include the rejected value.
+ordinal as a canonical ordinal in logs or reports. Corpus and receipt failures
+similarly expose stable enums plus physical-line, input-record, or policy
+ordinals only. Underlying transformation failures are represented by a stable
+`transform_error_code`; library-owned errors do not include rejected values,
+JSON tokens, or source lines.
 
 `HazardHandling.PRESERVE` is an explicit analytical choice. It retains raw
 control or format content and records hazard locations; it does not make that
@@ -110,11 +121,11 @@ length-prefixed canonical record IDs and UTF-8 identifier values, ordered by
 record ID. It binds the semantic in-memory record model and avoids delimiter
 ambiguity.
 
-It does **not** bind original source bytes, file encoding markers, delimiters,
-comments, line endings, filenames, record tuple order, or ingestion settings.
-The current API has already received decoded Python strings, so it cannot prove
-what source representation produced them. A future ingestion receipt must
-separately bind exact source bytes.
+It does **not** bind original source bytes, encoding markers, delimiters, line
+endings, or JSON representation. The implemented receipt therefore keeps a
+separate `source.sha256` and `source.byte_count` over the complete accepted
+byte string. It deliberately does not bind a filename or path because the
+library has no filesystem boundary.
 
 The semantic digest is not a MAC, signature, authentication mechanism,
 authorization decision, trusted timestamp, freshness proof, or anonymity
@@ -139,17 +150,17 @@ Current reject/preserve handling covers the documented control, format, and
 bidirectional-control classifications. Preserved text still requires safe,
 visible rendering before a human can review it.
 
-## Requirements for future ingestion and rendering
+## Requirements for future filesystem and rendering layers
 
-Future file and CLI layers must use strict, bounded decoding and must account
-for source bytes, lines, records, fields, and aggregation independently.
-Portable receipts must use a versioned canonical schema and bind exact source
-bytes, policy documents, implementation identity, and Unicode data version.
-Unless separately signed or authenticated, those receipts will still be
-integrity evidence rather than proof of origin. The design-only
-[portable receipt contract](docs/portable-receipt-contract.md) makes this future
-boundary concrete; it is **not implemented yet** and does not expand the current
-support status.
+The in-memory corpus and receipt boundaries already use strict bounded decoding,
+a versioned canonical schema, exact-source and semantic digests, complete policy
+documents, producer identity, and Unicode data binding. Receipts are integrity
+evidence, not proof of origin, unless separately signed or authenticated.
+
+Any future file and CLI layer must preserve those rules while adding safe file
+handling and publication. The
+[portable receipt contract](docs/portable-receipt-contract.md) distinguishes the
+implemented byte API from those still-design-only boundaries.
 
 Terminal output must prevent ANSI/control interpretation and show controls,
 bidirectional marks, invisible code points, and ambiguous whitespace visibly.

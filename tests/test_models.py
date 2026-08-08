@@ -4,12 +4,14 @@ import unittest
 
 from casefold_observatory import (
     CollisionGraph,
+    CollisionReceipt,
     CollisionWitness,
     ExactDuplicateGroup,
     GlobalCollisionComponent,
     HazardEvidence,
     IdentifierRecord,
     PolicyCollisionGroup,
+    ReceiptSource,
     TransformPolicy,
     TransformResult,
     TransformStageEvidence,
@@ -29,6 +31,8 @@ class ConstructionBoundaryTests(unittest.TestCase):
             (PolicyCollisionGroup, "PolicyCollisionGroup objects"),
             (GlobalCollisionComponent, "GlobalCollisionComponent objects"),
             (CollisionGraph, "CollisionGraph objects"),
+            (ReceiptSource, "ReceiptSource objects"),
+            (CollisionReceipt, "CollisionReceipt objects"),
         )
         for model, message in cases:
             with (
