@@ -679,7 +679,14 @@ def _text_width(
 ) -> int:
     if not value:
         return 0
-    return _text_dimensions(font, value)[0]
+    left, top, right, bottom = _font_bbox(font, value)
+    width = right - left
+    height = bottom - top
+    if width < 0 or height < 0:
+        _fail("visual text has a negative pixel measurement")
+    if height == 0 and not value.isspace():
+        _fail("non-whitespace wrapping text has no ink height")
+    return width
 
 
 def _text_placement(

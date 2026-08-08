@@ -58,6 +58,15 @@ class _TextPlacementFactory(Protocol):
     ) -> _TextPlacementResult: ...
 
 
+class _TextWidthFactory(Protocol):
+    def __call__(
+        self,
+        font: object,
+        value: str,
+        /,
+    ) -> int: ...
+
+
 class _GifLayoutResult(Protocol):
     canvas_height: int
     panel_bottom: int
@@ -171,6 +180,7 @@ class CliEvidenceCandidateContractTests(unittest.TestCase):
             "def _gif_layout(",
             "layout.canvas_height",
             "_text_dimensions(body_font, line)[1]",
+            "height == 0 and not value.isspace()",
         ):
             self.assertIn(layout_boundary, source)
         self.assertNotIn("height = 650", source)
@@ -208,6 +218,19 @@ class CliEvidenceCandidateContractTests(unittest.TestCase):
 
         self.assertEqual(placement.draw_position, (104, 193))
         self.assertEqual(placement.ink_bounds, (100, 200, 113, 215))
+
+    @unittest.skipUnless(PILLOW_AVAILABLE, "canonical Pillow is not installed")
+    def test_text_width_accepts_a_non_inking_continuation_indent(self) -> None:
+        from PIL import ImageFont
+
+        namespace = _renderer_namespace()
+        measure_width = cast(_TextWidthFactory, namespace["_text_width"])
+        font = ImageFont.load_default(size=18)
+        left, top, right, bottom = font.getbbox("         ")
+
+        self.assertGreater(right - left, 0)
+        self.assertEqual(bottom - top, 0)
+        self.assertGreater(measure_width(font, "         "), 0)
 
     @unittest.skipUnless(PILLOW_AVAILABLE, "canonical Pillow is not installed")
     def test_gif_layout_selects_the_tallest_measured_phase(self) -> None:
