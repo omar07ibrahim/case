@@ -235,9 +235,7 @@ class CorpusBoundaryTests(unittest.TestCase):
 
     def test_exact_bytes_type_is_required(self) -> None:
         with self.assertRaisesRegex(TypeError, "exact bytes"):
-            corpus_module._parse_corpus_bytes(
-                cast(bytes, bytearray(_source()))
-            )
+            corpus_module._parse_corpus_bytes(cast(bytes, bytearray(_source())))
 
     def test_internal_json_code_mapping_is_total(self) -> None:
         mapping = {
