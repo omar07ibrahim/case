@@ -11,6 +11,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import warnings
 from pathlib import Path
 from types import SimpleNamespace
 from typing import BinaryIO, cast
@@ -767,11 +768,22 @@ class CliInternalAndInstalledTests(unittest.TestCase):
 
     def test_module_entry_false_and_true_paths_share_cli_main(self) -> None:
         self.assertTrue(callable(getattr(module_entry, "main", None)))
-        with (
-            mock.patch.object(cli, "main", return_value=7) as entry,
-            self.assertRaises(SystemExit) as caught,
-        ):
-            runpy.run_module("casefold_observatory.__main__", run_name="__main__")
+        loaded_entry = sys.modules.pop("casefold_observatory.__main__")
+        try:
+            with warnings.catch_warnings():
+                warnings.simplefilter("error", RuntimeWarning)
+                with (
+                    mock.patch.object(cli, "main", return_value=7) as entry,
+                    self.assertRaises(SystemExit) as caught,
+                ):
+                    runpy.run_module(
+                        "casefold_observatory.__main__",
+                        run_name="__main__",
+                    )
+        finally:
+            sys.modules["casefold_observatory.__main__"] = loaded_entry
+
+        self.assertIs(sys.modules["casefold_observatory.__main__"], loaded_entry)
         self.assertEqual(caught.exception.code, 7)
         entry.assert_called_once_with()
 
