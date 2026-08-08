@@ -340,9 +340,7 @@ def _dispatch(argv: tuple[str, ...]) -> tuple[int, bytes, bytes]:
             _error_line("policy.invalid_argument"),
         )
     except CorpusIngestionError as error:
-        status = (
-            EXIT_POLICY if error.code in _CORPUS_RESOURCE_CODES else EXIT_USAGE
-        )
+        status = EXIT_POLICY if error.code in _CORPUS_RESOURCE_CODES else EXIT_USAGE
         return (
             status,
             b"",

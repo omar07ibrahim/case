@@ -248,10 +248,9 @@ print(
         raise TypeError("installed CLI returned a non-object")
     payload["cli_analyze_status"] = analyzed_payload.get("status")
     payload["cli_verify_status"] = verified_payload.get("status")
-    payload["cli_digest_parity"] = (
-        analyzed_payload.get("receipt_sha256")
-        == verified_payload.get("receipt_sha256")
-    )
+    payload["cli_digest_parity"] = analyzed_payload.get(
+        "receipt_sha256"
+    ) == verified_payload.get("receipt_sha256")
     payload["cli_receipt_mode"] = stat.S_IMODE(receipt_path.stat().st_mode)
     return payload
 

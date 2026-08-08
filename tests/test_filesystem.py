@@ -567,9 +567,7 @@ class FilePublicationTests(unittest.TestCase):
                 publish_new_file(destination.as_posix(), b"x")
             self.assertFalse(destination.exists())
             self.assertEqual(unrelated.read_bytes(), b"keep")
-            self.assertFalse(
-                (root / f".casefold-observatory-{'b' * 32}.tmp").exists()
-            )
+            self.assertFalse((root / f".casefold-observatory-{'b' * 32}.tmp").exists())
 
     def test_link_races_and_link_errors_are_rejected(self) -> None:
         with tempfile.TemporaryDirectory(prefix="casefold-link-race-") as directory:

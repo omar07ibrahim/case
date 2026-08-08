@@ -90,8 +90,7 @@ def _require_posix_primitives() -> None:
     for name in {*_DIRECTORY_FLAGS, *_FILE_FLAGS, *_OUTPUT_FLAGS}:
         _required_flag(name)
     if any(
-        function not in os.supports_dir_fd
-        for function in _REQUIRED_DIR_FD_FUNCTIONS
+        function not in os.supports_dir_fd for function in _REQUIRED_DIR_FD_FUNCTIONS
     ) or any(
         function not in os.supports_follow_symlinks
         for function in _REQUIRED_FOLLOW_SYMLINK_FUNCTIONS
@@ -218,9 +217,8 @@ def _open_parent(path: str) -> tuple[int, str]:
                 _mapped_os_error(error)
             try:
                 after = os.fstat(next_descriptor)
-                if (
-                    not stat.S_ISDIR(after.st_mode)
-                    or _identity(before) != _identity(after)
+                if not stat.S_ISDIR(after.st_mode) or _identity(before) != _identity(
+                    after
                 ):
                     _raise_file(FileBoundaryErrorCode.CONCURRENT_MUTATION)
             except BaseException:

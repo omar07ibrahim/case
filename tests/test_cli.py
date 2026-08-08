@@ -286,9 +286,7 @@ class CliParsingTests(unittest.TestCase):
         )
 
     def test_forged_argv_container_is_internal_not_echoed(self) -> None:
-        status, output, error = cli._dispatch(
-            cast(tuple[str, ...], ["private-value"])
-        )
+        status, output, error = cli._dispatch(cast(tuple[str, ...], ["private-value"]))
         self.assertEqual(status, cli.EXIT_INTERNAL)
         self.assertEqual(output, b"")
         self.assertEqual(
