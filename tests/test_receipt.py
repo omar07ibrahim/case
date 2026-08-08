@@ -4,13 +4,13 @@ import ast
 import copy
 import hashlib
 import inspect
-from functools import partial
 import json
 import os
 import subprocess
 import sys
 import unittest
 from collections.abc import Callable
+from functools import partial
 from importlib import metadata
 from typing import cast
 from unittest import mock
