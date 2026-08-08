@@ -77,8 +77,7 @@ EXPECTED_PACKAGE: Final = "casefold-observatory"
 EXPECTED_PACKAGE_VERSION: Final = "0.4.0"
 EXPECTED_PILLOW: Final = "12.3.0"
 EXPECTED_PILLOW_WHEEL: Final = (
-    "pillow-12.3.0-cp312-cp312-manylinux_2_27_x86_64."
-    "manylinux_2_28_x86_64.whl"
+    "pillow-12.3.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl"
 )
 EXPECTED_PILLOW_WHEEL_SHA256: Final = (
     "78cb2c6865a35ab8ff8b75fd122f6033b92a62c82801110e48ddd6c936a45d91"
@@ -468,10 +467,7 @@ def _validate_renderer_runtime() -> dict[str, str]:
         _fail("visual renderer requires canonical CPython")
     if platform.python_version() != EXPECTED_PYTHON:
         _fail("visual renderer requires exact CPython 3.12.3")
-    if (
-        platform.system() != EXPECTED_SYSTEM
-        or platform.machine() != EXPECTED_MACHINE
-    ):
+    if platform.system() != EXPECTED_SYSTEM or platform.machine() != EXPECTED_MACHINE:
         _fail("visual renderer requires canonical Linux x86-64")
     if unicodedata.unidata_version != EXPECTED_UNICODE:
         _fail("visual renderer requires Unicode database 15.0.0")
@@ -711,14 +707,10 @@ def _draw_bounded_text(
 ) -> None:
     box = draw.textbbox(position, value, font=font)
     left, top, right, bottom = bounds
-    if (
-        box[0] < left
-        or box[1] < top
-        or box[2] > right
-        or box[3] > bottom
-    ):
+    if box[0] < left or box[1] < top or box[2] > right or box[3] > bottom:
         _fail("visual transcript text escaped its measured bounds")
     draw.text(position, value, font=font, fill=fill)
+
 
 def _render_png(evidence: JsonObject, commands: tuple[CapturedCommand, ...]) -> bytes:
     width = 1400
@@ -829,6 +821,7 @@ def _render_png(evidence: JsonObject, commands: tuple[CapturedCommand, ...]) -> 
     image.save(buffer, format="PNG", optimize=False, compress_level=9)
     return buffer.getvalue()
 
+
 def _gif_palette() -> list[int]:
     colors = (
         _BACKGROUND,
@@ -927,6 +920,7 @@ def _render_gif(evidence: JsonObject, commands: tuple[CapturedCommand, ...]) -> 
         optimize=False,
     )
     return buffer.getvalue()
+
 
 def _svg_document(
     *,
@@ -1422,10 +1416,7 @@ def _audit_outputs(outputs: dict[str, bytes]) -> None:
         _fail("candidate Pillow version changed")
     if renderer_document.get("pillow_wheel_filename") != EXPECTED_PILLOW_WHEEL:
         _fail("candidate Pillow wheel identity changed")
-    if (
-        renderer_document.get("pillow_wheel_sha256")
-        != EXPECTED_PILLOW_WHEEL_SHA256
-    ):
+    if renderer_document.get("pillow_wheel_sha256") != EXPECTED_PILLOW_WHEEL_SHA256:
         _fail("candidate Pillow wheel digest changed")
     generated_files = cast(JsonObject, manifest.get("generated_files"))
     if set(generated_files) != set(HASHED_OUTPUT_PATHS):
