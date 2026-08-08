@@ -85,8 +85,8 @@ jobs:
       - name: Verify source and wheel distributions
         run: python scripts/verify_distribution.py
 
-  cli-evidence-candidate:
-    name: CLI evidence candidate
+  cli-evidence:
+    name: Adopted CLI evidence
     needs: quality
     runs-on: ubuntu-24.04
     timeout-minutes: 10
@@ -101,7 +101,6 @@ jobs:
           ref: ${{ env.SOURCE_REVISION }}
 
       - name: Assert source revision and tree
-        id: source_identity
         run: |
           test "$(git rev-parse HEAD)" = "$SOURCE_REVISION"
           test "${#SOURCE_REVISION}" -eq 40
@@ -111,7 +110,6 @@ jobs:
           test "${#source_tree}" -eq 40
           case "$source_tree" in *[!0-9a-f]*) exit 1;; esac
           test -z "$(git symbolic-ref -q HEAD || true)"
-          echo "tree=$source_tree" >> "$GITHUB_OUTPUT"
 
       - name: Set up canonical evidence Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -151,33 +149,11 @@ jobs:
             --no-deps \
             "${wheels[0]}"
 
-      - name: Capture twice and compare candidate bytes
+      - name: Reproduce and verify adopted CLI evidence
         run: |
           wheels=("$RUNNER_TEMP"/cli-wheel/*.whl)
-          python scripts/render_cli_evidence.py render \
+          python scripts/render_cli_evidence.py check \
             --venv-bin "$RUNNER_TEMP/cli-venv/bin" \
-            --wheel "${wheels[0]}" \
-            --source-revision "$SOURCE_REVISION" \
-            --source-tree "${{ steps.source_identity.outputs.tree }}" \
-            --output-root "$RUNNER_TEMP/cli-evidence-a"
-          python scripts/render_cli_evidence.py render \
-            --venv-bin "$RUNNER_TEMP/cli-venv/bin" \
-            --wheel "${wheels[0]}" \
-            --source-revision "$SOURCE_REVISION" \
-            --source-tree "${{ steps.source_identity.outputs.tree }}" \
-            --output-root "$RUNNER_TEMP/cli-evidence-b"
-          python scripts/render_cli_evidence.py compare \
-            "$RUNNER_TEMP/cli-evidence-a" \
-            "$RUNNER_TEMP/cli-evidence-b"
+            --wheel "${wheels[0]}"
           git diff --exit-code
           test -z "$(git status --porcelain --untracked-files=all)"
-
-      - name: Upload reviewed candidate boundary
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: case-cli-evidence-candidate-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/cli-evidence-a/
-          if-no-files-found: error
-          retention-days: 7
-          compression-level: 0
-          include-hidden-files: false

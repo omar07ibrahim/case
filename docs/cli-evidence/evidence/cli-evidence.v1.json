@@ -1,0 +1,221 @@
+{
+  "analyze_summary": {
+    "colliding_record_count": 7,
+    "component_count": 3,
+    "policy_group_count": 7,
+    "receipt_sha256": "f27a1e8abecfea76d9ef054ceea0bf3d38d07d246d21653ade01e65846a58ccb",
+    "record_count": 7,
+    "status": "analyzed",
+    "witness_count": 9
+  },
+  "artifact_inventory": [
+    "docs/cli-evidence/evidence/cli-evidence.v1.json",
+    "docs/cli-evidence/evidence/cli-demo.receipt.v1.json",
+    "docs/cli-evidence/cli-transcript.png",
+    "docs/cli-evidence/cli-demo.gif",
+    "docs/cli-evidence/cli-result.svg",
+    "docs/cli-evidence/cli-workflow.svg"
+  ],
+  "build_environment": {
+    "build": "1.5.0",
+    "packaging": "26.3",
+    "pyproject-hooks": "1.2.0",
+    "setuptools": "83.0.0"
+  },
+  "commands": [
+    {
+      "argv": [
+        "casefold-observatory",
+        "analyze",
+        "--source",
+        "corpus.jsonl",
+        "--policy",
+        "reject@case:lower",
+        "--policy",
+        "reject@case:casefold",
+        "--policy",
+        "reject@normalize:nfkc,case:casefold",
+        "--receipt",
+        "result.receipt.json"
+      ],
+      "exit_status": 0,
+      "id": "analyze",
+      "stderr": "",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout": "{\"colliding_record_count\":7,\"component_count\":3,\"policy_group_count\":7,\"receipt_sha256\":\"f27a1e8abecfea76d9ef054ceea0bf3d38d07d246d21653ade01e65846a58ccb\",\"record_count\":7,\"status\":\"analyzed\",\"witness_count\":9}\n",
+      "stdout_bytes": 211,
+      "stdout_sha256": "8737ef8b359045a98abdb0d01eef1940b7ce87317abc5b472773e6094fd9d0bb"
+    },
+    {
+      "argv": [
+        "python",
+        "-m",
+        "casefold_observatory",
+        "verify",
+        "--source",
+        "corpus.jsonl",
+        "--receipt",
+        "result.receipt.json"
+      ],
+      "exit_status": 0,
+      "id": "verify",
+      "stderr": "",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout": "{\"receipt_sha256\":\"f27a1e8abecfea76d9ef054ceea0bf3d38d07d246d21653ade01e65846a58ccb\",\"status\":\"verified\"}\n",
+      "stdout_bytes": 106,
+      "stdout_sha256": "8cab068f02f20028e34eac0691195da455a388910bbd895c664b56a80183a84a"
+    },
+    {
+      "argv": [
+        "casefold-observatory",
+        "analyze",
+        "--source",
+        "corpus.jsonl",
+        "--policy",
+        "reject@case:lower",
+        "--policy",
+        "reject@case:casefold",
+        "--policy",
+        "reject@normalize:nfkc,case:casefold",
+        "--receipt",
+        "result.receipt.json"
+      ],
+      "exit_status": 5,
+      "id": "no_clobber",
+      "stderr": "{\"code\":\"filesystem.destination_exists\",\"status\":\"error\"}\n",
+      "stderr_bytes": 58,
+      "stderr_sha256": "aaa67ba71c8343e956f509421b626dfcd728b71d7f633e48a96266c6778abbc0",
+      "stdout": "",
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "python",
+        "-m",
+        "casefold_observatory",
+        "verify",
+        "--source",
+        "corpus.jsonl",
+        "--receipt",
+        "result.receipt.json"
+      ],
+      "exit_status": 4,
+      "id": "source_mismatch",
+      "stderr": "{\"code\":\"receipt.source_mismatch\",\"status\":\"error\"}\n",
+      "stderr_bytes": 52,
+      "stderr_sha256": "325612a62f78810faf43146db2728cc59d4b2f3197587dd42783557ea3e9c681",
+      "stdout": "",
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "fixture": {
+    "bytes": 384,
+    "path": "docs/cli-evidence/fixtures/cli-demo.v1.jsonl",
+    "sha256": "a77c90ed5e767a4e0a8029cad14ed347354a3b939b62ad75c0da091b522a259f"
+  },
+  "font": {
+    "family": "Aileron",
+    "implementation": "Pillow ImageFont.load_default(size), embedded limited Aileron Regular",
+    "provenance": "https://pillow.readthedocs.io/en/stable/reference/ImageFont.html",
+    "style": "Regular",
+    "upstream": "https://dotcolon.net/fonts/aileron/"
+  },
+  "generated_files": {
+    "docs/cli-evidence/cli-demo.gif": {
+      "bytes": 45778,
+      "sha256": "0034dccbefc08dfde3a3884162d44566664fbe80e0fc56bfef7dca9677543aea"
+    },
+    "docs/cli-evidence/cli-result.svg": {
+      "bytes": 6582,
+      "sha256": "dba4fcad5da2303e3ccbfa6ea53709ad4d4e28201cdf5dde110bb64712c71ed2"
+    },
+    "docs/cli-evidence/cli-transcript.png": {
+      "bytes": 109515,
+      "sha256": "e76316607fe1813661e799178645818bddfe73419ceaa179b0684be49ea9ed89"
+    },
+    "docs/cli-evidence/cli-workflow.svg": {
+      "bytes": 9610,
+      "sha256": "96752ec5aec6465b8d25179f78573b803e026ffed81ef8623b2d1cedd68be684"
+    },
+    "docs/cli-evidence/evidence/cli-demo.receipt.v1.json": {
+      "bytes": 6905,
+      "sha256": "f27a1e8abecfea76d9ef054ceea0bf3d38d07d246d21653ade01e65846a58ccb"
+    }
+  },
+  "package": {
+    "distribution": "casefold-observatory",
+    "runtime_files": {
+      "casefold_observatory/__init__.py": "2ac8adf3810f5db3760c3a0fff391caca774897d7e1a303d8478f3d638993e15",
+      "casefold_observatory/__main__.py": "d1e60b3225c4707d87a9e6c61cb89d502a64b39549fdd6c77596af995e917281",
+      "casefold_observatory/cli.py": "08d98e15dd451689810e7392d31b48d65488bcc397275ed8338c33e14e4cde83",
+      "casefold_observatory/collision.py": "861a445a6e665b4471bb2b1578375e1d4730dfd843f95e9ae3eb9c999de8a8c9",
+      "casefold_observatory/corpus.py": "e51da59546bedddd1625483e5ad228d871a1e910f93e57b1091b9fadd965fdec",
+      "casefold_observatory/engine.py": "167c278985eeebceaa2f20e0335a6c4c9581ddd0324fe66fb0602554a2110697",
+      "casefold_observatory/filesystem.py": "c27414b29ee45902eb00e2d63d4f64ed803de2322889a2ea01fb37f97b0f20b4",
+      "casefold_observatory/model.py": "6a1c0ebcc476adb4a6e4496c412a92b0d5de80bb987ebc60291e471624118749",
+      "casefold_observatory/py.typed": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "casefold_observatory/receipt.py": "b02f67c0cdb66d90a398cc3afbd70c06d7cffc00d28fcfd5d8153017c7fabe69"
+    },
+    "runtime_tree_sha256": "792c82f9ea178510a41c77fe7bf8bbcad877ff2da2869aaca1ab395d5ea6f2a9",
+    "version": "0.4.0",
+    "wheel_filename": "casefold_observatory-0.4.0-py3-none-any.whl"
+  },
+  "platform": {
+    "machine": "x86_64",
+    "system": "Linux"
+  },
+  "python_implementation": "CPython",
+  "python_version": "3.12.3",
+  "receipt": {
+    "adopted_git_mode": "100644",
+    "bytes": 6905,
+    "capture_mode": "0600",
+    "path": "docs/cli-evidence/evidence/cli-demo.receipt.v1.json",
+    "sha256": "f27a1e8abecfea76d9ef054ceea0bf3d38d07d246d21653ade01e65846a58ccb",
+    "single_link": true
+  },
+  "renderer": {
+    "gif_frame_durations_ms": [
+      1400,
+      1200,
+      1400,
+      1400
+    ],
+    "gif_frames": 4,
+    "gif_size": [
+      1200,
+      450
+    ],
+    "pillow_version": "12.3.0",
+    "pillow_wheel_filename": "pillow-12.3.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+    "pillow_wheel_sha256": "78cb2c6865a35ab8ff8b75fd122f6033b92a62c82801110e48ddd6c936a45d91",
+    "png_size": [
+      1400,
+      1120
+    ]
+  },
+  "schema": "casefold-observatory.cli-evidence",
+  "schema_version": 1,
+  "source_bindings": {
+    "docs/cli-evidence/fixtures/cli-demo.v1.jsonl": "a77c90ed5e767a4e0a8029cad14ed347354a3b939b62ad75c0da091b522a259f",
+    "pyproject.toml": "99bc0ba743c96c5c5a4cd137b6d8a709585422ca36178dab1fda3d790a46af08",
+    "scripts/render_cli_evidence.py": "942de9df8181b0f12edd989541d80916761972b4cbb39140de14979adc0dcecb",
+    "src/casefold_observatory/__init__.py": "2ac8adf3810f5db3760c3a0fff391caca774897d7e1a303d8478f3d638993e15",
+    "src/casefold_observatory/__main__.py": "d1e60b3225c4707d87a9e6c61cb89d502a64b39549fdd6c77596af995e917281",
+    "src/casefold_observatory/cli.py": "08d98e15dd451689810e7392d31b48d65488bcc397275ed8338c33e14e4cde83",
+    "src/casefold_observatory/collision.py": "861a445a6e665b4471bb2b1578375e1d4730dfd843f95e9ae3eb9c999de8a8c9",
+    "src/casefold_observatory/corpus.py": "e51da59546bedddd1625483e5ad228d871a1e910f93e57b1091b9fadd965fdec",
+    "src/casefold_observatory/engine.py": "167c278985eeebceaa2f20e0335a6c4c9581ddd0324fe66fb0602554a2110697",
+    "src/casefold_observatory/filesystem.py": "c27414b29ee45902eb00e2d63d4f64ed803de2322889a2ea01fb37f97b0f20b4",
+    "src/casefold_observatory/model.py": "6a1c0ebcc476adb4a6e4496c412a92b0d5de80bb987ebc60291e471624118749",
+    "src/casefold_observatory/py.typed": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+    "src/casefold_observatory/receipt.py": "b02f67c0cdb66d90a398cc3afbd70c06d7cffc00d28fcfd5d8153017c7fabe69"
+  },
+  "source_revision": "b83e7a936f0b3e77ac4c2e1285b2e88dcc029741",
+  "source_tree": "71e4f3ec9cd69ba74036601232c59e015b03a437",
+  "unicode_version": "15.0.0"
+}

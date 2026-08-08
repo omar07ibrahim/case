@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="791" viewBox="0 0 1500 791" role="img" aria-labelledby="title desc">
+<title id="title">Receipt-derived collision result</title>
+<desc id="desc">Component membership and witness-tree counts read from the real installed-command receipt.</desc>
+<metadata>{&quot;kind&quot;:&quot;receipt-derived-result&quot;,&quot;receipt_sha256&quot;:&quot;f27a1e8abecfea76d9ef054ceea0bf3d38d07d246d21653ade01e65846a58ccb&quot;,&quot;schema&quot;:&quot;casefold-observatory.cli-evidence-svg&quot;,&quot;schema_version&quot;:1,&quot;source_sha256&quot;:&quot;a77c90ed5e767a4e0a8029cad14ed347354a3b939b62ad75c0da091b522a259f&quot;}</metadata>
+<rect width="1500" height="791" fill="#07111f"/>
+<text x="70" y="78" fill="#eff6ff" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="34" font-weight="700" text-anchor="start">Receipt-derived collision result</text>
+<text x="70" y="120" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="18" font-weight="400" text-anchor="start">Actual installed-command receipt; labels are reviewed synthetic record IDs.</text>
+<line x1="70" y1="150" x2="1430" y2="150" stroke="#29425f"/>
+<rect x="70" y="180" width="240" height="100" rx="14" fill="#0e1b2d"/>
+<text x="92" y="222" fill="#42d6c5" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="30" font-weight="700" text-anchor="start">7</text>
+<text x="92" y="258" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="16" font-weight="400" text-anchor="start">records</text>
+<rect x="340" y="180" width="240" height="100" rx="14" fill="#0e1b2d"/>
+<text x="362" y="222" fill="#4db5ff" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="30" font-weight="700" text-anchor="start">3</text>
+<text x="362" y="258" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="16" font-weight="400" text-anchor="start">policies</text>
+<rect x="610" y="180" width="240" height="100" rx="14" fill="#0e1b2d"/>
+<text x="632" y="222" fill="#ffbd59" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="30" font-weight="700" text-anchor="start">7</text>
+<text x="632" y="258" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="16" font-weight="400" text-anchor="start">groups</text>
+<rect x="880" y="180" width="240" height="100" rx="14" fill="#0e1b2d"/>
+<text x="902" y="222" fill="#ff78a9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="30" font-weight="700" text-anchor="start">9</text>
+<text x="902" y="258" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="16" font-weight="400" text-anchor="start">witnesses</text>
+<rect x="1150" y="180" width="240" height="100" rx="14" fill="#0e1b2d"/>
+<text x="1172" y="222" fill="#7ee787" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="30" font-weight="700" text-anchor="start">3</text>
+<text x="1172" y="258" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="16" font-weight="400" text-anchor="start">components</text>
+<text x="96" y="326" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="15" font-weight="400" text-anchor="start">component</text>
+<text x="190" y="326" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="15" font-weight="400" text-anchor="start">record IDs</text>
+<text x="830" y="326" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="15" font-weight="400" text-anchor="start">policy ordinals</text>
+<text x="1120" y="326" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="15" font-weight="400" text-anchor="start">tree edges</text>
+<rect x="70" y="327" width="1360" height="72" rx="12" fill="#0e1b2d"/>
+<text x="96" y="361" fill="#42d6c5" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="20" font-weight="700" text-anchor="start">C0</text>
+<text x="190" y="361" fill="#eff6ff" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="18" font-weight="400" text-anchor="start">ascii-a, fullwidth-a</text>
+<text x="830" y="361" fill="#4db5ff" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="18" font-weight="400" text-anchor="start">2</text>
+<text x="1120" y="361" fill="#ffbd59" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="18" font-weight="400" text-anchor="start">1</text>
+<rect x="70" y="419" width="1360" height="72" rx="12" fill="#142640"/>
+<text x="96" y="453" fill="#42d6c5" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="20" font-weight="700" text-anchor="start">C1</text>
+<text x="190" y="453" fill="#eff6ff" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="18" font-weight="400" text-anchor="start">ascii-k, kelvin-sign</text>
+<text x="830" y="453" fill="#4db5ff" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="18" font-weight="400" text-anchor="start">0, 1, 2</text>
+<text x="1120" y="453" fill="#ffbd59" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="18" font-weight="400" text-anchor="start">1</text>
+<rect x="70" y="511" width="1360" height="72" rx="12" fill="#0e1b2d"/>
+<text x="96" y="545" fill="#42d6c5" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="20" font-weight="700" text-anchor="start">C2</text>
+<text x="190" y="545" fill="#eff6ff" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="18" font-weight="400" text-anchor="start">eszett, lower-ss, upper-ss</text>
+<text x="830" y="545" fill="#4db5ff" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="18" font-weight="400" text-anchor="start">0, 1, 2</text>
+<text x="1120" y="545" fill="#ffbd59" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="18" font-weight="400" text-anchor="start">2</text>
+<text x="70" y="713" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="16" font-weight="400" text-anchor="start">receipt sha256 f27a1e8abecfea76d9ef054ceea0bf3d38d07d246d21653ade01e65846a58ccb</text>
+<text x="70" y="745" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="16" font-weight="400" text-anchor="start">source sha256  a77c90ed5e767a4e0a8029cad14ed347354a3b939b62ad75c0da091b522a259f</text>
+</svg>

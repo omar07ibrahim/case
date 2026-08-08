@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="810" viewBox="0 0 1600 810" role="img" aria-labelledby="title desc">
+<title id="title">Current installed CLI architecture and workflow</title>
+<desc id="desc">Explanatory flow from explicit CLI grammar through hardened POSIX capture, collision replay, durable publication, and verification.</desc>
+<metadata>{&quot;kind&quot;:&quot;explanatory-current-cli-workflow&quot;,&quot;package_version&quot;:&quot;0.4.0&quot;,&quot;receipt_sha256&quot;:&quot;f27a1e8abecfea76d9ef054ceea0bf3d38d07d246d21653ade01e65846a58ccb&quot;,&quot;schema&quot;:&quot;casefold-observatory.cli-evidence-svg&quot;,&quot;schema_version&quot;:1,&quot;source_revision&quot;:&quot;b83e7a936f0b3e77ac4c2e1285b2e88dcc029741&quot;,&quot;source_sha256&quot;:&quot;a77c90ed5e767a4e0a8029cad14ed347354a3b939b62ad75c0da091b522a259f&quot;,&quot;source_tree&quot;:&quot;71e4f3ec9cd69ba74036601232c59e015b03a437&quot;}</metadata>
+<rect width="1600" height="810" fill="#07111f"/>
+<text x="70" y="76" fill="#eff6ff" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="34" font-weight="700" text-anchor="start">Current installed CLI architecture and workflow</text>
+<text x="70" y="118" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="18" font-weight="400" text-anchor="start">Explanatory diagram bound to the captured package, source, and receipt.</text>
+<text x="70" y="160" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="15" font-weight="400" text-anchor="start">runtime 792c82f9ea178510a41c77fe7bf8bbcad877ff2da2869aaca1ab395d5ea6f2a9  |  UCD 15.0.0</text>
+<rect x="70" y="210" width="250" height="126" rx="16" fill="#0e1b2d" stroke="#42d6c5" stroke-width="2"/>
+<text x="92" y="248" fill="#42d6c5" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="20" font-weight="700" text-anchor="start">1  exact CLI grammar</text>
+<text x="92" y="282" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="15" font-weight="400" text-anchor="start">explicit files + policies</text>
+<text x="92" y="307" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="15" font-weight="400" text-anchor="start">no stdin/config/network</text>
+<rect x="370" y="210" width="250" height="126" rx="16" fill="#0e1b2d" stroke="#4db5ff" stroke-width="2"/>
+<text x="392" y="248" fill="#4db5ff" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="20" font-weight="700" text-anchor="start">2  POSIX capture</text>
+<text x="392" y="282" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="15" font-weight="400" text-anchor="start">dir-fd + no-follow</text>
+<text x="392" y="307" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="15" font-weight="400" text-anchor="start">stable regular single-link</text>
+<rect x="670" y="210" width="250" height="126" rx="16" fill="#0e1b2d" stroke="#ffbd59" stroke-width="2"/>
+<text x="692" y="248" fill="#ffbd59" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="20" font-weight="700" text-anchor="start">3  bounded replay</text>
+<text x="692" y="282" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="15" font-weight="400" text-anchor="start">JSONL -&gt; collision graph</text>
+<text x="692" y="307" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="15" font-weight="400" text-anchor="start">canonical receipt bytes</text>
+<rect x="970" y="210" width="250" height="126" rx="16" fill="#0e1b2d" stroke="#ff78a9" stroke-width="2"/>
+<text x="992" y="248" fill="#ff78a9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="20" font-weight="700" text-anchor="start">4  durable publish</text>
+<text x="992" y="282" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="15" font-weight="400" text-anchor="start">0600 temp + full writes</text>
+<text x="992" y="307" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="15" font-weight="400" text-anchor="start">fsync + no-clobber link</text>
+<rect x="1270" y="210" width="250" height="126" rx="16" fill="#0e1b2d" stroke="#7ee787" stroke-width="2"/>
+<text x="1292" y="248" fill="#7ee787" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="20" font-weight="700" text-anchor="start">5  redacted channels</text>
+<text x="1292" y="282" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="15" font-weight="400" text-anchor="start">canonical ASCII summary</text>
+<text x="1292" y="307" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="15" font-weight="400" text-anchor="start">stable status taxonomy</text>
+<line x1="320" y1="273" x2="370" y2="273" stroke="#29425f" stroke-width="3"/>
+<path d="M 358 266 L 370 273 L 358 280" fill="none" stroke="#29425f" stroke-width="3"/>
+<text x="345" y="261" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="13" font-weight="400" text-anchor="middle">argv</text>
+<line x1="620" y1="273" x2="670" y2="273" stroke="#29425f" stroke-width="3"/>
+<path d="M 658 266 L 670 273 L 658 280" fill="none" stroke="#29425f" stroke-width="3"/>
+<text x="645" y="261" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="13" font-weight="400" text-anchor="middle">bytes</text>
+<line x1="920" y1="273" x2="970" y2="273" stroke="#29425f" stroke-width="3"/>
+<path d="M 958 266 L 970 273 L 958 280" fill="none" stroke="#29425f" stroke-width="3"/>
+<text x="945" y="261" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="13" font-weight="400" text-anchor="middle">receipt</text>
+<line x1="1220" y1="273" x2="1270" y2="273" stroke="#29425f" stroke-width="3"/>
+<path d="M 1258 266 L 1270 273 L 1258 280" fill="none" stroke="#29425f" stroke-width="3"/>
+<text x="1245" y="261" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="13" font-weight="400" text-anchor="middle">status</text>
+<text x="70" y="440" fill="#42d6c5" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="20" font-weight="700" text-anchor="start">verification path</text>
+<rect x="330" y="485" width="340" height="126" rx="16" fill="#0e1b2d" stroke="#4db5ff" stroke-width="2"/>
+<text x="352" y="523" fill="#4db5ff" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="20" font-weight="700" text-anchor="start">verify source + receipt</text>
+<text x="352" y="557" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="15" font-weight="400" text-anchor="start">capture each identity once</text>
+<text x="352" y="582" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="15" font-weight="400" text-anchor="start">reject alias or mutation</text>
+<rect x="805" y="485" width="340" height="126" rx="16" fill="#0e1b2d" stroke="#ffbd59" stroke-width="2"/>
+<text x="827" y="523" fill="#ffbd59" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="20" font-weight="700" text-anchor="start">trust-reconstruct receipt</text>
+<text x="827" y="557" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="15" font-weight="400" text-anchor="start">schema + canonical bytes</text>
+<text x="827" y="582" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="15" font-weight="400" text-anchor="start">replay source and compare</text>
+<rect x="1280" y="485" width="240" height="126" rx="16" fill="#0e1b2d" stroke="#7ee787" stroke-width="2"/>
+<text x="1302" y="523" fill="#7ee787" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="20" font-weight="700" text-anchor="start">verified / mismatch</text>
+<text x="1302" y="557" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="15" font-weight="400" text-anchor="start">0 success</text>
+<text x="1302" y="582" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="15" font-weight="400" text-anchor="start">4 replay mismatch</text>
+<line x1="670" y1="548" x2="805" y2="548" stroke="#29425f" stroke-width="3"/>
+<path d="M 793 541 L 805 548 L 793 555" fill="none" stroke="#29425f" stroke-width="3"/>
+<text x="737" y="536" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="13" font-weight="400" text-anchor="middle">captured bytes</text>
+<line x1="1145" y1="548" x2="1280" y2="548" stroke="#29425f" stroke-width="3"/>
+<path d="M 1268 541 L 1280 548 L 1268 555" fill="none" stroke="#29425f" stroke-width="3"/>
+<text x="1212" y="536" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="13" font-weight="400" text-anchor="middle">canonical result</text>
+<text x="70" y="700" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="15" font-weight="400" text-anchor="start">source a77c90ed5e767a4e0a8029cad14ed347354a3b939b62ad75c0da091b522a259f  |  receipt f27a1e8abecfea76d9ef054ceea0bf3d38d07d246d21653ade01e65846a58ccb</text>
+<text x="70" y="744" fill="#ffbd59" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="16" font-weight="400" text-anchor="start">Receipt integrity is not authentication, authorization, freshness, or anonymity.</text>
+</svg>

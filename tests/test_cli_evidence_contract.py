@@ -5,6 +5,7 @@ import hashlib
 import importlib.util
 import json
 import runpy
+import stat
 import tomllib
 import unittest
 from pathlib import Path
@@ -14,6 +15,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 CLI_ROOT = PROJECT_ROOT / "docs" / "cli-evidence"
 FIXTURE_PATH = CLI_ROOT / "fixtures" / "cli-demo.v1.jsonl"
 GENERATOR_PATH = PROJECT_ROOT / "scripts" / "render_cli_evidence.py"
+ADOPTION_PATH = "docs/cli-evidence/evidence/cli-evidence-adoption.v1.json"
 PILLOW_AVAILABLE = importlib.util.find_spec("PIL") is not None
 CONTRACT_PATH = PROJECT_ROOT / "docs" / "portable-receipt-contract.md"
 WORKFLOW_PATH = PROJECT_ROOT / ".github" / "workflows" / "ci.yml"
@@ -23,8 +25,17 @@ MANIFEST_PATH = PROJECT_ROOT / "MANIFEST.in"
 
 FIXTURE_SHA256 = "a77c90ed5e767a4e0a8029cad14ed347354a3b939b62ad75c0da091b522a259f"
 PILLOW_SHA256 = "78cb2c6865a35ab8ff8b75fd122f6033b92a62c82801110e48ddd6c936a45d91"
-UPLOAD_ARTIFACT_SHA = "043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"
-CANDIDATE_OUTPUTS = (
+ARTIFACT_ARCHIVE_BYTES = 188_273
+ARTIFACT_ARCHIVE_SHA256 = (
+    "11c9a0d0bfd33c2b828629dd9b207a9a587a1fa907e23ec0a5d4c18d0ead90f7"
+)
+ARTIFACT_ID = 9_026_465_100
+ARTIFACT_NAME = "case-cli-evidence-candidate-31273971052-1"
+ARTIFACT_RUN_ID = 31_273_971_052
+ARTIFACT_JOB_ID = 93_144_542_401
+ADOPTED_SOURCE_REVISION = "b83e7a936f0b3e77ac4c2e1285b2e88dcc029741"
+ADOPTED_SOURCE_TREE = "71e4f3ec9cd69ba74036601232c59e015b03a437"
+ADOPTED_OUTPUTS = (
     "docs/cli-evidence/evidence/cli-evidence.v1.json",
     "docs/cli-evidence/evidence/cli-demo.receipt.v1.json",
     "docs/cli-evidence/cli-transcript.png",
@@ -32,6 +43,32 @@ CANDIDATE_OUTPUTS = (
     "docs/cli-evidence/cli-result.svg",
     "docs/cli-evidence/cli-workflow.svg",
 )
+ADOPTED_IDENTITIES: dict[str, dict[str, object]] = {
+    "docs/cli-evidence/cli-demo.gif": {
+        "bytes": 45_778,
+        "sha256": "0034dccbefc08dfde3a3884162d44566664fbe80e0fc56bfef7dca9677543aea",
+    },
+    "docs/cli-evidence/cli-result.svg": {
+        "bytes": 6_582,
+        "sha256": "dba4fcad5da2303e3ccbfa6ea53709ad4d4e28201cdf5dde110bb64712c71ed2",
+    },
+    "docs/cli-evidence/cli-transcript.png": {
+        "bytes": 109_515,
+        "sha256": "e76316607fe1813661e799178645818bddfe73419ceaa179b0684be49ea9ed89",
+    },
+    "docs/cli-evidence/cli-workflow.svg": {
+        "bytes": 9_610,
+        "sha256": "96752ec5aec6465b8d25179f78573b803e026ffed81ef8623b2d1cedd68be684",
+    },
+    "docs/cli-evidence/evidence/cli-demo.receipt.v1.json": {
+        "bytes": 6_905,
+        "sha256": "f27a1e8abecfea76d9ef054ceea0bf3d38d07d246d21653ade01e65846a58ccb",
+    },
+    "docs/cli-evidence/evidence/cli-evidence.v1.json": {
+        "bytes": 8_849,
+        "sha256": "e61e48ed714c85403b032781e7d21b7ba0dc2a40a8063fa61180ee0d83829e21",
+    },
+}
 FIXTURE_RECORDS = (
     ("ascii-a", "A"),
     ("ascii-k", "K"),
@@ -103,7 +140,7 @@ def _object(value: object) -> dict[str, object]:
     return cast(dict[str, object], value)
 
 
-class CliEvidenceCandidateContractTests(unittest.TestCase):
+class CliEvidenceContractTests(unittest.TestCase):
     def test_reviewed_fixture_is_exact_synthetic_corpus(self) -> None:
         fixture = FIXTURE_PATH.read_bytes()
         self.assertEqual(hashlib.sha256(fixture).hexdigest(), FIXTURE_SHA256)
@@ -206,7 +243,7 @@ class CliEvidenceCandidateContractTests(unittest.TestCase):
             "decoded_frame.load()",
         ):
             self.assertIn(media_boundary, source)
-        for output in CANDIDATE_OUTPUTS:
+        for output in ADOPTED_OUTPUTS:
             self.assertIn(f'"{output}"', source)
 
     @unittest.skipUnless(PILLOW_AVAILABLE, "canonical Pillow is not installed")
@@ -309,18 +346,82 @@ class CliEvidenceCandidateContractTests(unittest.TestCase):
             canvas_gap,
         )
 
-    def test_stage_one_keeps_candidate_bytes_out_of_repository(self) -> None:
+    def test_adopted_bundle_matches_reviewed_hosted_artifact(self) -> None:
+        expected_files = {
+            "docs/cli-evidence/fixtures/cli-demo.v1.jsonl",
+            ADOPTION_PATH,
+            *ADOPTED_OUTPUTS,
+        }
         actual_files = {
             path.relative_to(PROJECT_ROOT).as_posix()
             for path in CLI_ROOT.rglob("*")
             if path.is_file()
         }
+        self.assertEqual(actual_files, expected_files)
+
+        for relative_path, expected_identity in ADOPTED_IDENTITIES.items():
+            path = PROJECT_ROOT / relative_path
+            self.assertFalse(path.is_symlink())
+            status = path.stat()
+            self.assertTrue(stat.S_ISREG(status.st_mode))
+            self.assertEqual(stat.S_IMODE(status.st_mode), 0o644)
+            data = path.read_bytes()
+            self.assertEqual(
+                {
+                    "bytes": len(data),
+                    "sha256": hashlib.sha256(data).hexdigest(),
+                },
+                expected_identity,
+            )
+
+        adoption_bytes = (PROJECT_ROOT / ADOPTION_PATH).read_bytes()
+        self.assertTrue(adoption_bytes.isascii())
+        adoption = _object(json.loads(adoption_bytes))
         self.assertEqual(
-            actual_files,
-            {"docs/cli-evidence/fixtures/cli-demo.v1.jsonl"},
+            adoption_bytes,
+            (
+                json.dumps(
+                    adoption,
+                    ensure_ascii=True,
+                    allow_nan=False,
+                    indent=2,
+                    sort_keys=True,
+                )
+                + "\n"
+            ).encode("ascii"),
         )
-        for output in CANDIDATE_OUTPUTS:
-            self.assertFalse((PROJECT_ROOT / output).exists())
+        self.assertEqual(
+            adoption,
+            {
+                "artifact": {
+                    "archive_bytes": ARTIFACT_ARCHIVE_BYTES,
+                    "archive_sha256": ARTIFACT_ARCHIVE_SHA256,
+                    "id": ARTIFACT_ID,
+                    "name": ARTIFACT_NAME,
+                    "run_attempt": 1,
+                    "workflow_job_id": ARTIFACT_JOB_ID,
+                    "workflow_run_id": ARTIFACT_RUN_ID,
+                },
+                "files": ADOPTED_IDENTITIES,
+                "schema": "casefold-observatory.cli-evidence-adoption",
+                "schema_version": 1,
+                "source_revision": ADOPTED_SOURCE_REVISION,
+                "source_tree": ADOPTED_SOURCE_TREE,
+                "validation": {
+                    "archive_entry_mode": "100644",
+                    "archive_inventory_exact": True,
+                    "byte_identities_match_manifest": True,
+                    "media_structure_validated": True,
+                    "privacy_scan_passed": True,
+                    "visual_review_passed": True,
+                },
+            },
+        )
+
+        manifest = _object(json.loads((PROJECT_ROOT / ADOPTED_OUTPUTS[0]).read_bytes()))
+        self.assertEqual(manifest["source_revision"], ADOPTED_SOURCE_REVISION)
+        self.assertEqual(manifest["source_tree"], ADOPTED_SOURCE_TREE)
+        self.assertEqual(manifest["artifact_inventory"], list(ADOPTED_OUTPUTS))
 
     def test_capture_environment_and_two_stage_gate_are_documented(self) -> None:
         contract = CONTRACT_PATH.read_text(encoding="utf-8")
@@ -341,7 +442,7 @@ class CliEvidenceCandidateContractTests(unittest.TestCase):
         self.assertIn("actual ink bounding-box top-left", contract)
         self.assertIn("tallest measured phase", contract)
         self.assertIn("raster mode derived from\nthe target drawing surface", contract)
-        for output in CANDIDATE_OUTPUTS:
+        for output in ADOPTED_OUTPUTS:
             self.assertIn(f"`{output}`", contract)
 
     def test_visual_dependency_is_hash_locked_and_not_runtime(self) -> None:
@@ -373,9 +474,10 @@ class CliEvidenceCandidateContractTests(unittest.TestCase):
         self.assertIn('getname()` resolves exactly to `("Aileron",', notices)
         self.assertIn("No Rights Reserved", notices)
 
-    def test_hosted_candidate_uses_explicit_head_and_exact_uploader(self) -> None:
+    def test_adopted_evidence_is_reproduced_from_explicit_head(self) -> None:
         workflow = WORKFLOW_PATH.read_text(encoding="utf-8")
-        self.assertIn("cli-evidence-candidate:", workflow)
+        self.assertIn("cli-evidence:", workflow)
+        self.assertNotIn("cli-evidence-candidate:", workflow)
         self.assertIn(
             "SOURCE_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}",
             workflow,
@@ -383,29 +485,27 @@ class CliEvidenceCandidateContractTests(unittest.TestCase):
         self.assertIn("ref: ${{ env.SOURCE_REVISION }}", workflow)
         self.assertIn('test "$(git rev-parse HEAD)" = "$SOURCE_REVISION"', workflow)
         self.assertIn("git rev-parse HEAD^{tree}", workflow)
-        self.assertIn("id: source_identity", workflow)
-        self.assertIn('echo "tree=$source_tree" >> "$GITHUB_OUTPUT"', workflow)
         self.assertIn("runs-on: ubuntu-24.04", workflow)
         self.assertIn('python-version: "3.12.3"', workflow)
-        self.assertEqual(workflow.count("--source-tree"), 2)
+        self.assertEqual(
+            workflow.count("scripts/render_cli_evidence.py check"),
+            1,
+        )
         self.assertEqual(
             workflow.count("scripts/render_cli_evidence.py render"),
-            2,
+            0,
         )
         self.assertEqual(
             workflow.count("scripts/render_cli_evidence.py compare"),
-            1,
+            0,
         )
-        self.assertIn(f"actions/upload-artifact@{UPLOAD_ARTIFACT_SHA}", workflow)
-        self.assertIn(
-            "name: case-cli-evidence-candidate-${{ github.run_id }}-"
-            "${{ github.run_attempt }}",
-            workflow,
-        )
-        self.assertIn("compression-level: 0", workflow)
+        self.assertNotIn("--source-tree", workflow)
+        self.assertNotIn("actions/upload-artifact@", workflow)
+        self.assertIn("Reproduce and verify adopted CLI evidence", workflow)
+        self.assertIn("git diff --exit-code", workflow)
         self.assertIn("git status --porcelain --untracked-files=all", workflow)
 
-    def test_source_distribution_contract_carries_candidate_sources_only(self) -> None:
+    def test_source_distribution_carries_the_evidence_contract(self) -> None:
         manifest = MANIFEST_PATH.read_text(encoding="utf-8")
         for required in (
             "include THIRD_PARTY_NOTICES.md",
