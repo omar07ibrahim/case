@@ -18,6 +18,8 @@ GENERATOR_PATH = PROJECT_ROOT / "scripts" / "render_cli_evidence.py"
 ADOPTION_PATH = "docs/cli-evidence/evidence/cli-evidence-adoption.v1.json"
 PILLOW_AVAILABLE = importlib.util.find_spec("PIL") is not None
 CONTRACT_PATH = PROJECT_ROOT / "docs" / "portable-receipt-contract.md"
+README_PATH = PROJECT_ROOT / "README.md"
+CLI_INDEX_PATH = CLI_ROOT / "README.md"
 WORKFLOW_PATH = PROJECT_ROOT / ".github" / "workflows" / "ci.yml"
 REQUIREMENTS_PATH = PROJECT_ROOT / "requirements" / "cli-visuals.txt"
 NOTICES_PATH = PROJECT_ROOT / "THIRD_PARTY_NOTICES.md"
@@ -35,6 +37,7 @@ ARTIFACT_RUN_ID = 31_273_971_052
 ARTIFACT_JOB_ID = 93_144_542_401
 ADOPTED_SOURCE_REVISION = "b83e7a936f0b3e77ac4c2e1285b2e88dcc029741"
 ADOPTED_SOURCE_TREE = "71e4f3ec9cd69ba74036601232c59e015b03a437"
+ADOPTION_COMMIT = "2a83f25ca18b12469a3336341f42c58d6643a834"
 ADOPTED_OUTPUTS = (
     "docs/cli-evidence/evidence/cli-evidence.v1.json",
     "docs/cli-evidence/evidence/cli-demo.receipt.v1.json",
@@ -348,6 +351,7 @@ class CliEvidenceContractTests(unittest.TestCase):
 
     def test_adopted_bundle_matches_reviewed_hosted_artifact(self) -> None:
         expected_files = {
+            "docs/cli-evidence/README.md",
             "docs/cli-evidence/fixtures/cli-demo.v1.jsonl",
             ADOPTION_PATH,
             *ADOPTED_OUTPUTS,
@@ -423,9 +427,9 @@ class CliEvidenceContractTests(unittest.TestCase):
         self.assertEqual(manifest["source_tree"], ADOPTED_SOURCE_TREE)
         self.assertEqual(manifest["artifact_inventory"], list(ADOPTED_OUTPUTS))
 
-    def test_capture_environment_and_two_stage_gate_are_documented(self) -> None:
+    def test_adopted_capture_and_review_are_documented(self) -> None:
         contract = CONTRACT_PATH.read_text(encoding="utf-8")
-        self.assertIn("## CLI visual-evidence candidate and adoption gates", contract)
+        self.assertIn("## Adopted CLI visual evidence", contract)
         self.assertIn(FIXTURE_SHA256, contract)
         self.assertIn("exact CPython 3.12.3", contract)
         self.assertIn("Unicode database 15.0.0", contract)
@@ -435,15 +439,57 @@ class CliEvidenceContractTests(unittest.TestCase):
         self.assertIn("deliberately does not hash itself", contract)
         self.assertIn("single-link mode-0600", contract)
         self.assertIn("regular `100644` repository file", contract)
-        self.assertIn("Stage two must download that hosted artifact", contract)
-        self.assertIn("verified rasterized CLI transcript", contract)
+        self.assertIn(ARTIFACT_ARCHIVE_SHA256, contract)
+        self.assertIn(str(ARTIFACT_ARCHIVE_BYTES), contract)
+        self.assertIn(str(ARTIFACT_ID), contract)
+        self.assertIn(ARTIFACT_NAME, contract)
+        self.assertIn(str(ARTIFACT_RUN_ID), contract)
+        self.assertIn(str(ARTIFACT_JOB_ID), contract)
+        self.assertIn(ADOPTED_SOURCE_REVISION, contract)
+        self.assertIn(ADOPTED_SOURCE_TREE, contract)
+        self.assertIn(ADOPTION_COMMIT, contract)
+        self.assertIn("independently downloaded and checked", contract)
+        self.assertIn("without rerendering", contract)
+        self.assertIn("verified\nrasterized CLI transcript", contract)
         self.assertIn("source commit and tree identities", contract)
         self.assertIn('("Aileron", "Regular")', contract)
         self.assertIn("actual ink bounding-box top-left", contract)
         self.assertIn("tallest measured phase", contract)
         self.assertIn("raster mode derived from\nthe target drawing surface", contract)
+        self.assertIn("does not upload or substitute generated media", contract)
         for output in ADOPTED_OUTPUTS:
             self.assertIn(f"`{output}`", contract)
+
+    def test_readmes_embed_real_evidence_and_exact_reproduction(self) -> None:
+        readme = README_PATH.read_text(encoding="utf-8")
+        index = CLI_INDEX_PATH.read_text(encoding="utf-8")
+
+        self.assertIn("## Verified CLI workflow and results", readme)
+        self.assertIn("not speculative UI mockups", readme)
+        self.assertIn("not an operating-system screenshot", readme)
+        self.assertIn("two fresh captures", readme)
+        for output in (
+            "docs/cli-evidence/cli-workflow.svg",
+            "docs/cli-evidence/cli-transcript.png",
+            "docs/cli-evidence/cli-demo.gif",
+            "docs/cli-evidence/cli-result.svg",
+        ):
+            self.assertIn(f"]({output})", readme)
+            self.assertIn(f"]({Path(output).name})", index)
+
+        self.assertIn("This README is an index", index)
+        self.assertIn("not a seventh artifact member", index)
+        self.assertIn(ARTIFACT_ARCHIVE_SHA256, index)
+        self.assertIn(ARTIFACT_NAME, index)
+        self.assertIn(ADOPTED_SOURCE_REVISION, index)
+        self.assertIn(ADOPTED_SOURCE_TREE, index)
+        self.assertIn(ADOPTION_COMMIT, index)
+        self.assertIn('test "${#wheels[@]}" -eq 1', index)
+        self.assertIn("scripts/render_cli_evidence.py check", index)
+        self.assertIn("git diff --exit-code", index)
+        for output, identity in ADOPTED_IDENTITIES.items():
+            self.assertIn(Path(output).name, index)
+            self.assertIn(cast(str, identity["sha256"]), index)
 
     def test_visual_dependency_is_hash_locked_and_not_runtime(self) -> None:
         requirements = REQUIREMENTS_PATH.read_text(encoding="utf-8")

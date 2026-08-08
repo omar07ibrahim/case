@@ -6,14 +6,17 @@ for security review of usernames, routing keys, dataset labels, package names,
 and other namespaces where an unexpected equivalence can become an
 authorization or integrity problem.
 
-> **Phase 2c is implemented:** the dependency-free package accepts a strict,
-> bounded UTF-8 JSON Lines corpus, computes the complete collision graph, emits
-> canonical ASCII JSON receipt bytes, and verifies a receipt by replaying the
-> source. An installed POSIX CLI now adds hardened descriptor-relative reads and
-> durable no-clobber receipt publication. It performs no network or browser work.
+> **Phase 2c and its CLI evidence are implemented:** the dependency-free
+> package accepts a strict, bounded UTF-8 JSON Lines corpus, computes the complete
+> collision graph, emits canonical ASCII JSON receipt bytes, and verifies a
+> receipt by replaying the source. The installed POSIX CLI adds hardened
+> descriptor-relative reads and durable no-clobber publication. Its reviewed
+> PNG, GIF, and SVG evidence is reproduced byte-for-byte in CI; neither the
+> package nor the capture workflow performs network or browser work at runtime.
 >
-> The implemented byte, command, and POSIX filesystem boundaries are documented
-> in the [portable receipt contract](docs/portable-receipt-contract.md).
+> The implemented byte, command, POSIX filesystem, and visual-evidence boundaries
+> are documented in the
+> [portable receipt contract](docs/portable-receipt-contract.md).
 
 It is not a generic case converter, a confusable-character detector, or a claim
 that one Unicode policy is universally correct.
@@ -124,6 +127,62 @@ tests, while the two exact evidence-replay tests report an explicit skip when
 their `unicodedata.unidata_version` differs. Policy IDs include that version by
 design, so silently treating cross-version bytes as equivalent would be wrong.
 
+## Verified CLI workflow and results
+
+These are reviewed outputs from the installed `casefold-observatory` 0.4.0
+wheel and the seven-record synthetic fixture—not speculative UI mockups. The
+capture is pinned to CPython 3.12.3, Unicode database 15.0.0, Linux x86-64, and
+the hash-locked Pillow 12.3.0 renderer.
+
+### Setup and trust boundary
+
+![Installed-wheel setup, capture, and verification workflow](docs/cli-evidence/cli-workflow.svg)
+
+*Explanatory workflow generated from the evidence manifest. It distinguishes the
+installed wheel under test from the renderer, the reviewed fixture from
+temporary files, and byte-level replay from visual review.*
+
+The evidence path builds a wheel from the selected Git tree, installs it into an
+isolated environment, invokes both console and module entry points without a
+shell, and captures bounded stdout/stderr. Receipt publication is checked as a
+single-link mode-0600 runtime file before the synthetic receipt is committed as
+a normal Git `100644` blob.
+
+### Observed command channels
+
+![Verified rasterized CLI transcript with success and failure channels](docs/cli-evidence/cli-transcript.png)
+
+*Verified rasterized CLI transcript—not an operating-system screenshot. Every
+visible line comes from captured argv, stdout, stderr, and exit status; wrapping
+uses measured font pixels and is rejected if ink escapes the panel.*
+
+![Four-step installed CLI demonstration](docs/cli-evidence/cli-demo.gif)
+
+*Four deterministic full-canvas frames: analyze succeeds, replay verification
+succeeds, no-clobber publication is rejected, and a changed source is rejected.
+The final two frames show the redacted error channel and non-zero exit status.*
+
+### Receipt-derived collision result
+
+![Receipt-derived collision groups, witnesses, and components](docs/cli-evidence/cli-result.svg)
+
+*Receipt-derived result for seven synthetic records under three explicit
+policies: seven collision groups, nine minimal witnesses, and three cross-policy
+components. The SVG reports stored receipt data; it does not recompute or
+invent results.*
+
+The review chain is intentionally inspectable:
+
+- [synthetic JSONL fixture](docs/cli-evidence/fixtures/cli-demo.v1.jsonl);
+- [canonical capture manifest](docs/cli-evidence/evidence/cli-evidence.v1.json);
+- [real generated receipt](docs/cli-evidence/evidence/cli-demo.receipt.v1.json);
+- [artifact-adoption provenance](docs/cli-evidence/evidence/cli-evidence-adoption.v1.json);
+- [renderer and verifier](scripts/render_cli_evidence.py); and
+- [visual evidence index and exact reproduction recipe](docs/cli-evidence/README.md).
+
+CI performs two fresh captures, compares them to one another, compares all six
+outputs byte-for-byte with the adopted files, and requires a clean checkout.
+
 ## Public API example
 
 This example is executable against the current in-memory API. The input order is
@@ -202,11 +261,12 @@ spelling, and input order therefore change the source digest without changing
 the semantic digest when they decode to the same canonical records. Neither
 digest provides authentication, anonymity, or freshness.
 
-The current diagrams are regenerated from reviewed repository inputs and
-describe implemented behavior. They are not UI screenshots or evidence of a
-CLI. Future screenshots, terminal captures, GIFs, or videos will be added only
-after the corresponding surface exists, with generation commands and
-non-sensitive public fixtures. Speculative mockups are not used as proof.
+The in-memory diagrams and installed-CLI bundle are regenerated from reviewed
+repository inputs and describe implemented behavior. The CLI transcript is
+deliberately labeled as a verified rasterization rather than an operating-system
+screenshot; the result SVG is derived from the real generated receipt; and the
+workflow SVG is explanatory. The GIF and transcript preserve actual command
+channels and exit statuses. No speculative mockup is used as proof.
 
 `repr=False` keeps raw identifiers, record IDs, and transformed values out of
 ordinary dataclass representations, but it is not a privacy boundary.
@@ -226,11 +286,13 @@ commit private namespace exports without an appropriate data-handling plan.
 4. **Command-line workflow** — implemented in phase 2c for POSIX systems with
    descriptor-relative stable reads, exact policy arguments, replay verification,
    redacted canonical channels, and durable no-clobber receipt publication.
-5. **Offline interface** — local-only assets, escaped visible rendering of
-   controls and invisible code points, and a restrictive Content Security
-   Policy.
-6. **Interactive evidence** — real screenshots and a GIF or short video once an
-   implemented interaction warrants them.
+5. **Verified CLI evidence** — implemented as a source-bound PNG transcript,
+   four-frame GIF, receipt-derived result SVG, explanatory workflow SVG,
+   canonical manifest, and independent adoption provenance.
+6. **Offline interface** — future local-only assets, escaped visible rendering
+   of controls and invisible code points, and a restrictive Content Security
+   Policy. Its own real screenshots or video will follow only after that
+   interface exists.
 
 The historical Flask case-conversion prototype remains in Git history for
 provenance. It is unsupported and must not be deployed: it used a development

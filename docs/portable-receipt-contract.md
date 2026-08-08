@@ -2,14 +2,14 @@
 
 ## Status
 
-> **IN-MEMORY BYTE CONTRACT IMPLEMENTED IN 0.3.0; POSIX CLI IMPLEMENTED IN
-> 0.4.0.**
+> **IN-MEMORY BYTE CONTRACT IMPLEMENTED IN 0.3.0; POSIX CLI AND REVIEWED
+> VISUAL EVIDENCE IMPLEMENTED IN 0.4.0.**
 >
 > The supported package accepts a bounded JSON Lines corpus as exact caller-owned
 > bytes, creates and replays a canonical portable receipt, and exposes the same
 > workflow through installed `casefold-observatory` and module entry points. The
-> command, terminal, and POSIX filesystem sections below are implemented. The
-> visual-evidence adoption section remains future work.
+> command, terminal, POSIX filesystem, and two-stage visual-evidence sections
+> below are implemented. CI reproduces the adopted six-file bundle byte-for-byte.
 
 Normative words in the corpus, receipt, command, terminal, verification, error,
 and POSIX filesystem sections describe implemented version 1 behavior.
@@ -409,12 +409,14 @@ Do not publish a receipt derived from a private namespace merely because the
 raw source file is absent. Low-entropy identifiers, record IDs, source digests,
 semantic digests, and transformed outputs can be guessed or correlated.
 
-## CLI visual-evidence candidate and adoption gates
+## Adopted CLI visual evidence
 
-The installed command contract is green before visual adoption. The first stage
-adds a candidate-only renderer and hosted artifact; it does **not** place
-candidate media or a generated receipt in the repository and it does not make a
-README evidence claim. The reviewed source fixture is
+The installed command contract was green before visual adoption. Evidence then
+passed two distinct gates: a candidate capture was hosted without changing the
+repository, and an independent review adopted those exact bytes only after
+validating their provenance, structure, content, and privacy boundary.
+
+The reviewed source fixture is
 `docs/cli-evidence/fixtures/cli-demo.v1.jsonl` (SHA-256
 `a77c90ed5e767a4e0a8029cad14ed347354a3b939b62ad75c0da091b522a259f`). It
 contains only seven synthetic identifiers selected to exercise lower, case-fold,
@@ -431,7 +433,7 @@ It is not a package runtime dependency. The renderer also requires
 `("Aileron", "Regular")`. License, wheel, source, and embedded-font provenance
 are recorded in `THIRD_PARTY_NOTICES.md`.
 
-The hosted candidate has exactly six files:
+The adopted bundle has exactly six files:
 
 1. `docs/cli-evidence/evidence/cli-evidence.v1.json`;
 2. `docs/cli-evidence/evidence/cli-demo.receipt.v1.json`;
@@ -440,69 +442,82 @@ The hosted candidate has exactly six files:
 5. `docs/cli-evidence/cli-result.svg`; and
 6. `docs/cli-evidence/cli-workflow.svg`.
 
-The machine manifest records the exact argv, stdout bytes, stderr bytes, exit
-status, and channel digests for installed-console analyze, installed-module
-verify, no-clobber rejection, and source-mismatch rejection. It also records the
-installed package identity, wheel filename, installed-runtime per-file digests
-and aggregate runtime-tree digest, Python and Unicode versions, exact build-tool
-versions, canonical Pillow wheel filename and digest, resolved font family and
-style, source commit and tree identities, source bindings, fixture identity,
-real receipt identity, renderer identity, and the acyclic hash/size inventory
-of the other five files. The manifest lists itself in the
-artifact inventory but deliberately does not hash itself. Its reviewed identity
-and the hosted archive identity belong in a separate stage-two adoption record.
+`docs/cli-evidence/README.md` is the human-readable index and reproduction
+guide, not a seventh bundle member. The machine manifest records exact argv,
+stdout bytes, stderr bytes, exit status, and channel digests for installed-console
+analyze, installed-module verify, no-clobber rejection, and source-mismatch
+rejection. It also records the installed package identity, wheel filename,
+installed-runtime per-file digests and aggregate runtime-tree digest, Python and
+Unicode versions, exact build-tool versions, canonical Pillow wheel filename and
+digest, resolved font family and style, source commit and tree identities, source
+bindings, fixture identity, real receipt identity, renderer identity, and the
+acyclic hash/size inventory of the other five files. The manifest lists itself
+in the artifact inventory but deliberately does not hash itself.
 
-The analyze capture must prove that the runtime-created receipt was a regular,
-single-link mode-0600 file before its bytes are copied into the candidate. Git
-cannot preserve mode 0600 for a normal blob: an adopted synthetic receipt is a
-regular `100644` repository file. The manifest and captions must state those two
-distinct facts and must never imply that checkout preserves the runtime mode.
+The analyze capture proves that the runtime-created receipt was a regular,
+single-link mode-0600 file before its bytes were copied into the candidate. Git
+cannot preserve mode 0600 for a normal blob: the adopted synthetic receipt is a
+regular `100644` repository file. Captions and manifests state both facts and
+do not imply that checkout preserves the runtime mode.
 
-The candidate job is pinned to `ubuntu-24.04`, checks out the explicit
-pull-request head SHA (or the push SHA), asserts that the 40-hex source revision
-equals checkout HEAD, derives and validates the exact 40-hex HEAD tree, builds
-the wheel from a clean `git archive` copy with a fixed source epoch, and passes
-both source objects into two fresh runner-temporary renders.
+The frozen candidate provenance is:
 
-Every renderer input is captured through an O_NOFOLLOW and close-on-exec
+- source commit `b83e7a936f0b3e77ac4c2e1285b2e88dcc029741`;
+- source tree `71e4f3ec9cd69ba74036601232c59e015b03a437`;
+- workflow run `31273971052`, attempt `1`, job `93144542401`;
+- artifact `case-cli-evidence-candidate-31273971052-1`, ID `9026465100`; and
+- archive size `188273` bytes with SHA-256
+  `11c9a0d0bfd33c2b828629dd9b207a9a587a1fa907e23ec0a5d4c18d0ead90f7`.
+
+The candidate job was pinned to `ubuntu-24.04`, checked out the explicit
+pull-request head SHA, asserted the 40-hex source revision and HEAD tree, built
+the wheel from a clean `git archive` copy with fixed source epoch, and passed
+both source objects into two fresh runner-temporary renders. A merge ref or
+`refs/pull/*/merge` SHA was not accepted as provenance.
+
+Every renderer input is captured through an `O_NOFOLLOW` and close-on-exec
 descriptor. The bounded reader compares descriptor identity, type, link count,
 size, modification time, and change time before and after a maximum-plus-one
 read, then confirms the pathname still names that same inode.
 
-The PNG must decode at its exact RGB dimensions with no text, time, EXIF, ICC,
-or other metadata. Every GIF frame must fully decode at the exact full-canvas
+The PNG decodes at its exact RGB dimensions with no text, time, EXIF, ICC, or
+other metadata. Every GIF frame fully decodes at the exact full-canvas
 dimensions with the reviewed duration, loop count zero, disposal method two, and
 no transparency, comment, EXIF, or ICC metadata. Transcript wrapping is
 measured with the exact font's pixel bounding boxes rather than character
 counts. The font bounding box uses the exact Pillow raster mode derived from
 the target drawing surface (`"1"` for the palette GIF and `"L"` for the RGB
-PNG), and must equal `ImageDraw.textbbox` before drawing. The renderer
-normalizes every requested text position to the actual ink bounding-box top-left,
-including glyphs with negative horizontal or vertical bearings. Every drawn line
-is rejected if its measured left, top, right, or bottom edge escapes the reviewed
+PNG), and equals `ImageDraw.textbbox` before drawing. The renderer normalizes
+every requested text position to the actual ink bounding-box top-left, including
+glyphs with negative horizontal or vertical bearings. Every drawn line is
+rejected if its measured left, top, right, or bottom edge escapes the reviewed
 panel and canvas padding; captured text is continued without truncation and
-reconstructs to the exact original channel text. The GIF
-uses one deterministic full-canvas height derived from the tallest measured phase:
-the exact line boxes, inter-line gaps, receipt-footer gap and height, panel bottom
-padding, and canvas bottom padding are all included and asserted.
+reconstructs to the exact original channel text. The GIF uses one deterministic
+full-canvas height derived from the tallest measured phase: the exact line
+boxes, inter-line gaps, receipt-footer gap and height, panel bottom padding, and
+canvas bottom padding are all included and asserted.
 
-Both inventories, every file byte, media structure, redacted failure channel,
-safe file mode, receipt hash, and source binding must match before upload. The
-pinned uploader is
-`actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a`
-(v7.0.1). The artifact name includes the immutable workflow run ID and attempt.
-A merge ref or `refs/pull/*/merge` SHA is not valid provenance.
+The hosted archive was independently downloaded and checked for an exact
+six-entry inventory, regular `100644` modes, manifest and receipt consistency,
+source bindings, per-file identities, PNG/GIF/SVG structure, complete unclipped
+rendering, and absence of host paths, secrets, email addresses, remote assets,
+or personal data. Commit
+`2a83f25ca18b12469a3336341f42c58d6643a834` adopted those six exact blobs
+without rerendering. The separate canonical record
+`docs/cli-evidence/evidence/cli-evidence-adoption.v1.json` preserves the
+artifact archive identity, every adopted file hash and size, capture source
+commit and tree, and review outcomes.
 
-Stage two must download that hosted artifact, independently validate the archive,
-manifest, receipt replay inputs, PNG, GIF, SVGs, hashes, modes, privacy scans, and
-absence of host paths or secrets, then adopt those exact six bytes together with
-a separate canonical adoption-provenance record. Only then may README and docs
-embed them with captions distinguishing a verified rasterized CLI transcript
-(not an OS screenshot), a receipt-derived result, and an explanatory workflow.
-Final CI must capture twice again, compare every adopted byte, enforce the exact
-inventory, and leave the checkout clean.
+The README therefore embeds the assets with distinct captions: a verified
+rasterized CLI transcript (not an OS screenshot), a four-phase observed-command
+GIF, a receipt-derived result, and an explanatory workflow. Current CI checks
+out the explicit pull-request head, builds and installs its wheel outside the
+checkout, performs two fresh captures, audits and compares them, and then
+compares all six outputs byte-for-byte with the adopted files. Any bound runtime
+source drift fails the check, and the checkout must remain clean. The final job
+does not upload or substitute generated media.
 
-No evidence file may contain a remote font, script, image, stylesheet, tracking
+No evidence file contains a remote font, script, image, stylesheet, tracking
 identifier, timestamp, absolute host path, machine identifier, secret, or copied
 third-party asset. Existing `docs/visuals` files remain evidence for the
 in-memory API; the CLI evidence is a separate source-bound bundle.
