@@ -11,6 +11,7 @@ import sys
 import unittest
 from collections.abc import Callable
 from importlib import metadata
+from typing import cast
 from unittest import mock
 
 import casefold_observatory.corpus as corpus_module
@@ -238,14 +239,14 @@ class ReceiptVerificationBoundaryTests(unittest.TestCase):
     def test_exact_byte_types_and_receipt_size_boundary(self) -> None:
         encoded = canonical_receipt_bytes(_receipt())
         for receipt_value, source_value in (
-            (bytearray(encoded), _SAMPLE_SOURCE),
-            (encoded, bytearray(_SAMPLE_SOURCE)),
+            (cast(bytes, bytearray(encoded)), _SAMPLE_SOURCE),
+            (encoded, cast(bytes, bytearray(_SAMPLE_SOURCE))),
         ):
             with (
                 self.subTest(receipt_type=type(receipt_value).__name__),
                 self.assertRaisesRegex(TypeError, "exact bytes"),
             ):
-                verify_collision_receipt(  # type: ignore[arg-type]
+                verify_collision_receipt(
                     receipt_value,
                     source_value,
                 )
@@ -279,7 +280,7 @@ class ReceiptVerificationBoundaryTests(unittest.TestCase):
             with self.subTest(code=code, prefix=value[:12]):
                 error = _expect_failure(
                     self,
-                    lambda value=value: verify_collision_receipt(
+                    lambda: verify_collision_receipt(
                         value,
                         _SAMPLE_SOURCE,
                     ),
@@ -288,11 +289,14 @@ class ReceiptVerificationBoundaryTests(unittest.TestCase):
                 self.assertTrue(error.__suppress_context__)
 
     def test_top_level_schema_and_producer_rejections(self) -> None:
+        def drop_source(document: dict[str, object]) -> None:
+            document.pop("source")
+
         mutations: tuple[
             tuple[Callable[[dict[str, object]], None], ReceiptErrorCode],
             ...,
         ] = (
-            (lambda doc: doc.pop("source"), ReceiptErrorCode.SCHEMA_MISMATCH),
+            (drop_source, ReceiptErrorCode.SCHEMA_MISMATCH),
             (
                 lambda doc: doc.update(schema="private-value"),
                 ReceiptErrorCode.SCHEMA_MISMATCH,
@@ -389,6 +393,9 @@ class ReceiptVerificationBoundaryTests(unittest.TestCase):
             assert isinstance(policy_document, dict)
             return entry, policy_document
 
+        def drop_policy_bounds(document: dict[str, object]) -> None:
+            mutate_policy(document, 0)[1].pop("bounds")
+
         mutations: tuple[
             tuple[Callable[[dict[str, object]], None], ReceiptErrorCode],
             ...,
@@ -408,7 +415,7 @@ class ReceiptVerificationBoundaryTests(unittest.TestCase):
                 ReceiptErrorCode.POLICY_MISMATCH,
             ),
             (
-                lambda doc: mutate_policy(doc, 0)[1].pop("bounds"),
+                drop_policy_bounds,
                 ReceiptErrorCode.POLICY_MISMATCH,
             ),
             (
@@ -559,7 +566,7 @@ class ReceiptForgedStateTests(unittest.TestCase):
             with self.subTest(owner=owner, attribute=attribute):
                 _expect_failure(
                     self,
-                    lambda receipt=receipt: canonical_receipt_bytes(receipt),
+                    lambda: canonical_receipt_bytes(receipt),
                 )
 
         forged = object.__new__(CollisionReceipt)
@@ -575,7 +582,7 @@ class ReceiptForgedStateTests(unittest.TestCase):
             object.__setattr__(graph, attribute, value)
             _expect_failure(self, lambda: receipt_module._graph_document(graph))
 
-        graph_cases = (
+        graph_cases: tuple[tuple[str, object], ...] = (
             ("algorithm", "private-value"),
             ("unicode_version", "private-value"),
             ("semantic_corpus_sha256", "private-value"),
@@ -617,17 +624,21 @@ class ReceiptForgedStateTests(unittest.TestCase):
                 record_count=record_count,
             ),
         )
-        for attribute, value in (
+        for duplicate_attribute, duplicate_value in (
             ("group_id", 1),
             ("member_record_ordinals", (0,)),
             ("witness_ids", ()),
         ):
-            fresh = _receipt().graph.duplicate_groups[0]
-            object.__setattr__(fresh, attribute, value)
+            fresh_duplicate = _receipt().graph.duplicate_groups[0]
+            object.__setattr__(
+                fresh_duplicate,
+                duplicate_attribute,
+                duplicate_value,
+            )
             _expect_failure(
                 self,
-                lambda fresh=fresh: receipt_module._duplicate_group_document(
-                    fresh,
+                lambda: receipt_module._duplicate_group_document(
+                    fresh_duplicate,
                     record_count=record_count,
                 ),
             )
@@ -640,7 +651,7 @@ class ReceiptForgedStateTests(unittest.TestCase):
                 policy_ids=policy_ids,
             ),
         )
-        for attribute, value in (
+        for policy_attribute, policy_value in (
             ("policy_ordinal", -1),
             ("policy_id", "0" * 64),
             ("transformed", 1),
@@ -649,12 +660,16 @@ class ReceiptForgedStateTests(unittest.TestCase):
             ("member_record_ordinals", (0,)),
             ("witness_ids", ()),
         ):
-            fresh = _receipt().graph.policy_groups[0]
-            object.__setattr__(fresh, attribute, value)
+            fresh_policy_group = _receipt().graph.policy_groups[0]
+            object.__setattr__(
+                fresh_policy_group,
+                policy_attribute,
+                policy_value,
+            )
             _expect_failure(
                 self,
-                lambda fresh=fresh: receipt_module._policy_group_document(
-                    fresh,
+                lambda: receipt_module._policy_group_document(
+                    fresh_policy_group,
                     record_count=record_count,
                     policy_ids=policy_ids,
                 ),
@@ -678,19 +693,23 @@ class ReceiptForgedStateTests(unittest.TestCase):
             (transform_witness, "stage_index", -1),
             (transform_witness, "step", None),
         )
-        for original, attribute, value in witness_cases:
+        for original, witness_attribute, witness_value in witness_cases:
             fresh_receipt = _receipt()
             candidates = (
                 witness
                 for witness in fresh_receipt.graph.witnesses
                 if (witness.policy_ordinal is None) == (original.policy_ordinal is None)
             )
-            fresh = next(candidates)
-            object.__setattr__(fresh, attribute, value)
+            fresh_witness = next(candidates)
+            object.__setattr__(
+                fresh_witness,
+                witness_attribute,
+                witness_value,
+            )
             _expect_failure(
                 self,
-                lambda fresh=fresh: receipt_module._witness_document(
-                    fresh,
+                lambda: receipt_module._witness_document(
+                    fresh_witness,
                     record_count=record_count,
                     policy_ids=policy_ids,
                 ),
@@ -704,17 +723,21 @@ class ReceiptForgedStateTests(unittest.TestCase):
                 policy_count=len(policy_ids),
             ),
         )
-        for attribute, value in (
+        for component_attribute, component_value in (
             ("member_record_ordinals", (0,)),
             ("witness_tree_ids", ()),
             ("policy_ordinals", (99,)),
         ):
-            fresh = _receipt().graph.components[0]
-            object.__setattr__(fresh, attribute, value)
+            fresh_component = _receipt().graph.components[0]
+            object.__setattr__(
+                fresh_component,
+                component_attribute,
+                component_value,
+            )
             _expect_failure(
                 self,
-                lambda fresh=fresh: receipt_module._component_document(
-                    fresh,
+                lambda: receipt_module._component_document(
+                    fresh_component,
                     record_count=record_count,
                     policy_count=len(policy_ids),
                 ),
@@ -781,12 +804,14 @@ class ReceiptForgedStateTests(unittest.TestCase):
     def test_recursive_json_type_validator_and_error_mapping(self) -> None:
         valid = (None, "x", 1, [None, {"x": [1]}], {"x": "y"})
         invalid = (True, 1.0, [object()], {1: "x"}, {"x": object()})
-        for value in valid:
-            with self.subTest(value=value):
-                self.assertTrue(receipt_module._valid_receipt_json_types(value))
-        for value in invalid:
-            with self.subTest(value=type(value).__name__):
-                self.assertFalse(receipt_module._valid_receipt_json_types(value))
+        for valid_value in valid:
+            with self.subTest(value=valid_value):
+                self.assertTrue(receipt_module._valid_receipt_json_types(valid_value))
+        for invalid_value in invalid:
+            with self.subTest(value=type(invalid_value).__name__):
+                self.assertFalse(
+                    receipt_module._valid_receipt_json_types(invalid_value)
+                )
 
         mapping = {
             corpus_module._JsonIssue.JSON_DEPTH: ReceiptErrorCode.JSON_DEPTH,

@@ -210,7 +210,7 @@ def _ordinal_tuple(
 
 
 def _is_digest(value: object) -> bool:
-    return type(value) is str and _HEX_DIGEST.fullmatch(cast(str, value)) is not None
+    return type(value) is str and _HEX_DIGEST.fullmatch(value) is not None
 
 
 def _policy_document(policy: TransformPolicy) -> JsonObject:
@@ -373,12 +373,15 @@ def _graph_document(graph: CollisionGraph) -> JsonObject:
     record_count = len(record_ids)
 
     duplicate_groups = [
-        _duplicate_group_document(group, record_count=record_count)
+        _duplicate_group_document(
+            cast(ExactDuplicateGroup, group),
+            record_count=record_count,
+        )
         for group in _exact_tuple(graph.duplicate_groups)
     ]
     policy_groups = [
         _policy_group_document(
-            group,
+            cast(PolicyCollisionGroup, group),
             record_count=record_count,
             policy_ids=policy_ids,
         )
@@ -386,7 +389,7 @@ def _graph_document(graph: CollisionGraph) -> JsonObject:
     ]
     witnesses = [
         _witness_document(
-            witness,
+            cast(CollisionWitness, witness),
             record_count=record_count,
             policy_ids=policy_ids,
         )
@@ -394,7 +397,7 @@ def _graph_document(graph: CollisionGraph) -> JsonObject:
     ]
     components = [
         _component_document(
-            component,
+            cast(GlobalCollisionComponent, component),
             record_count=record_count,
             policy_count=len(policy_ids),
         )
@@ -693,7 +696,7 @@ def _parse_policy_documents(value: object) -> tuple[TransformPolicy, ...]:
             )
         try:
             steps = tuple(TransformStep(cast(str, step)) for step in steps_value)
-            handling = HazardHandling(cast(str, document["hazard_handling"]))
+            handling = HazardHandling(document["hazard_handling"])
             policy = create_policy(steps, hazard_handling=handling)
         except (TypeError, ValueError):
             _raise_receipt(
@@ -775,7 +778,7 @@ def verify_collision_receipt(
         or type(source["format_version"]) is not int
         or source["format_version"] != CORPUS_FORMAT_VERSION
         or type(source["byte_count"]) is not int
-        or cast(int, source["byte_count"]) < 0
+        or source["byte_count"] < 0
         or not _is_digest(source["sha256"])
     ):
         _raise_receipt(ReceiptErrorCode.SCHEMA_MISMATCH)
@@ -799,7 +802,7 @@ def verify_collision_receipt(
     expected_source_digest = cast(str, source["sha256"])
     if (
         len(source_bytes) > MAX_CORPUS_SOURCE_BYTES
-        or cast(int, source["byte_count"]) != len(source_bytes)
+        or source["byte_count"] != len(source_bytes)
         or not hmac.compare_digest(
             expected_source_digest,
             hashlib.sha256(source_bytes).hexdigest(),
