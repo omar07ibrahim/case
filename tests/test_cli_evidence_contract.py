@@ -18,12 +18,8 @@ REQUIREMENTS_PATH = PROJECT_ROOT / "requirements" / "cli-visuals.txt"
 NOTICES_PATH = PROJECT_ROOT / "THIRD_PARTY_NOTICES.md"
 MANIFEST_PATH = PROJECT_ROOT / "MANIFEST.in"
 
-FIXTURE_SHA256 = (
-    "a77c90ed5e767a4e0a8029cad14ed347354a3b939b62ad75c0da091b522a259f"
-)
-PILLOW_SHA256 = (
-    "78cb2c6865a35ab8ff8b75fd122f6033b92a62c82801110e48ddd6c936a45d91"
-)
+FIXTURE_SHA256 = "a77c90ed5e767a4e0a8029cad14ed347354a3b939b62ad75c0da091b522a259f"
+PILLOW_SHA256 = "78cb2c6865a35ab8ff8b75fd122f6033b92a62c82801110e48ddd6c936a45d91"
 UPLOAD_ARTIFACT_SHA = "043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"
 CANDIDATE_OUTPUTS = (
     "docs/cli-evidence/evidence/cli-evidence.v1.json",
@@ -95,9 +91,7 @@ class CliEvidenceCandidateContractTests(unittest.TestCase):
 
         self.assertTrue({"PIL", "subprocess"}.issubset(imports))
         self.assertTrue(
-            imports.isdisjoint(
-                {"http", "requests", "socket", "urllib", "webbrowser"}
-            )
+            imports.isdisjoint({"http", "requests", "socket", "urllib", "webbrowser"})
         )
         self.assertNotIn("shell=True", source)
         self.assertNotIn("datetime", imports)
@@ -161,7 +155,8 @@ class CliEvidenceCandidateContractTests(unittest.TestCase):
         self.assertEqual(project["dependencies"], [])
 
         notices = NOTICES_PATH.read_text(encoding="utf-8")
-        self.assertIn("not installed with `casefold-observatory`", notices)
+        self.assertIn("no runtime dependencies", notices)
+        self.assertIn("included in its wheel", notices)
         self.assertIn("Pillow 12.3.0", notices)
         self.assertIn(PILLOW_SHA256, notices)
         self.assertIn("Aileron Regular", notices)
