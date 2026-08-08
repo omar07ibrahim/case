@@ -4,10 +4,11 @@ import ast
 import hashlib
 import importlib.util
 import json
+import runpy
 import tomllib
 import unittest
 from pathlib import Path
-from typing import cast
+from typing import Protocol, cast
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 CLI_ROOT = PROJECT_ROOT / "docs" / "cli-evidence"
@@ -40,6 +41,43 @@ FIXTURE_RECORDS = (
     ("lower-ss", "ss"),
     ("upper-ss", "SS"),
 )
+
+
+class _TextPlacementResult(Protocol):
+    draw_position: tuple[int, int]
+    ink_bounds: tuple[int, int, int, int]
+
+
+class _TextPlacementFactory(Protocol):
+    def __call__(
+        self,
+        font: object,
+        value: str,
+        position: tuple[int, int],
+        /,
+    ) -> _TextPlacementResult: ...
+
+
+class _GifLayoutResult(Protocol):
+    canvas_height: int
+    panel_bottom: int
+    footer_top: int
+    footer_bottom: int
+    phase_bottoms: tuple[int, ...]
+    tallest_phase: int
+
+
+class _GifLayoutFactory(Protocol):
+    def __call__(
+        self,
+        line_heights_by_phase: tuple[tuple[int, ...], ...],
+        *,
+        footer_height: int,
+    ) -> _GifLayoutResult: ...
+
+
+def _renderer_namespace() -> dict[str, object]:
+    return cast(dict[str, object], runpy.run_path(GENERATOR_PATH.as_posix()))
 
 
 def _object(value: object) -> dict[str, object]:
@@ -156,8 +194,6 @@ class CliEvidenceCandidateContractTests(unittest.TestCase):
     def test_text_placement_normalizes_negative_glyph_bearings(self) -> None:
         from PIL import ImageFont
 
-        from scripts import render_cli_evidence as renderer
-
         class NegativeBearingFont:
             def getbbox(self, value: str) -> tuple[int, int, int, int]:
                 self_value = value
@@ -165,17 +201,20 @@ class CliEvidenceCandidateContractTests(unittest.TestCase):
                     raise AssertionError("unexpected test glyph")
                 return (-4, 7, 9, 22)
 
+        namespace = _renderer_namespace()
+        place_text = cast(_TextPlacementFactory, namespace["_text_placement"])
         font = cast(ImageFont.ImageFont, NegativeBearingFont())
-        placement = renderer._text_placement(font, "j", (100, 200))
+        placement = place_text(font, "j", (100, 200))
 
         self.assertEqual(placement.draw_position, (104, 193))
         self.assertEqual(placement.ink_bounds, (100, 200, 113, 215))
 
     @unittest.skipUnless(PILLOW_AVAILABLE, "canonical Pillow is not installed")
     def test_gif_layout_selects_the_tallest_measured_phase(self) -> None:
-        from scripts import render_cli_evidence as renderer
-
-        layout = renderer._gif_layout(
+        namespace = _renderer_namespace()
+        layout_gif = cast(_GifLayoutFactory, namespace["_gif_layout"])
+        footer_gap = cast(int, namespace["_GIF_TRANSCRIPT_FOOTER_GAP"])
+        layout = layout_gif(
             ((11,), (8, 30, 9), (20, 20)),
             footer_height=13,
         )
@@ -184,26 +223,29 @@ class CliEvidenceCandidateContractTests(unittest.TestCase):
         self.assertEqual(layout.tallest_phase, 1)
         self.assertEqual(
             layout.footer_top,
-            layout.phase_bottoms[1] + renderer._GIF_TRANSCRIPT_FOOTER_GAP,
+            layout.phase_bottoms[1] + footer_gap,
         )
 
     @unittest.skipUnless(PILLOW_AVAILABLE, "canonical Pillow is not installed")
     def test_gif_layout_preserves_exact_footer_and_canvas_gaps(self) -> None:
-        from scripts import render_cli_evidence as renderer
-
-        layout = renderer._gif_layout(((14, 13),), footer_height=12)
+        namespace = _renderer_namespace()
+        layout_gif = cast(_GifLayoutFactory, namespace["_gif_layout"])
+        footer_gap = cast(int, namespace["_GIF_TRANSCRIPT_FOOTER_GAP"])
+        panel_gap = cast(int, namespace["_GIF_FOOTER_PANEL_GAP"])
+        canvas_gap = cast(int, namespace["_GIF_CANVAS_BOTTOM_GAP"])
+        layout = layout_gif(((14, 13),), footer_height=12)
 
         self.assertEqual(
             layout.footer_top - max(layout.phase_bottoms),
-            renderer._GIF_TRANSCRIPT_FOOTER_GAP,
+            footer_gap,
         )
         self.assertEqual(
             layout.panel_bottom - layout.footer_bottom,
-            renderer._GIF_FOOTER_PANEL_GAP,
+            panel_gap,
         )
         self.assertEqual(
             layout.canvas_height - layout.panel_bottom,
-            renderer._GIF_CANVAS_BOTTOM_GAP,
+            canvas_gap,
         )
 
     def test_stage_one_keeps_candidate_bytes_out_of_repository(self) -> None:
