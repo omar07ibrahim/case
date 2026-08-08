@@ -10,6 +10,11 @@ authorization or integrity problem.
 > records, evaluates one or more ordered policies, and returns deterministic
 > collision groups, connected components, and minimal stage witnesses. File
 > ingestion, portable receipts, a CLI, and an offline UI remain future work.
+>
+> The proposed version 1 corpus, receipt, and CLI boundaries are documented in
+> the [portable receipt contract](docs/portable-receipt-contract.md). That
+> contract is **NOT IMPLEMENTED YET** and does not describe an available command
+> or file format.
 
 It is not a generic case converter, a confusable-character detector, or a claim
 that one Unicode policy is universally correct.
@@ -185,11 +190,13 @@ commit private namespace exports without an appropriate data-handling plan.
 2. **In-memory collision graph and minimal witnesses** — implemented in phase
    2a; portable graph serialization is next. The checked-in documentation
    fixtures are generator-owned evidence, not a public receipt format.
-3. **Reproducible ingestion and receipts** — bounded streaming input,
-   deterministic serialization, and receipts tied to exact input bytes,
-   policies, implementation version, and Unicode data version.
-4. **Command-line workflow** — safe terminal rendering, inspectable output, and
-   reproducible evidence capture.
+3. **Reproducible ingestion and receipts** — the design-only
+   [portable receipt contract](docs/portable-receipt-contract.md) specifies
+   bounded input, deterministic serialization, and bindings to exact input
+   bytes, policies, implementation version, and Unicode data version. It is
+   **not implemented yet**.
+4. **Command-line workflow** — the same future contract specifies safe terminal
+   output and no-clobber persistence, but no installed CLI exists yet.
 5. **Offline interface** — local-only assets, escaped visible rendering of
    controls and invisible code points, and a restrictive Content Security
    Policy.

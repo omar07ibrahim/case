@@ -1,5 +1,6 @@
 include SECURITY.md
 include docs/collision-graph-contract.md
+include docs/portable-receipt-contract.md
 include scripts/render_collision_visuals.py
 include scripts/verify_distribution.py
 recursive-include docs/visuals *.json *.md *.svg

@@ -146,7 +146,10 @@ for source bytes, lines, records, fields, and aggregation independently.
 Portable receipts must use a versioned canonical schema and bind exact source
 bytes, policy documents, implementation identity, and Unicode data version.
 Unless separately signed or authenticated, those receipts will still be
-integrity evidence rather than proof of origin.
+integrity evidence rather than proof of origin. The design-only
+[portable receipt contract](docs/portable-receipt-contract.md) makes this future
+boundary concrete; it is **not implemented yet** and does not expand the current
+support status.
 
 Terminal output must prevent ANSI/control interpretation and show controls,
 bidirectional marks, invisible code points, and ambiguous whitespace visibly.
@@ -155,7 +158,7 @@ untrusted text rather than interpreting it as markup or script. Any future
 browser interface must work offline, load no remote runtime assets, and enforce
 a restrictive Content Security Policy.
 
-Filesystem output must use safe atomic replacement, reject or explicitly handle
+Filesystem output must use safe atomic publication, reject or explicitly handle
 links and special files, avoid input/output aliasing, and prevent path
 traversal. Analysis and evidence regeneration must not require network access.
 
