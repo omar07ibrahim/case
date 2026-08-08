@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1500" height="900" viewBox="0 0 1500 900" role="img" aria-labelledby="svg-title svg-description">
   <title id="svg-title">First-merge witness graph</title>
   <desc id="svg-description">A real collision graph for SS, ss, and eszett under lower then casefold, showing the first stage at which each edge merges.</desc>
-  <metadata>{&quot;data_sha256&quot;:&quot;4e90406218438ba332c59f3f55abca76265de9597460cb28dd5366ae927b1a6c&quot;,&quot;generated_by&quot;:&quot;scripts/render_collision_visuals.py&quot;,&quot;scenario&quot;:&quot;first_merge_witness&quot;,&quot;source_revision&quot;:&quot;8c55335d6db549fbc55319addba33f3a2bda0e96&quot;}</metadata>
+  <metadata>{&quot;data_sha256&quot;:&quot;4e90406218438ba332c59f3f55abca76265de9597460cb28dd5366ae927b1a6c&quot;,&quot;generated_by&quot;:&quot;scripts/render_collision_visuals.py&quot;,&quot;scenario&quot;:&quot;first_merge_witness&quot;,&quot;source_revision&quot;:&quot;c55833248d5e8a63987c6a88f9ae971f95a05df2&quot;}</metadata>
   <style>
     text { font-family: Inter, 'Segoe UI', 'DejaVu Sans', sans-serif; }
     .title { fill: #eff6ff; font-size: 34px; font-weight: 750; }
