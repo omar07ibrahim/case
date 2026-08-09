@@ -1829,7 +1829,9 @@ def _write_outputs(root: Path, outputs: dict[str, bytes]) -> None:
             stream.write(outputs[relative_path])
             stream.flush()
             os.fsync(stream.fileno())
-        os.chmod(path, 0o644)
+        # Candidate evidence becomes intentionally public only after the output
+        # root and each destination have passed the safety checks above.
+        path.chmod(0o644)
     _audit_tree(root, exact_inventory=True)
 
 
