@@ -317,8 +317,12 @@ def _verify_gif(payload: bytes, manifest: JsonObject) -> None:
 
 
 def _verify_svg(payload: bytes) -> None:
-    if not payload.isascii() or b"http://" in payload or b"https://" in payload:
-        _fail("architecture SVG contains non-ASCII or remote content")
+    namespace = b'xmlns="http://www.w3.org/2000/svg"'
+    if not payload.isascii() or payload.count(namespace) != 1:
+        _fail("architecture SVG contains non-ASCII or an invalid namespace")
+    remote_scan = payload.replace(namespace, b"", 1)
+    if b"http://" in remote_scan or b"https://" in remote_scan:
+        _fail("architecture SVG contains remote content")
     root = ET.fromstring(payload)
     if root.tag != "{http://www.w3.org/2000/svg}svg":
         _fail("architecture evidence is not SVG")
