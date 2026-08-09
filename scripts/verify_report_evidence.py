@@ -132,20 +132,27 @@ def _object(value: object) -> JsonObject:
     return cast(JsonObject, value)
 
 
-def _canonical_json(payload: bytes) -> JsonObject:
+def _canonical_json(payload: bytes, *, pretty: bool) -> JsonObject:
     if not payload.isascii() or not payload.endswith(b"\n"):
         _fail("JSON evidence must be canonical ASCII plus LF")
     value: object = json.loads(payload)
-    expected = (
-        json.dumps(
+    if pretty:
+        rendered = json.dumps(
             value,
             ensure_ascii=True,
             allow_nan=False,
             indent=2,
             sort_keys=True,
-        ).encode("ascii")
-        + b"\n"
-    )
+        )
+    else:
+        rendered = json.dumps(
+            value,
+            ensure_ascii=True,
+            allow_nan=False,
+            separators=(",", ":"),
+            sort_keys=True,
+        )
+    expected = rendered.encode("ascii") + b"\n"
     if expected != payload:
         _fail("JSON evidence is not canonical")
     return _object(value)
@@ -383,7 +390,7 @@ def _verify(
         relative: _read(root / relative, MAX_FILE_BYTES[relative])
         for relative in OUTPUT_PATHS
     }
-    manifest = _canonical_json(payloads[MANIFEST_PATH])
+    manifest = _canonical_json(payloads[MANIFEST_PATH], pretty=True)
     if manifest.get("schema") != "casefold-observatory.report-evidence":
         _fail("report evidence schema changed")
     if manifest.get("schema_version") != 1:
@@ -470,7 +477,7 @@ def _verify(
     if fixture.get("sha256") != _sha256(fixture_bytes):
         _fail("fixture digest changed")
 
-    receipt = _canonical_json(payloads[RECEIPT_PATH])
+    receipt = _canonical_json(payloads[RECEIPT_PATH], pretty=False)
     if receipt.get("schema") != "casefold-observatory.analysis-receipt":
         _fail("receipt schema changed")
     receipt_sha = _sha256(payloads[RECEIPT_PATH])
