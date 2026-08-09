@@ -89,7 +89,7 @@ jobs:
     name: Adopted CLI evidence
     needs: quality
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 20
     env:
       SOURCE_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
@@ -150,10 +150,53 @@ jobs:
             "${wheels[0]}"
 
       - name: Reproduce and verify adopted CLI evidence
+        id: cli_evidence
+        shell: bash
         run: |
+          set -euo pipefail
           wheels=("$RUNNER_TEMP"/cli-wheel/*.whl)
-          python scripts/render_cli_evidence.py check \
+          if python scripts/render_cli_evidence.py check \
             --venv-bin "$RUNNER_TEMP/cli-venv/bin" \
-            --wheel "${wheels[0]}"
-          git diff --exit-code
+            --wheel "${wheels[0]}"; then
+            git diff --exit-code
+            test -z "$(git status --porcelain --untracked-files=all)"
+            echo "drift=false" >>"${GITHUB_OUTPUT}"
+            exit 0
+          fi
+
+          source_tree="$(git rev-parse "${SOURCE_REVISION}^{tree}")"
+          candidate_a="$RUNNER_TEMP/cli-evidence-candidate-a"
+          candidate_b="$RUNNER_TEMP/cli-evidence-candidate-b"
+          python scripts/render_cli_evidence.py render \
+            --venv-bin "$RUNNER_TEMP/cli-venv/bin" \
+            --wheel "${wheels[0]}" \
+            --source-revision "$SOURCE_REVISION" \
+            --source-tree "$source_tree" \
+            --output-root "$candidate_a"
+          python scripts/render_cli_evidence.py render \
+            --venv-bin "$RUNNER_TEMP/cli-venv/bin" \
+            --wheel "${wheels[0]}" \
+            --source-revision "$SOURCE_REVISION" \
+            --source-tree "$source_tree" \
+            --output-root "$candidate_b"
+          python scripts/render_cli_evidence.py compare "$candidate_a" "$candidate_b"
+          test "$(find "$candidate_a" -type f | wc -l)" -eq 6
+          test -z "$(find "$candidate_a" -type l -print -quit)"
+          test -z "$(find "$candidate_a" ! -type d ! -type f -print -quit)"
           test -z "$(git status --porcelain --untracked-files=all)"
+          echo "drift=true" >>"${GITHUB_OUTPUT}"
+
+      - name: Preserve refreshed CLI evidence for review
+        if: steps.cli_evidence.outputs.drift == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: generated-cli-evidence-${{ github.run_id }}
+          path: ${{ runner.temp }}/cli-evidence-candidate-a/
+          if-no-files-found: error
+          include-hidden-files: false
+          compression-level: 0
+          retention-days: 1
+
+      - name: Reject stale committed CLI evidence
+        if: steps.cli_evidence.outputs.drift == 'true'
+        run: exit 1
