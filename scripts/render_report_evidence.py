@@ -415,8 +415,8 @@ def _capture_page(
     context.on(
         "request", lambda request: requests.append((request.resource_type, request.url))
     )
-    context.on("page", lambda _page: popups.append("popup"))
     page = context.new_page()
+    context.on("page", lambda _page: popups.append("popup"))
     page.on(
         "console", lambda message: console_messages.append((message.type, message.text))
     )
