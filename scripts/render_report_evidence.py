@@ -379,7 +379,7 @@ def _page_assertions(page: Any) -> JsonObject:
         _fail("browser found the wrong CSP count")
     if type(styles) is not list or len(styles) != 1 or type(styles[0]) is not str:
         _fail("browser found the wrong stylesheet count")
-    style_hash = hashlib.sha256(cast(str, styles[0]).encode("ascii")).digest()
+    style_hash = hashlib.sha256(styles[0].encode("ascii")).digest()
     directive = "'sha256-" + base64.b64encode(style_hash).decode("ascii") + "'"
     if type(csp[0]) is not str or directive not in csp[0]:
         _fail("browser CSP did not bind the exact stylesheet")
@@ -783,9 +783,9 @@ def _render(
 
         receipt_bytes = _read(receipt, 1_048_576)
         report_bytes = _read(report, 8_388_608)
-        for path in (receipt, report):
-            mode = stat.S_IMODE(path.stat().st_mode)
-            if mode != 0o600 or path.stat().st_nlink != 1:
+        for runtime_path in (receipt, report):
+            mode = stat.S_IMODE(runtime_path.stat().st_mode)
+            if mode != 0o600 or runtime_path.stat().st_nlink != 1:
                 _fail("runtime output lost mode-0600 single-link semantics")
         if not report_bytes.isascii():
             _fail("offline report source must be ASCII")
@@ -949,8 +949,8 @@ def _render(
             },
         }
         manifest_bytes = _canonical_json(manifest)
-        for path, payload in payloads.items():
-            _write(output_root, path, payload)
+        for relative, payload in payloads.items():
+            _write(output_root, relative, payload)
         _write(output_root, MANIFEST_PATH, manifest_bytes)
     print(f"report evidence candidate rendered ({len(OUTPUT_PATHS)} files)")
 

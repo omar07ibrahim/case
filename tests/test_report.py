@@ -31,6 +31,8 @@ from casefold_observatory import (
 )
 from casefold_observatory import receipt as receipt_module
 from casefold_observatory import report as report_module
+from casefold_observatory.corpus import _parse_corpus_bytes
+from casefold_observatory.receipt import _verify_collision_receipt_and_records
 
 _HEADER = b'{"schema":"casefold-observatory.identifier-corpus","schema_version":1}'
 
@@ -297,10 +299,9 @@ class OfflineReportTests(unittest.TestCase):
     def test_reverse_input_order_maps_values_to_canonical_record_ordinals(self) -> None:
         source = _source(("zeta", "Z"), ("alpha", "A"))
         receipt = _receipt(source)
-        with mock.patch.object(
-            receipt_module,
-            "_parse_corpus_bytes",
-            wraps=receipt_module._parse_corpus_bytes,
+        with mock.patch(
+            "casefold_observatory.receipt._parse_corpus_bytes",
+            wraps=_parse_corpus_bytes,
         ) as parse:
             report = render_offline_report(receipt, source)
         self.assertEqual(parse.call_count, 1)
@@ -369,15 +370,14 @@ class OfflineReportTests(unittest.TestCase):
     def test_verified_graph_and_canonical_records_must_match(self) -> None:
         source = _source(("alpha", "A"))
         receipt_bytes = _receipt(source)
-        verified, records = report_module._verify_collision_receipt_and_records(
+        verified, records = _verify_collision_receipt_and_records(
             receipt_bytes,
             source,
         )
         replacement = create_identifier_record("other", "A")
         with (
-            mock.patch.object(
-                report_module,
-                "_verify_collision_receipt_and_records",
+            mock.patch(
+                "casefold_observatory.report._verify_collision_receipt_and_records",
                 return_value=(verified, (replacement,)),
             ),
             self.assertRaises(OfflineReportError) as caught,
@@ -405,7 +405,7 @@ class OfflineReportTests(unittest.TestCase):
 
         source = _source(("alpha", "A"))
         receipt = _receipt(source)
-        verified, records = report_module._verify_collision_receipt_and_records(
+        verified, records = _verify_collision_receipt_and_records(
             receipt,
             source,
         )

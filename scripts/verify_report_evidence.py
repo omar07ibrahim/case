@@ -510,10 +510,10 @@ def _verify(
             _fail("captured stdout byte count changed")
         if document.get("stdout_sha256") != _sha256(stdout_bytes):
             _fail("captured stdout digest changed")
-        payload = _object(json.loads(stdout))
-        if payload.get("status") != expected_status:
+        command_payload = _object(json.loads(stdout))
+        if command_payload.get("status") != expected_status:
             _fail("captured command status changed")
-        command_payloads.append(payload)
+        command_payloads.append(command_payload)
     if command_payloads[0].get("receipt_sha256") != receipt_sha:
         _fail("analyze summary lost receipt parity")
     if command_payloads[1].get("receipt_sha256") != receipt_sha:

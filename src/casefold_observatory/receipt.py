@@ -853,7 +853,7 @@ def _verify_collision_receipt_and_records(
             source_bytes,
             policies,
             records,
-            producer_version=cast(str, producer["version"]),
+            producer_version=producer["version"],
         )
         expected_bytes = canonical_receipt_bytes(expected)
     except (CorpusIngestionError, CollisionAnalysisError):
