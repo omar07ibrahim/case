@@ -1,0 +1,494 @@
+{
+  "artifacts": {
+    "docs/report-evidence/evidence/report-demo.receipt.v1.json": {
+      "bytes": 8537,
+      "sha256": "6ac6363a609cfa64c8bca7bdace514f09beab5f60927a880b220ad258f70d06e"
+    },
+    "docs/report-evidence/evidence/report-demo.v1.html": {
+      "bytes": 33092,
+      "sha256": "52e41982b2defd6f8eae643cabfc0bfd96f44fb47c0172e36aba5d864cc93d4c"
+    },
+    "docs/report-evidence/report-architecture.svg": {
+      "bytes": 3486,
+      "sha256": "56ec83288a91d68a423f465ed089cc17a85a2d87b8ad045865803d1f146fac54"
+    },
+    "docs/report-evidence/report-desktop.png": {
+      "bytes": 136923,
+      "sha256": "144220805f9137f9ecef4a809ed3e2165f4829efc6c65667f699e021d4765045"
+    },
+    "docs/report-evidence/report-full-page.png": {
+      "bytes": 1020472,
+      "sha256": "893a85813c07b89b81acaef2a633f49985374bea0f14384645c9a20d359b02b5"
+    },
+    "docs/report-evidence/report-mobile.png": {
+      "bytes": 71185,
+      "sha256": "12a5d1a03d302d7429e8d94ba0a5e87f33f0ea61569e77506ca5bee1f7e2788c"
+    },
+    "docs/report-evidence/report-scroll.gif": {
+      "bytes": 210842,
+      "sha256": "daf9abff4452a4c3f5b9278c360d2c2b4766d19121fe8a5e1ac2d72625005204"
+    }
+  },
+  "browser": {
+    "assertions": {
+      "csp_negative_probe": {
+        "inline_script_blocked": true,
+        "observed_background": "rgb(9, 16, 21)",
+        "tampered_style_blocked": true
+      },
+      "desktop": {
+        "bad_attributes": [],
+        "bad_tags": [],
+        "body_background": "rgb(9, 16, 21)",
+        "console_errors": 0,
+        "csp": [
+          "default-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'; script-src 'none'; script-src-elem 'none'; script-src-attr 'none'; style-src 'sha256-E7pIH36FWA5Gii1ZO90RqvAVKDgiumeaEDNluF8DdbA='; style-src-elem 'sha256-E7pIH36FWA5Gii1ZO90RqvAVKDgiumeaEDNluF8DdbA='; style-src-attr 'none'; img-src 'none'; font-src 'none'; media-src 'none'; connect-src 'none'; worker-src 'none'; child-src 'none'; frame-src 'none'; manifest-src 'none'"
+        ],
+        "document_client_width": 1440,
+        "document_scroll_height": 12945,
+        "document_scroll_width": 1440,
+        "image": {
+          "height": 1000,
+          "mode": "RGB",
+          "width": 1440
+        },
+        "page_errors": 0,
+        "popup_count": 0,
+        "request_count": 1,
+        "resource_types": [
+          "document"
+        ],
+        "subresource_request_count": 0,
+        "text_ascii": true,
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      "full_page": {
+        "bad_attributes": [],
+        "bad_tags": [],
+        "body_background": "rgb(9, 16, 21)",
+        "console_errors": 0,
+        "csp": [
+          "default-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'; script-src 'none'; script-src-elem 'none'; script-src-attr 'none'; style-src 'sha256-E7pIH36FWA5Gii1ZO90RqvAVKDgiumeaEDNluF8DdbA='; style-src-elem 'sha256-E7pIH36FWA5Gii1ZO90RqvAVKDgiumeaEDNluF8DdbA='; style-src-attr 'none'; img-src 'none'; font-src 'none'; media-src 'none'; connect-src 'none'; worker-src 'none'; child-src 'none'; frame-src 'none'; manifest-src 'none'"
+        ],
+        "document_client_width": 1440,
+        "document_scroll_height": 12945,
+        "document_scroll_width": 1440,
+        "image": {
+          "height": 12945,
+          "mode": "RGB",
+          "width": 1440
+        },
+        "page_errors": 0,
+        "popup_count": 0,
+        "request_count": 1,
+        "resource_types": [
+          "document"
+        ],
+        "subresource_request_count": 0,
+        "text_ascii": true,
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      "mobile_emulation": {
+        "bad_attributes": [],
+        "bad_tags": [],
+        "body_background": "rgb(9, 16, 21)",
+        "console_errors": 0,
+        "csp": [
+          "default-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'; script-src 'none'; script-src-elem 'none'; script-src-attr 'none'; style-src 'sha256-E7pIH36FWA5Gii1ZO90RqvAVKDgiumeaEDNluF8DdbA='; style-src-elem 'sha256-E7pIH36FWA5Gii1ZO90RqvAVKDgiumeaEDNluF8DdbA='; style-src-attr 'none'; img-src 'none'; font-src 'none'; media-src 'none'; connect-src 'none'; worker-src 'none'; child-src 'none'; frame-src 'none'; manifest-src 'none'"
+        ],
+        "document_client_width": 390,
+        "document_scroll_height": 16301,
+        "document_scroll_width": 390,
+        "image": {
+          "height": 844,
+          "mode": "RGB",
+          "width": 390
+        },
+        "page_errors": 0,
+        "popup_count": 0,
+        "request_count": 1,
+        "resource_types": [
+          "document"
+        ],
+        "subresource_request_count": 0,
+        "text_ascii": true,
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      "scroll": {
+        "durations_ms": [
+          1100,
+          1100,
+          1100,
+          1500
+        ],
+        "frame_png_sha256": [
+          "144220805f9137f9ecef4a809ed3e2165f4829efc6c65667f699e021d4765045",
+          "ae083d665af40c2c389b74db8254e69aa5c1664c86db3554480f11ef6da8efd6",
+          "11e2b29ae072878c0e79ebeb7a9be0dab4891ed063020c1389f35ab8b0bdcdcb",
+          "fb495813f5eddb54f52b0843ed28048ff8c3b16808f90afe346de7b1ed7a4f36"
+        ],
+        "frames": 4,
+        "observed_scroll_y": [
+          0,
+          3982,
+          7963,
+          11945
+        ],
+        "requested_scroll_y": [
+          0,
+          3982,
+          7963,
+          11945
+        ],
+        "source": "four real Chromium viewport screenshots after scrollTo"
+      }
+    },
+    "chromium_executable_bytes": 290614600,
+    "chromium_executable_sha256": "0b20b130e7edd9dd51873be867761295fe0cfad490c2b9a64f95bd3cfc08fa71",
+    "chromium_version": "151.0.7922.34",
+    "container_image": "mcr.microsoft.com/playwright/python@sha256:51d31fdfacb0cff99a1a724152e34ae408d2bd4e7da310ff157450f49261cc59",
+    "java_script_enabled": true,
+    "launch_args": [
+      "--disable-dev-shm-usage",
+      "--force-color-profile=srgb"
+    ],
+    "network": "none",
+    "outer_isolation": {
+      "capabilities": "dropped",
+      "network": "none",
+      "new_privileges": false,
+      "root_filesystem": "read_only",
+      "runtime_user": "non_root"
+    },
+    "playwright_version": "1.62.0",
+    "process_sandbox": false,
+    "service_workers": "block"
+  },
+  "commands": [
+    {
+      "argv": [
+        "python",
+        "-m",
+        "casefold_observatory",
+        "analyze",
+        "--source",
+        "$FIXTURE",
+        "--policy",
+        "preserve@case:lower,case:casefold",
+        "--policy",
+        "preserve@normalize:nfc,case:casefold",
+        "--policy",
+        "preserve@normalize:nfkc,case:casefold",
+        "--receipt",
+        "$RECEIPT"
+      ],
+      "exit_status": 0,
+      "stderr": "",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout": "{\"colliding_record_count\":9,\"component_count\":4,\"policy_group_count\":9,\"receipt_sha256\":\"6ac6363a609cfa64c8bca7bdace514f09beab5f60927a880b220ad258f70d06e\",\"record_count\":12,\"status\":\"analyzed\",\"witness_count\":12}\n",
+      "stdout_bytes": 213,
+      "stdout_sha256": "225c523da41b9f43a6ee41acc40dd9f0231c575a93ed04d3338b4bd9e975c722"
+    },
+    {
+      "argv": [
+        "python",
+        "-m",
+        "casefold_observatory",
+        "report",
+        "--source",
+        "$FIXTURE",
+        "--receipt",
+        "$RECEIPT",
+        "--output",
+        "$REPORT"
+      ],
+      "exit_status": 0,
+      "stderr": "",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout": "{\"receipt_sha256\":\"6ac6363a609cfa64c8bca7bdace514f09beab5f60927a880b220ad258f70d06e\",\"report_byte_count\":33092,\"report_sha256\":\"52e41982b2defd6f8eae643cabfc0bfd96f44fb47c0172e36aba5d864cc93d4c\",\"status\":\"reported\"}\n",
+      "stdout_bytes": 215,
+      "stdout_sha256": "682bb20c6b5113a3ed04c95f0a4a7273c627321a9e3ccffe4db1ff0632598ea6"
+    },
+    {
+      "argv": [
+        "python",
+        "-m",
+        "casefold_observatory",
+        "verify",
+        "--source",
+        "$FIXTURE",
+        "--receipt",
+        "$RECEIPT"
+      ],
+      "exit_status": 0,
+      "stderr": "",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout": "{\"receipt_sha256\":\"6ac6363a609cfa64c8bca7bdace514f09beab5f60927a880b220ad258f70d06e\",\"status\":\"verified\"}\n",
+      "stdout_bytes": 106,
+      "stdout_sha256": "3c0028de52bf4178c5e9a0e63c0ce9d343bf3cf5a16ce5780d33239eb6a64f5e"
+    }
+  ],
+  "environment": {
+    "architecture": "x86_64",
+    "fonts": {
+      "monospace": {
+        "bytes": 16791251,
+        "family": "WenQuanYi Zen Hei Mono,\u6587\u6cc9\u9a5b\u7b49\u5bec\u6b63\u9ed1,\u6587\u6cc9\u9a7f\u7b49\u5bbd\u6b63\u9ed1",
+        "file": "wqy-zenhei.ttc",
+        "sha256": "79c18ebe7b811951e8311bad7103ebeae8c337ed9988ea69e8a78a66cfe029b9",
+        "style": "Regular"
+      },
+      "sans_serif": {
+        "bytes": 16791251,
+        "family": "WenQuanYi Zen Hei,\u6587\u6cc9\u9a5b\u6b63\u9ed1,\u6587\u6cc9\u9a7f\u6b63\u9ed1",
+        "file": "wqy-zenhei.ttc",
+        "sha256": "79c18ebe7b811951e8311bad7103ebeae8c337ed9988ea69e8a78a66cfe029b9",
+        "style": "Regular"
+      }
+    },
+    "operating_system": {
+      "id": "ubuntu",
+      "version_id": "24.04"
+    },
+    "pillow_version": "12.3.0",
+    "python": {
+      "implementation": "CPython",
+      "package_files": {
+        "__init__.py": {
+          "bytes": 4349,
+          "sha256": "f7729bb0a7aa4c7e69173f737afeb792c5729a40bdab0ef8fb10594d93117f3d"
+        },
+        "__main__.py": {
+          "bytes": 152,
+          "sha256": "d1e60b3225c4707d87a9e6c61cb89d502a64b39549fdd6c77596af995e917281"
+        },
+        "cli.py": {
+          "bytes": 16426,
+          "sha256": "ff8f46269320d7058490251acee5f3df14554bba27c7fdb3ae64dc6815c99676"
+        },
+        "collision.py": {
+          "bytes": 31949,
+          "sha256": "861a445a6e665b4471bb2b1578375e1d4730dfd843f95e9ae3eb9c999de8a8c9"
+        },
+        "corpus.py": {
+          "bytes": 9372,
+          "sha256": "e51da59546bedddd1625483e5ad228d871a1e910f93e57b1091b9fadd965fdec"
+        },
+        "engine.py": {
+          "bytes": 6801,
+          "sha256": "167c278985eeebceaa2f20e0335a6c4c9581ddd0324fe66fb0602554a2110697"
+        },
+        "filesystem.py": {
+          "bytes": 15242,
+          "sha256": "c27414b29ee45902eb00e2d63d4f64ed803de2322889a2ea01fb37f97b0f20b4"
+        },
+        "model.py": {
+          "bytes": 10681,
+          "sha256": "6a1c0ebcc476adb4a6e4496c412a92b0d5de80bb987ebc60291e471624118749"
+        },
+        "py.typed": {
+          "bytes": 1,
+          "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+        },
+        "receipt.py": {
+          "bytes": 28972,
+          "sha256": "c608d4b99ff1486fa6972a1531a021f53a9f0d0bc8311a84d6796d1e845c2722"
+        },
+        "report.py": {
+          "bytes": 18031,
+          "sha256": "093b36509dbb8d20bcf8a6e1a0f5eff4dc2fb4eb70e4ad0efe4cfda43e6ff13b"
+        }
+      },
+      "package_version": "0.5.0",
+      "python_version": "3.12.3",
+      "unicode_version": "15.0.0"
+    }
+  },
+  "fixture": {
+    "bytes": 693,
+    "path": "docs/report-evidence/fixtures/report-demo.v1.jsonl",
+    "record_count": 12,
+    "sha256": "58c4b868820471fcb67a42351d7bddbfbcc66bfd4b2165d4e9868390787991cf",
+    "synthetic": true
+  },
+  "generated_files": [
+    "docs/report-evidence/evidence/report-evidence.v1.json",
+    "docs/report-evidence/evidence/report-demo.receipt.v1.json",
+    "docs/report-evidence/evidence/report-demo.v1.html",
+    "docs/report-evidence/report-desktop.png",
+    "docs/report-evidence/report-mobile.png",
+    "docs/report-evidence/report-full-page.png",
+    "docs/report-evidence/report-scroll.gif",
+    "docs/report-evidence/report-architecture.svg"
+  ],
+  "package": {
+    "distribution": "casefold-observatory",
+    "runtime": {
+      "implementation": "CPython",
+      "package_files": {
+        "__init__.py": {
+          "bytes": 4349,
+          "sha256": "f7729bb0a7aa4c7e69173f737afeb792c5729a40bdab0ef8fb10594d93117f3d"
+        },
+        "__main__.py": {
+          "bytes": 152,
+          "sha256": "d1e60b3225c4707d87a9e6c61cb89d502a64b39549fdd6c77596af995e917281"
+        },
+        "cli.py": {
+          "bytes": 16426,
+          "sha256": "ff8f46269320d7058490251acee5f3df14554bba27c7fdb3ae64dc6815c99676"
+        },
+        "collision.py": {
+          "bytes": 31949,
+          "sha256": "861a445a6e665b4471bb2b1578375e1d4730dfd843f95e9ae3eb9c999de8a8c9"
+        },
+        "corpus.py": {
+          "bytes": 9372,
+          "sha256": "e51da59546bedddd1625483e5ad228d871a1e910f93e57b1091b9fadd965fdec"
+        },
+        "engine.py": {
+          "bytes": 6801,
+          "sha256": "167c278985eeebceaa2f20e0335a6c4c9581ddd0324fe66fb0602554a2110697"
+        },
+        "filesystem.py": {
+          "bytes": 15242,
+          "sha256": "c27414b29ee45902eb00e2d63d4f64ed803de2322889a2ea01fb37f97b0f20b4"
+        },
+        "model.py": {
+          "bytes": 10681,
+          "sha256": "6a1c0ebcc476adb4a6e4496c412a92b0d5de80bb987ebc60291e471624118749"
+        },
+        "py.typed": {
+          "bytes": 1,
+          "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+        },
+        "receipt.py": {
+          "bytes": 28972,
+          "sha256": "c608d4b99ff1486fa6972a1531a021f53a9f0d0bc8311a84d6796d1e845c2722"
+        },
+        "report.py": {
+          "bytes": 18031,
+          "sha256": "093b36509dbb8d20bcf8a6e1a0f5eff4dc2fb4eb70e4ad0efe4cfda43e6ff13b"
+        }
+      },
+      "package_version": "0.5.0",
+      "python_version": "3.12.3",
+      "unicode_version": "15.0.0"
+    },
+    "wheel": {
+      "bytes": 44413,
+      "filename": "casefold_observatory-0.5.0-py3-none-any.whl",
+      "sha256": "b1428fad82273003b4c48024cfc605124ec7b563a025a39ef840f9266bba33c5"
+    }
+  },
+  "runtime_outputs": {
+    "receipt": {
+      "bytes": 8537,
+      "mode": "0600",
+      "nlink": 1,
+      "sha256": "6ac6363a609cfa64c8bca7bdace514f09beab5f60927a880b220ad258f70d06e"
+    },
+    "report": {
+      "bytes": 33092,
+      "mode": "0600",
+      "nlink": 1,
+      "sha256": "52e41982b2defd6f8eae643cabfc0bfd96f44fb47c0172e36aba5d864cc93d4c"
+    }
+  },
+  "schema": "casefold-observatory.report-evidence",
+  "schema_version": 1,
+  "source": {
+    "bindings": {
+      ".github/workflows/report-evidence.yml": {
+        "bytes": 8459,
+        "sha256": "4ce73a9f5d4107bac3fd91dfff37b02cf557ba3e0a7ff207370042d16cdadcbd"
+      },
+      "README.md": {
+        "bytes": 16366,
+        "sha256": "cb663bf7121533287812d6d8addb0478a3df3634909f536e76d1bdce5bfce39b"
+      },
+      "docs/report-evidence/fixtures/report-demo.v1.jsonl": {
+        "bytes": 693,
+        "sha256": "58c4b868820471fcb67a42351d7bddbfbcc66bfd4b2165d4e9868390787991cf"
+      },
+      "pyproject.toml": {
+        "bytes": 1230,
+        "sha256": "6b1136e56cd359b474101854d0e491b722d84ff67ee254409cbff712cb4b9811"
+      },
+      "requirements/report-browser-image.lock.json": {
+        "bytes": 466,
+        "sha256": "4535268a455c9dc79e4b954b12ca0a5cd88ba6f56d784911ae4ea24587eb3af0"
+      },
+      "requirements/report-browser.txt": {
+        "bytes": 716,
+        "sha256": "bd5c150998519d969dd163e2026de48ffb90dc3441655853e7459827d024377e"
+      },
+      "scripts/render_report_evidence.py": {
+        "bytes": 36989,
+        "sha256": "9d8df5a931d7ae6de2df0c8cbc9e726d8a871fce76a2d537409f33c4bba22601"
+      },
+      "scripts/verify_report_evidence.py": {
+        "bytes": 25879,
+        "sha256": "208f505561a81f6dae40a12aea00ae60171f56954efcece1193556225d01ed8a"
+      },
+      "src/casefold_observatory/__init__.py": {
+        "bytes": 4349,
+        "sha256": "f7729bb0a7aa4c7e69173f737afeb792c5729a40bdab0ef8fb10594d93117f3d"
+      },
+      "src/casefold_observatory/__main__.py": {
+        "bytes": 152,
+        "sha256": "d1e60b3225c4707d87a9e6c61cb89d502a64b39549fdd6c77596af995e917281"
+      },
+      "src/casefold_observatory/cli.py": {
+        "bytes": 16426,
+        "sha256": "ff8f46269320d7058490251acee5f3df14554bba27c7fdb3ae64dc6815c99676"
+      },
+      "src/casefold_observatory/collision.py": {
+        "bytes": 31949,
+        "sha256": "861a445a6e665b4471bb2b1578375e1d4730dfd843f95e9ae3eb9c999de8a8c9"
+      },
+      "src/casefold_observatory/corpus.py": {
+        "bytes": 9372,
+        "sha256": "e51da59546bedddd1625483e5ad228d871a1e910f93e57b1091b9fadd965fdec"
+      },
+      "src/casefold_observatory/engine.py": {
+        "bytes": 6801,
+        "sha256": "167c278985eeebceaa2f20e0335a6c4c9581ddd0324fe66fb0602554a2110697"
+      },
+      "src/casefold_observatory/filesystem.py": {
+        "bytes": 15242,
+        "sha256": "c27414b29ee45902eb00e2d63d4f64ed803de2322889a2ea01fb37f97b0f20b4"
+      },
+      "src/casefold_observatory/model.py": {
+        "bytes": 10681,
+        "sha256": "6a1c0ebcc476adb4a6e4496c412a92b0d5de80bb987ebc60291e471624118749"
+      },
+      "src/casefold_observatory/py.typed": {
+        "bytes": 1,
+        "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+      },
+      "src/casefold_observatory/receipt.py": {
+        "bytes": 28972,
+        "sha256": "c608d4b99ff1486fa6972a1531a021f53a9f0d0bc8311a84d6796d1e845c2722"
+      },
+      "src/casefold_observatory/report.py": {
+        "bytes": 18031,
+        "sha256": "093b36509dbb8d20bcf8a6e1a0f5eff4dc2fb4eb70e4ad0efe4cfda43e6ff13b"
+      }
+    },
+    "revision": "cc4e5fc4403f4d7dcbe20df83dc9545fc22808d1",
+    "tree": "0b371628fa35fee844834aad329ffefcca77fc04"
+  }
+}
