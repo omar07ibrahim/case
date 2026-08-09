@@ -88,6 +88,7 @@ jobs:
   cli-evidence:
     name: Adopted CLI evidence
     needs: quality
+    if: ${{ always() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
