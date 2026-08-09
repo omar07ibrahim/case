@@ -225,7 +225,7 @@ class FileCaptureTests(unittest.TestCase):
             def denied_nested_open(
                 path: str | bytes,
                 flags: int,
-                mode: int = 0o777,
+                mode: int = 0o600,
                 *,
                 dir_fd: int | None = None,
             ) -> int:
@@ -309,7 +309,7 @@ class FileCaptureTests(unittest.TestCase):
             def denied_file_open(
                 path: str | bytes,
                 flags: int,
-                mode: int = 0o777,
+                mode: int = 0o600,
                 *,
                 dir_fd: int | None = None,
             ) -> int:
@@ -646,7 +646,7 @@ class FilePublicationTests(unittest.TestCase):
             def denied_temporary_open(
                 path: str | bytes,
                 flags: int,
-                mode: int = 0o777,
+                mode: int = 0o600,
                 *,
                 dir_fd: int | None = None,
             ) -> int:
