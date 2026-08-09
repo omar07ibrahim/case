@@ -3,16 +3,19 @@
 ## Current support status
 
 The supported tree contains the dependency-free in-memory policy, collision,
-corpus, and receipt layers plus one installed POSIX command boundary. The CLI
-provides explicit-policy analysis, receipt replay, descriptor-relative stable
-regular-file reads, and durable no-clobber mode-0600 receipt publication.
+corpus, receipt, and verified offline-report layers plus one installed POSIX
+command boundary. The CLI provides explicit-policy analysis, receipt replay,
+descriptor-relative stable regular-file reads, and durable no-clobber mode-0600
+publication of receipts and static HTML reports.
 
-There is no browser UI, network service, general-purpose renderer for caller
-data, Windows race-safety claim, stdin corpus or receipt, stdout receipt,
-overwrite mode, implicit policy, or configuration discovery. The repository
-does include a deterministic documentation renderer for fixed, reviewed
-synthetic fixtures; it is not a product interface. The historical Flask
-prototype is unsupported and must not be deployed.
+There is no interactive or served browser UI, network service, Windows
+race-safety claim, stdin corpus or receipt, stdout receipt or report, overwrite
+mode, implicit policy, or configuration discovery. The renderer accepts caller
+data only after exact receipt replay and emits a bounded, static, ASCII-source
+HTML artifact. The separate Chromium lane uses reviewed synthetic data only and
+is evidence infrastructure, not a package runtime dependency or product
+service. The historical Flask prototype is unsupported and must not be
+deployed.
 
 ## Current trust boundary
 
@@ -22,10 +25,14 @@ pure exact-type boundaries. The installed CLI pins and walks path components
 with directory descriptors, rejects traversal, links and special files, captures
 a single stable descriptor once, and trust-reconstructs receipts only by replay.
 
-The CLI does not read stdin, emit a receipt to stdout, discover configuration,
-open sockets, invoke a shell, overwrite a destination, or render untrusted text.
+The CLI does not read stdin, emit a receipt or report to stdout, discover
+configuration, open sockets, invoke a shell, or overwrite a destination.
 Success and handled-failure channels are canonical ASCII and never echo paths,
 identifiers, transformed values, source lines, parser tokens, or policy strings.
+The report command is intentionally different: after verifying exact receipt
+and source bytes, it visibly represents source-derived values as escaped,
+logical-indexed code-point metadata and publishes the complete artifact at mode
+0600. A report is sensitive and is not a redacted export.
 
 Record IDs are limited to 64 lowercase ASCII characters matching
 `[a-z][a-z0-9._-]*` and must be unique. They define canonical record ordinals;
@@ -60,6 +67,12 @@ The analyzer fails closed when any configured bound is exceeded:
 | Canonical receipt | 16,777,216 bytes | Complete ASCII JSON plus final LF |
 | Descriptor read request | 65,536 bytes | Maximum per already-open regular-file read |
 | CLI policy argument | 256 ASCII bytes | Complete explicit hazard-and-step specification |
+| Report records | 256 | Canonical records presented after verified replay |
+| Report code-point tokens | 8,192 | Record inputs plus transformed collision values |
+| Report groups | 4,096 | Exact and per-policy groups combined |
+| Report witnesses | 4,096 | Witness rows presented |
+| Report components | 1,024 | Cross-policy component cards |
+| Offline report | 8,388,608 bytes | Complete ASCII HTML artifact |
 
 Limits are part of the implementation, not capacity guidance for a hostile
 multi-tenant service. The library runs synchronously in the caller's process;
@@ -151,7 +164,7 @@ Current reject/preserve handling covers the documented control, format, and
 bidirectional-control classifications. Preserved text still requires safe,
 visible rendering before a human can review it.
 
-## Implemented POSIX filesystem boundary and future rendering layers
+## Implemented POSIX filesystem and offline-report boundaries
 
 The in-memory boundaries use strict bounded decoding, a versioned canonical
 schema, exact-source and semantic digests, complete policy documents, producer
@@ -168,10 +181,30 @@ destination, link, special file, alias, pathname race, mutation, or I/O failure
 is rejected without exposing its path. See the
 [portable receipt contract](docs/portable-receipt-contract.md).
 
-Future CSV, HTML, SVG, and browser surfaces must safely render controls and
-invisible text, defend against formula or markup interpretation, work offline,
-load no remote runtime assets, and enforce a restrictive Content Security
-Policy. Analysis and evidence regeneration do not require network access.
+The implemented HTML renderer verifies exact receipt and source bytes before it
+parses and renders. It accepts at most 256 records, 8,192 presented code-point
+tokens, 4,096 groups, 4,096 witnesses, 1,024 components, and 8 MiB of output.
+The source and decoded DOM text remain ASCII. Printable ASCII glyphs are escaped;
+all other code points are represented by logical position and metadata,
+including U+ value, Unicode name, category, bidi class, combining class, UTF-8
+bytes, engine hazard, and display flags. No raw bidirectional control, combining
+mark, invisible, private-use, unassigned, noncharacter, or non-ASCII glyph is
+placed in the DOM.
+
+The document contains no script, form, image, media, font, worker, frame,
+manifest, URL-bearing attribute, inline event handler, or remote asset. Its
+Content Security Policy denies all default loads and permits only the exact
+SHA-256-bound inline stylesheet. The policy is meaningful for an offline file,
+but meta CSP cannot express frame-ancestors: if a report is served, anti-framing
+requires an HTTP Content-Security-Policy response header. Rendering is not
+authentication, freshness, authorization, or proof that an identifier is safe.
+
+The evidence-only Chromium workflow uses reviewed synthetic data, an immutable
+Linux-amd64 OCI platform digest, hash-locked automation wheels, a non-root
+read-only container, and no network during capture. JavaScript stays enabled so
+negative CSP probes are real. One local document and zero subresources are
+required. Real desktop, mobile-emulation, full-page, and scroll captures are
+independently verified before manual adoption.
 
 Published fixtures, screenshots, recordings, and generated diagrams must use
 reviewed synthetic or openly licensed data, contain no secrets or personal

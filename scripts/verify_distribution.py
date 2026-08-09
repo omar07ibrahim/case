@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import stat
@@ -98,21 +99,37 @@ def _assert_archive_contract(sdist: Path, wheel: Path) -> None:
             raise RuntimeError(f"wheel omitted {required}")
 
     required_source_files = (
+        ".github/workflows/report-evidence.yml",
         "README.md",
         "SECURITY.md",
         "THIRD_PARTY_NOTICES.md",
         "docs/cli-evidence/fixtures/cli-demo.v1.jsonl",
         "docs/collision-graph-contract.md",
         "docs/portable-receipt-contract.md",
+        "docs/report-evidence/README.md",
+        "docs/report-evidence/evidence/report-demo.receipt.v1.json",
+        "docs/report-evidence/evidence/report-demo.v1.html",
+        "docs/report-evidence/evidence/report-evidence-adoption.v1.json",
+        "docs/report-evidence/evidence/report-evidence.v1.json",
+        "docs/report-evidence/fixtures/report-demo.v1.jsonl",
+        "docs/report-evidence/report-architecture.svg",
+        "docs/report-evidence/report-desktop.png",
+        "docs/report-evidence/report-full-page.png",
+        "docs/report-evidence/report-mobile.png",
+        "docs/report-evidence/report-scroll.gif",
         "docs/visuals/README.md",
         "docs/visuals/architecture.svg",
         "docs/visuals/collision-witness-graph.svg",
         "docs/visuals/evidence/collision-visuals.v1.json",
         "docs/visuals/policy-collision-landscape.svg",
         "requirements/cli-visuals.txt",
+        "requirements/report-browser-image.lock.json",
+        "requirements/report-browser.txt",
         "scripts/render_cli_evidence.py",
         "scripts/render_collision_visuals.py",
+        "scripts/render_report_evidence.py",
         "scripts/verify_distribution.py",
+        "scripts/verify_report_evidence.py",
         "tests/test_collision.py",
         "tests/test_collision_properties.py",
         "tests/test_corpus.py",
@@ -122,6 +139,7 @@ def _assert_archive_contract(sdist: Path, wheel: Path) -> None:
         "tests/test_filesystem.py",
         "tests/test_receipt.py",
         "tests/test_report.py",
+        "tests/test_report_evidence_contract.py",
         "tests/test_visuals.py",
     )
     for required in required_source_files:
@@ -212,6 +230,7 @@ print(
 
     source_path = workdir / "cli-source.jsonl"
     receipt_path = workdir / "cli-result.receipt.json"
+    report_path = workdir / "cli-result.html"
     source_path.write_bytes(
         b'{"schema":"casefold-observatory.identifier-corpus",'
         b'"schema_version":1}\n'
@@ -233,6 +252,17 @@ print(
         receipt_path.as_posix(),
         cwd=workdir,
     )
+    reported = _run(
+        console.as_posix(),
+        "report",
+        "--source",
+        source_path.as_posix(),
+        "--receipt",
+        receipt_path.as_posix(),
+        "--output",
+        report_path.as_posix(),
+        cwd=workdir,
+    )
     verified = _run(
         venv_python.as_posix(),
         "-m",
@@ -244,16 +274,30 @@ print(
         receipt_path.as_posix(),
         cwd=workdir,
     )
-    if analyzed.stderr or verified.stderr:
+    if analyzed.stderr or reported.stderr or verified.stderr:
         raise RuntimeError("installed CLI wrote to stderr on success")
     analyzed_payload: object = json.loads(analyzed.stdout)
+    reported_payload: object = json.loads(reported.stdout)
     verified_payload: object = json.loads(verified.stdout)
-    if not isinstance(analyzed_payload, dict) or not isinstance(
-        verified_payload,
-        dict,
+    if (
+        not isinstance(analyzed_payload, dict)
+        or not isinstance(reported_payload, dict)
+        or not isinstance(verified_payload, dict)
     ):
         raise TypeError("installed CLI returned a non-object")
+    report_bytes = report_path.read_bytes()
     payload["cli_analyze_status"] = analyzed_payload.get("status")
+    payload["cli_report_ascii"] = report_bytes.isascii()
+    payload["cli_report_contains_csp"] = (
+        b'http-equiv="Content-Security-Policy"' in report_bytes
+    )
+    payload["cli_report_digest_parity"] = (
+        reported_payload.get("report_sha256")
+        == hashlib.sha256(report_bytes).hexdigest()
+    )
+    payload["cli_report_mode"] = stat.S_IMODE(report_path.stat().st_mode)
+    payload["cli_report_nlink"] = report_path.stat().st_nlink
+    payload["cli_report_status"] = reported_payload.get("status")
     payload["cli_verify_status"] = verified_payload.get("status")
     payload["cli_digest_parity"] = analyzed_payload.get(
         "receipt_sha256"
@@ -316,6 +360,12 @@ def main() -> None:
         "cli_analyze_status": "analyzed",
         "cli_digest_parity": True,
         "cli_receipt_mode": 0o600,
+        "cli_report_ascii": True,
+        "cli_report_contains_csp": True,
+        "cli_report_digest_parity": True,
+        "cli_report_mode": 0o600,
+        "cli_report_nlink": 1,
+        "cli_report_status": "reported",
         "cli_verify_status": "verified",
         "component_members": [0, 1, 2],
         "policy_group_members": [0, 1, 2],

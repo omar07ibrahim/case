@@ -1,0 +1,13 @@
+{"schema":"casefold-observatory.identifier-corpus","schema_version":1}
+{"identifier":"A","record_id":"ascii-a"}
+{"identifier":"K","record_id":"ascii-k"}
+{"identifier":"SS","record_id":"ascii-ss"}
+{"identifier":"</style><script>alert(1)</script>","record_id":"escaped-markup"}
+{"identifier":"\u00e9","record_id":"composed-e-acute"}
+{"identifier":"e\u0301","record_id":"decomposed-e-acute"}
+{"identifier":"\u00df","record_id":"eszett"}
+{"identifier":"\uff21","record_id":"fullwidth-a"}
+{"identifier":"\u212a","record_id":"kelvin-sign"}
+{"identifier":"ss","record_id":"lower-ss"}
+{"identifier":"admin\u202e","record_id":"preserved-bidi"}
+{"identifier":"pay\u200dpal","record_id":"preserved-zwj"}

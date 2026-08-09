@@ -1,11 +1,17 @@
+include .github/workflows/report-evidence.yml
 include SECURITY.md
 include THIRD_PARTY_NOTICES.md
 include docs/collision-graph-contract.md
 include docs/portable-receipt-contract.md
 include requirements/cli-visuals.txt
+include requirements/report-browser-image.lock.json
+include requirements/report-browser.txt
 include scripts/render_cli_evidence.py
 include scripts/render_collision_visuals.py
+include scripts/render_report_evidence.py
 include scripts/verify_distribution.py
+include scripts/verify_report_evidence.py
 recursive-include docs/cli-evidence *.gif *.json *.jsonl *.md *.png *.svg
+recursive-include docs/report-evidence *.gif *.html *.json *.jsonl *.md *.png *.svg
 recursive-include docs/visuals *.json *.md *.svg
 recursive-include tests *.py

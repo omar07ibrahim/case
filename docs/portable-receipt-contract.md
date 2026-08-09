@@ -2,14 +2,16 @@
 
 ## Status
 
-> **IN-MEMORY BYTE CONTRACT IMPLEMENTED IN 0.3.0; POSIX CLI AND REVIEWED
-> VISUAL EVIDENCE IMPLEMENTED IN 0.4.0.**
+> **IN-MEMORY BYTE CONTRACT IMPLEMENTED IN 0.3.0; POSIX CLI AND CLI
+> EVIDENCE IN 0.4.0; VERIFIED OFFLINE REPORT IN 0.5.0.**
 >
 > The supported package accepts a bounded JSON Lines corpus as exact caller-owned
-> bytes, creates and replays a canonical portable receipt, and exposes the same
-> workflow through installed `casefold-observatory` and module entry points. The
-> command, terminal, POSIX filesystem, and two-stage visual-evidence sections
-> below are implemented. CI reproduces the adopted six-file bundle byte-for-byte.
+> bytes, creates and replays a canonical portable receipt, and exposes analysis,
+> verified static-HTML reporting, and replay through installed
+> `casefold-observatory` and module entry points. The command, terminal, POSIX
+> filesystem, report, CSP, and two-stage visual-evidence sections below are
+> implemented. CI reproduces adopted evidence byte-for-byte and stages drift for
+> review without editing the checkout.
 
 Normative words in the corpus, receipt, command, terminal, verification, error,
 and POSIX filesystem sections describe implemented version 1 behavior.
@@ -29,12 +31,16 @@ Version 1 provides one deliberately narrow offline workflow:
 3. run the in-memory collision analyzer;
 4. project the complete graph and execution identity into canonical JSON bytes;
 5. durably publish a new receipt without clobber, or return those bytes to a
-   library caller; and
-6. verify canonical receipt bytes against the same captured source by replay.
+   library caller;
+6. verify canonical receipt bytes against the same captured source by replay;
+   and
+7. render and durably publish a bounded static HTML report only after that exact
+   verification succeeds.
 
-The implemented layer has no network access, service mode, browser interface,
-plugin system, user configuration, signing key, implicit policy, stdin corpus,
-stdout receipt, overwrite mode, or generic renderer for caller data.
+The implemented layer has no network access, service mode, served or interactive
+browser interface, plugin system, user configuration, signing key, implicit
+policy, stdin corpus, stdout receipt or report, or overwrite mode. The package
+does not launch a browser; Chromium is used only by the isolated evidence lane.
 
 ## Corpus JSON Lines schema
 
@@ -243,6 +249,8 @@ The console script and module entry point are byte-for-byte equivalent:
 ~~~console
 casefold-observatory analyze --source CORPUS.jsonl --policy reject@case:lower,case:casefold --receipt RESULT.receipt.json
 
+casefold-observatory report --source CORPUS.jsonl --receipt RESULT.receipt.json --output RESULT.report.html
+
 casefold-observatory verify --source CORPUS.jsonl --receipt RESULT.receipt.json
 ~~~
 
@@ -257,16 +265,19 @@ steps. analyze requires one through eight repeated --policy arguments and
 preserves their order. Hazard handling is explicit in every argument; there is
 no implicit policy or locale.
 
-The exact top-level forms are `--help`, `--version`, `analyze`, and
-`verify`. Options use separate tokens; short options and `--option=value`
-forms are rejected. Analyze requires exactly one `--source`, exactly one
-`--receipt`, and one through eight `--policy` pairs in any option order.
-Verify requires exactly one `--source` and one `--receipt` pair in either
-order. A subcommand accepts `--help` only as its sole following token.
+The exact top-level forms are `--help`, `--version`, `analyze`,
+`report`, and `verify`. Options use separate tokens; short options and
+`--option=value` forms are rejected. Analyze requires exactly one `--source`,
+exactly one `--receipt`, and one through eight `--policy` pairs in any option
+order. Report requires exactly one `--source`, one `--receipt`, and one
+`--output` pair in any option order. Verify requires exactly one `--source`
+and one `--receipt` pair in either order. A subcommand accepts `--help` only
+as its sole following token.
 
-Version 1 does not accept a source or receipt through `-`, emit a receipt to
-stdout, overwrite an existing destination, read configuration from the working
-directory or home directory, invoke a shell, or use the network.
+Version 1 does not accept a source or receipt through `-`, emit a receipt or
+report to stdout, overwrite an existing destination, read configuration from
+the working directory or home directory, invoke a shell, launch a browser, or
+use the network.
 
 ### Terminal output
 
@@ -276,6 +287,16 @@ receipt is durable:
 ~~~json
 {"colliding_record_count":3,"component_count":1,"policy_group_count":1,"receipt_sha256":"<64 lowercase hexadecimal characters>","record_count":3,"status":"analyzed","witness_count":2}
 ~~~
+
+Successful report writes one bounded ASCII JSON line only after the HTML file is
+durable:
+
+~~~json
+{"receipt_sha256":"<64 lowercase hexadecimal characters>","report_bytes":12345,"report_sha256":"<64 lowercase hexadecimal characters>","status":"reported"}
+~~~
+
+The integer above illustrates the exact type; its value is the complete emitted
+HTML byte count.
 
 Successful verify writes:
 
@@ -365,6 +386,14 @@ does not make the directory trustworthy against a privileged actor or another
 process that already has authority to mutate that directory, and it is not a
 transaction spanning the source file and output filesystem.
 
+The report command captures the source and receipt exactly once, rejects source,
+receipt, and destination inode aliasing, verifies and renders completely in
+memory, and then uses the same no-clobber publication primitive. The report is
+also mode 0600 because it visibly includes record IDs, transformed values, and
+source-derived code-point metadata. Success is printed only after publication
+and directory durability. A render or publication failure leaves no final
+destination.
+
 ## Verification algorithm
 
 A conforming verifier performs these steps in order:
@@ -372,8 +401,9 @@ A conforming verifier performs these steps in order:
 1. Require exact receipt `bytes` and enforce the complete byte bound.
 2. Preflight ASCII JSON depth, reject duplicate keys and wrong exact types, and
    require exact schema keys and canonical bytes.
-3. Require the receipt producer distribution and version to equal the executing
-   installed distribution.
+3. Require the receipt producer distribution to be
+   `casefold-observatory` and its version to be exactly one of the implemented
+   compatibility tuple `("0.4.0", "0.5.0")`. New receipts use 0.5.0.
 4. Recreate every policy only through validated current-runtime policy
    construction. Compare its full canonical document and policy ID with the
    embedded values while preserving policy order.
@@ -381,7 +411,8 @@ A conforming verifier performs these steps in order:
 6. Require exact source `bytes` and enforce the complete byte bound.
 7. Compare byte_count and source SHA-256 using constant-time digest comparison.
 8. Parse those captured source bytes and invoke the existing analyzer.
-9. Build the expected canonical receipt from that trusted result.
+9. Build the expected canonical receipt from that trusted result while
+   preserving the accepted input receipt's producer version.
 10. Require exact byte equality with the supplied canonical receipt and emit
     only the safe success summary.
 
@@ -394,10 +425,12 @@ receipt is returned.
 
 A receipt is not a redacted export. It contains record IDs, policy documents,
 semantic and source digests, collision relations, and transformed values.
-Transformed values can equal or reveal source identifiers. The byte API makes no persistence or file-mode guarantee. The installed
-analyze command publishes new receipts at mode 0600; that reduces accidental
-local disclosure but provides no encryption, memory isolation, or secure
-erasure.
+Transformed values can equal or reveal source identifiers. A report is even more
+visibly source-derived: it includes record IDs plus logical code-point metadata
+for identifiers and collision outputs. The byte APIs make no persistence or
+file-mode guarantee. The installed analyze and report commands publish new
+artifacts at mode 0600; that reduces accidental local disclosure but provides
+no encryption, memory isolation, or secure erasure.
 
 Library-owned errors expose stable categories and bounded numeric context only.
 The CLI preserves that rule. Generic JSON exceptions, Unicode decode
@@ -408,6 +441,65 @@ remain outside that guarantee.
 Do not publish a receipt derived from a private namespace merely because the
 raw source file is absent. Low-entropy identifiers, record IDs, source digests,
 semantic digests, and transformed outputs can be guessed or correlated.
+
+## Verified offline HTML report
+
+`render_offline_report(receipt_bytes, source_bytes)` first performs the exact
+verification algorithm above and maps identifiers to the analyzer's canonical
+record ordinals. It parses the source once and renders only factory-owned,
+recomputed state. The resulting document has schema
+`casefold-observatory.offline-report` version 1.
+
+Presentation is separately bounded at 256 records, 8,192 total displayed
+code-point tokens, 4,096 exact-plus-policy groups, 4,096 witnesses, 1,024
+components, and 8,388,608 output bytes. Exceeding a presentation bound does not
+change analysis semantics; rendering fails atomically with a stable non-echoing
+report error.
+
+The HTML source and browser-decoded DOM text are ASCII. Printable ASCII is HTML
+escaped. Every other code point is represented without its raw glyph by logical
+index, U+ value, Unicode name, general category, bidi class, canonical combining
+class, UTF-8 hexadecimal bytes, the engine's hazard classification, and explicit
+display flags. This applies to bidirectional controls, format characters,
+combining marks, separators, emoji sequences, private-use values, unassigned
+values, and noncharacters.
+
+The document contains no JavaScript, form, image, font, media, object, frame,
+worker, manifest, connection, event handler, URL-bearing attribute, or remote
+asset. One inline stylesheet is allowed only by its exact SHA-256 CSP hash;
+default, script, attribute-style, image, font, media, connection, worker, child,
+frame, object, form-action, base, and manifest capabilities are denied. Meta CSP
+does not support `frame-ancestors`; serving the file requires an equivalent
+HTTP Content Security Policy response header for anti-framing.
+
+The report is deterministic for exact receipt bytes, exact source bytes, the
+package implementation, and active Unicode database. It is not a signature,
+proof of origin, trusted timestamp, freshness proof, authorization decision, or
+generic Unicode safety verdict.
+
+## Chromium report evidence
+
+The evidence lane builds the 0.5.0 wheel from a clean source archive and runs it
+inside an immutable Linux-amd64 Playwright image selected by platform-manifest
+digest. Automation packages are hash locked. Two fresh non-root, read-only
+containers run with no network, no added capabilities, no-new-privileges,
+private temporary storage, and no repository credentials or Docker socket.
+
+JavaScript remains enabled. Each page must make one local document request and
+zero subresource requests, remain inside responsive layout bounds, contain only
+the reviewed DOM allowlist, and preserve ASCII decoded text. Negative probes
+must demonstrate that an appended inline script and altered inline style are
+blocked. Real 1440 x 1000 desktop, 390 x 844 mobile-emulation, full-page, and
+four-position scroll captures are recorded. The GIF uses actual browser
+`scrollTo` positions and viewport screenshots, not a crop of the full-page
+image.
+
+A generator-owned eight-file candidate is rendered twice, independently
+verified without importing the generator or project package, and compared
+byte-for-byte. Drift is uploaded and the workflow fails; the checkout is never
+rewritten. Artifact upload is not adoption. A separate human-reviewed adoption
+record binds the hosted archive and exact committed bytes only after structural,
+privacy, provenance, and pixel inspection.
 
 ## Adopted CLI visual evidence
 
@@ -423,7 +515,7 @@ contains only seven synthetic identifiers selected to exercise lower, case-fold,
 and NFKC-plus-case-fold collisions.
 
 The canonical capture environment is exact CPython 3.12.3 on Linux x86-64,
-Unicode database 15.0.0, package 0.4.0 installed from the built wheel, and
+Unicode database 15.0.0, package 0.5.0 installed from the built wheel, and
 Pillow 12.3.0 used only by the renderer. Pillow is installed binary-only from
 `requirements/cli-visuals.txt` with the canonical CPython 3.12 manylinux wheel
 SHA-256
@@ -537,7 +629,7 @@ The implemented receipt, even when successfully verified, is not:
   one policy;
 - a sandbox, deadline mechanism, multi-tenant service boundary, or protection
   from a privileged local actor; or
-- a browser UI, network service, generic Unicode security verdict, or
+- an interactive or served browser UI, network service, generic Unicode security verdict, or
   replacement for application-specific authorization review.
 
 A missing collision still means only that supplied identifiers did not become

@@ -6,16 +6,18 @@ for security review of usernames, routing keys, dataset labels, package names,
 and other namespaces where an unexpected equivalence can become an
 authorization or integrity problem.
 
-> **Phase 2c and its CLI evidence are implemented:** the dependency-free
-> package accepts a strict, bounded UTF-8 JSON Lines corpus, computes the complete
-> collision graph, emits canonical ASCII JSON receipt bytes, and verifies a
-> receipt by replaying the source. The installed POSIX CLI adds hardened
-> descriptor-relative reads and durable no-clobber publication. Its reviewed
-> PNG, GIF, and SVG evidence is reproduced byte-for-byte in CI; neither the
-> package nor the capture workflow performs network or browser work at runtime.
+> **Release 0.5.0 and its offline report are implemented:** the
+> dependency-free package accepts a strict, bounded UTF-8 JSON Lines corpus,
+> computes the complete collision graph, emits canonical ASCII JSON receipt
+> bytes, verifies them by exact replay, and renders a static ASCII-source HTML
+> report only after verification. The installed POSIX CLI adds hardened
+> descriptor-relative reads and durable mode-0600 no-clobber publication for
+> both receipts and reports.
 >
-> The implemented byte, command, POSIX filesystem, and visual-evidence boundaries
-> are documented in the
+> The package never opens a browser or network connection. A separate
+> evidence-only CI lane captures the real report in digest-pinned Chromium with
+> JavaScript enabled and the container network disabled. The implemented byte,
+> command, filesystem, HTML, CSP, and evidence boundaries are documented in the
 > [portable receipt contract](docs/portable-receipt-contract.md).
 
 It is not a generic case converter, a confusable-character detector, or a claim
@@ -53,12 +55,15 @@ decided from complete Python strings, never from hashes.
 - canonical, 16 MiB-bounded ASCII JSON receipts with complete graph and policy
   projection, distinct exact-source and semantic digests, producer identity,
   active-Unicode binding, and replay verification;
-- an installed `analyze`/`verify` CLI with exact explicit-policy grammar,
+- an installed `analyze`/`report`/`verify` CLI with exact grammar,
   descriptor-relative no-follow reads, single-link regular-file enforcement,
   mutation detection, mode-0600 no-clobber publication, and canonical redacted
   terminal channels;
-- no runtime dependencies, implicit configuration, shell execution, or network
-  access.
+- a verified, bounded offline HTML report with ASCII source and decoded DOM
+  text, logical code-point metadata, escaped markup, no active content, and a
+  hash-bound restrictive Content Security Policy;
+- no runtime dependencies, implicit configuration, shell execution, browser
+  launch, or network access.
 
 The architecture and current graph semantics are illustrated with
 source-controlled, reproducible assets:
@@ -109,6 +114,11 @@ The installed POSIX workflow uses explicit files and never accepts `-`:
   --policy reject@case:lower,case:casefold \
   --receipt result.receipt.json
 
+.venv/bin/casefold-observatory report \
+  --source corpus.jsonl \
+  --receipt result.receipt.json \
+  --output result.report.html
+
 .venv/bin/python -m casefold_observatory verify \
   --source corpus.jsonl \
   --receipt result.receipt.json
@@ -117,8 +127,12 @@ The installed POSIX workflow uses explicit files and never accepts `-`:
 Both entry points emit only a bounded canonical ASCII summary on success.
 Handled failures leave stdout empty, write one redacted JSON line to stderr,
 and never echo a pathname, identifier, source line, or policy argument. Receipt
-publication requires an absent destination and produces a durable mode-0600
-regular file.
+and report publication require an absent destination and produce durable
+mode-0600 regular files. A successful report command emits:
+
+```json
+{"receipt_sha256":"<64 lowercase hexadecimal characters>","report_bytes":12345,"report_sha256":"<64 lowercase hexadecimal characters>","status":"reported"}
+```
 
 The committed visual bundle binds Unicode database 15.0.0 and is reproduced in
 CI on Python 3.12. The installed package is also tested on Python 3.11, 3.13,
@@ -129,7 +143,7 @@ design, so silently treating cross-version bytes as equivalent would be wrong.
 
 ## Verified CLI workflow and results
 
-These are reviewed outputs from the installed `casefold-observatory` 0.4.0
+These are reviewed outputs from the installed `casefold-observatory` 0.5.0
 wheel and the seven-record synthetic fixture—not speculative UI mockups. The
 capture is pinned to CPython 3.12.3, Unicode database 15.0.0, Linux x86-64, and
 the hash-locked Pillow 12.3.0 renderer.
@@ -182,6 +196,31 @@ The review chain is intentionally inspectable:
 
 CI performs two fresh captures, compares them to one another, compares all six
 outputs byte-for-byte with the adopted files, and requires a clean checkout.
+
+## Verified offline report
+
+The report is generated by the installed wheel from the exact synthetic source
+and a freshly created canonical receipt. It never interpolates raw non-ASCII
+glyphs: each code point is shown by logical index, U+ value, Unicode name,
+general category, bidi class, combining class, UTF-8 bytes, engine hazard, and
+display flags. Markup-like identifiers remain inert escaped text.
+
+![Offline report evidence architecture](docs/report-evidence/report-architecture.svg)
+
+![Real desktop Chromium capture of the verified report](docs/report-evidence/report-desktop.png)
+
+![Real Chromium mobile emulation of the verified report](docs/report-evidence/report-mobile.png)
+
+![Real scrolling demonstration through the report](docs/report-evidence/report-scroll.gif)
+
+The [report evidence index](docs/report-evidence/README.md) also includes the
+real full-page capture, exact HTML, real receipt, source fixture, canonical
+manifest, independent verifier, and adoption provenance. The browser lane uses
+a platform-specific OCI manifest digest, a hash-locked Playwright 1.62.0 wheel,
+Chromium 151.0.7922.34, offline contexts, one document request and zero
+subresources. Two fresh captures must match byte-for-byte before a candidate can
+be reviewed. The report remains sensitive source-derived output; a successful
+replay is not authentication, freshness, or a safety verdict.
 
 ## Public API example
 
@@ -261,8 +300,8 @@ spelling, and input order therefore change the source digest without changing
 the semantic digest when they decode to the same canonical records. Neither
 digest provides authentication, anonymity, or freshness.
 
-The in-memory diagrams and installed-CLI bundle are regenerated from reviewed
-repository inputs and describe implemented behavior. The CLI transcript is
+The in-memory diagrams, installed-CLI bundle, and offline-report browser bundle
+are regenerated from reviewed repository inputs and describe implemented behavior. The CLI transcript is
 deliberately labeled as a verified rasterization rather than an operating-system
 screenshot; the result SVG is derived from the real generated receipt; and the
 workflow SVG is explanatory. The GIF and transcript preserve actual command
@@ -289,10 +328,10 @@ commit private namespace exports without an appropriate data-handling plan.
 5. **Verified CLI evidence** — implemented as a source-bound PNG transcript,
    four-frame GIF, receipt-derived result SVG, explanatory workflow SVG,
    canonical manifest, and independent adoption provenance.
-6. **Offline interface** — future local-only assets, escaped visible rendering
-   of controls and invisible code points, and a restrictive Content Security
-   Policy. Its own real screenshots or video will follow only after that
-   interface exists.
+6. **Verified offline report** — implemented in 0.5.0 as bounded static HTML
+   with escaped logical code-point rendering, a hash-bound restrictive Content
+   Security Policy, mode-0600 no-clobber CLI output, real desktop/mobile/full-page
+   Chromium captures, and a real-scroll GIF under independent evidence review.
 
 The historical Flask case-conversion prototype remains in Git history for
 provenance. It is unsupported and must not be deployed: it used a development

@@ -191,7 +191,7 @@ jobs:
         if: steps.cli_evidence.outputs.drift == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: generated-cli-evidence-${{ github.run_id }}
+          name: generated-cli-evidence-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/cli-evidence-candidate-a/
           if-no-files-found: error
           include-hidden-files: false
@@ -200,4 +200,56 @@ jobs:
 
       - name: Reject stale committed CLI evidence
         if: steps.cli_evidence.outputs.drift == 'true'
+        run: exit 1
+
+
+  collision-visual-evidence:
+    name: Collision visual evidence
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      SOURCE_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - name: Check out the explicit source revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ env.SOURCE_REVISION }}
+
+      - name: Set up canonical evidence Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12.3"
+
+      - name: Reproduce collision visuals
+        id: collision_visuals
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$SOURCE_REVISION"
+          test -z "$(git symbolic-ref -q HEAD || true)"
+          if python scripts/render_collision_visuals.py --check; then
+            test -z "$(git status --porcelain --untracked-files=all)"
+            echo "drift=false" >>"$GITHUB_OUTPUT"
+          else
+            python scripts/render_collision_visuals.py
+            test "$(find docs/visuals -type f | wc -l)" -eq 5
+            test -z "$(find docs/visuals -type l -print -quit)"
+            echo "drift=true" >>"$GITHUB_OUTPUT"
+          fi
+
+      - name: Preserve refreshed collision visuals for review
+        if: steps.collision_visuals.outputs.drift == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: generated-collision-visuals-${{ github.run_id }}-${{ github.run_attempt }}
+          path: docs/visuals/
+          if-no-files-found: error
+          include-hidden-files: false
+          compression-level: 0
+          retention-days: 1
+
+      - name: Reject stale committed collision visuals
+        if: steps.collision_visuals.outputs.drift == 'true'
         run: exit 1

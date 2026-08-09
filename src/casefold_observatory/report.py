@@ -225,7 +225,7 @@ def _witness_row(
         f"<td><code>{_escaped(witness.witness_id)}</code></td>"
         f"<td>{_escaped(witness.kind.value)}</td>"
         f"<td><code>{_escaped(record_ids[witness.left_record_ordinal])}</code>"
-        " &rarr; "
+        " -&gt; "
         f"<code>{_escaped(record_ids[witness.right_record_ordinal])}</code></td>"
         f"<td>{policy}</td><td>{stage}</td><td>{_escaped(step)}</td>"
         "</tr>"
