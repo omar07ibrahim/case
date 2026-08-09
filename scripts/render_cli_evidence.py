@@ -74,7 +74,7 @@ EXPECTED_MACHINE: Final = "x86_64"
 EXPECTED_PYTHON: Final = "3.12.3"
 EXPECTED_UNICODE: Final = "15.0.0"
 EXPECTED_PACKAGE: Final = "casefold-observatory"
-EXPECTED_PACKAGE_VERSION: Final = "0.4.0"
+EXPECTED_PACKAGE_VERSION: Final = "0.5.0"
 EXPECTED_PILLOW: Final = "12.3.0"
 EXPECTED_PILLOW_WHEEL: Final = (
     "pillow-12.3.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl"

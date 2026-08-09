@@ -34,12 +34,12 @@ from casefold_observatory.filesystem import (
     FileBoundaryErrorCode,
 )
 from casefold_observatory.model import HazardHandling, TransformStep
-from casefold_observatory.report import OfflineReportError, OfflineReportErrorCode
 from casefold_observatory.receipt import (
     DISTRIBUTION_VERSION,
     ReceiptErrorCode,
     ReceiptVerificationError,
 )
+from casefold_observatory.report import OfflineReportError, OfflineReportErrorCode
 
 _HEADER = b'{"schema":"casefold-observatory.identifier-corpus","schema_version":1}\n'
 _SOURCE = _HEADER + b"".join(

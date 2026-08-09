@@ -44,7 +44,8 @@ from casefold_observatory.model import (
 )
 
 DISTRIBUTION_NAME = "casefold-observatory"
-DISTRIBUTION_VERSION = "0.4.0"
+DISTRIBUTION_VERSION = "0.5.0"
+COMPATIBLE_RECEIPT_PRODUCER_VERSIONS = ("0.4.0", DISTRIBUTION_VERSION)
 RECEIPT_SCHEMA = "casefold-observatory.analysis-receipt"
 RECEIPT_SCHEMA_VERSION = 1
 MAX_RECEIPT_BYTES = 16_777_216
@@ -472,7 +473,7 @@ def _receipt_document(receipt: CollisionReceipt) -> JsonObject:
     )
     _require(
         type(receipt.producer_version) is str
-        and receipt.producer_version == DISTRIBUTION_VERSION
+        and receipt.producer_version in COMPATIBLE_RECEIPT_PRODUCER_VERSIONS
     )
     policies = _exact_tuple(receipt.policies)
     _require(1 <= len(policies) <= MAX_ANALYSIS_POLICIES)
@@ -550,12 +551,14 @@ def _seal_collision_receipt(
     source_bytes: bytes,
     policies: tuple[TransformPolicy, ...],
     graph: CollisionGraph,
+    *,
+    producer_version: str = DISTRIBUTION_VERSION,
 ) -> CollisionReceipt:
     receipt: CollisionReceipt = object.__new__(CollisionReceipt)
     object.__setattr__(receipt, "schema", RECEIPT_SCHEMA)
     object.__setattr__(receipt, "schema_version", RECEIPT_SCHEMA_VERSION)
     object.__setattr__(receipt, "producer_distribution", DISTRIBUTION_NAME)
-    object.__setattr__(receipt, "producer_version", DISTRIBUTION_VERSION)
+    object.__setattr__(receipt, "producer_version", producer_version)
     object.__setattr__(receipt, "source", _new_source(source_bytes))
     object.__setattr__(receipt, "policies", policies)
     object.__setattr__(receipt, "graph", graph)
@@ -573,9 +576,16 @@ def _create_collision_receipt_from_records(
     source_bytes: bytes,
     policies: tuple[TransformPolicy, ...],
     records: tuple[IdentifierRecord, ...],
+    *,
+    producer_version: str = DISTRIBUTION_VERSION,
 ) -> CollisionReceipt:
     graph = analyze_collisions(records, policies)
-    return _seal_collision_receipt(source_bytes, policies, graph)
+    return _seal_collision_receipt(
+        source_bytes,
+        policies,
+        graph,
+        producer_version=producer_version,
+    )
 
 
 def create_collision_receipt(
@@ -793,7 +803,7 @@ def _verify_collision_receipt_and_records(
         type(producer["distribution"]) is not str
         or producer["distribution"] != DISTRIBUTION_NAME
         or type(producer["version"]) is not str
-        or producer["version"] != DISTRIBUTION_VERSION
+        or producer["version"] not in COMPATIBLE_RECEIPT_PRODUCER_VERSIONS
     ):
         _raise_receipt(ReceiptErrorCode.PRODUCER_MISMATCH)
 
@@ -843,6 +853,7 @@ def _verify_collision_receipt_and_records(
             source_bytes,
             policies,
             records,
+            producer_version=cast(str, producer["version"]),
         )
         expected_bytes = canonical_receipt_bytes(expected)
     except (CorpusIngestionError, CollisionAnalysisError):

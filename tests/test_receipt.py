@@ -19,6 +19,7 @@ import casefold_observatory.corpus as corpus_module
 import casefold_observatory.receipt as receipt_module
 from casefold_observatory import (
     COLLISION_ALGORITHM,
+    COMPATIBLE_RECEIPT_PRODUCER_VERSIONS,
     CORPUS_FORMAT,
     CORPUS_FORMAT_VERSION,
     DISTRIBUTION_NAME,
@@ -118,13 +119,30 @@ class ReceiptPublicApiTests(unittest.TestCase):
         self.assertEqual(RECEIPT_SCHEMA, "casefold-observatory.analysis-receipt")
         self.assertEqual(RECEIPT_SCHEMA_VERSION, 1)
         self.assertEqual(DISTRIBUTION_NAME, "casefold-observatory")
-        self.assertEqual(DISTRIBUTION_VERSION, "0.4.0")
+        self.assertEqual(DISTRIBUTION_VERSION, "0.5.0")
+        self.assertEqual(
+            COMPATIBLE_RECEIPT_PRODUCER_VERSIONS,
+            ("0.4.0", "0.5.0"),
+        )
         self.assertEqual(CORPUS_FORMAT_VERSION, 1)
         self.assertEqual(MAX_RECEIPT_BYTES, 16_777_216)
         self.assertEqual(receipt.schema, RECEIPT_SCHEMA)
         self.assertEqual(receipt.producer_distribution, DISTRIBUTION_NAME)
         self.assertEqual(receipt.graph.algorithm, COLLISION_ALGORITHM)
         self.assertEqual(metadata.version(DISTRIBUTION_NAME), DISTRIBUTION_VERSION)
+
+    def test_previous_compatible_producer_receipt_replays_exactly(self) -> None:
+        document = _document()
+        producer = document["producer"]
+        self.assertIs(type(producer), dict)
+        assert isinstance(producer, dict)
+        producer["version"] = "0.4.0"
+        encoded = _encoded(document)
+
+        verified = verify_collision_receipt(encoded, _SAMPLE_SOURCE)
+
+        self.assertEqual(verified.producer_version, "0.4.0")
+        self.assertEqual(canonical_receipt_bytes(verified), encoded)
 
     def test_complete_projection_source_and_semantic_digests(self) -> None:
         receipt = _receipt()
@@ -326,6 +344,13 @@ class ReceiptVerificationBoundaryTests(unittest.TestCase):
                 lambda doc: doc.__setitem__(
                     "producer",
                     {"distribution": DISTRIBUTION_NAME, "version": 3},
+                ),
+                ReceiptErrorCode.PRODUCER_MISMATCH,
+            ),
+            (
+                lambda doc: doc.__setitem__(
+                    "producer",
+                    {"distribution": DISTRIBUTION_NAME, "version": "0.3.0"},
                 ),
                 ReceiptErrorCode.PRODUCER_MISMATCH,
             ),

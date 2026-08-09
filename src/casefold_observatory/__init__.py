@@ -55,6 +55,7 @@ from casefold_observatory.model import (
     create_policy,
 )
 from casefold_observatory.receipt import (
+    COMPATIBLE_RECEIPT_PRODUCER_VERSIONS,
     DISTRIBUTION_NAME,
     DISTRIBUTION_VERSION,
     MAX_RECEIPT_BYTES,
@@ -84,6 +85,7 @@ from casefold_observatory.report import (
 
 __all__ = [
     "COLLISION_ALGORITHM",
+    "COMPATIBLE_RECEIPT_PRODUCER_VERSIONS",
     "CORPUS_FORMAT",
     "CORPUS_FORMAT_VERSION",
     "CORPUS_SCHEMA",
