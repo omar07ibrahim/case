@@ -32,7 +32,7 @@ ARTIFACT_ARCHIVE_SHA256 = (
     "2d9f3f8aee1f95868bfb656d17468b14854a75be606aa8a45df246ec3e04d4d4"
 )
 ARTIFACT_ID = 9_032_120_081
-ARTIFACT_NAME = "case-cli-evidence-candidate-31293264288-1"
+ARTIFACT_NAME = "generated-cli-evidence-31293264288"
 ARTIFACT_RUN_ID = 31_293_264_288
 ARTIFACT_JOB_ID = 93_194_112_959
 ADOPTED_SOURCE_REVISION = "03c6f16c03e3d3e1a5230afe58f478da12228d4a"
@@ -456,7 +456,7 @@ class CliEvidenceContractTests(unittest.TestCase):
         self.assertIn("actual ink bounding-box top-left", contract)
         self.assertIn("tallest measured phase", contract)
         self.assertIn("raster mode derived from\nthe target drawing surface", contract)
-        self.assertIn("does not upload or substitute generated media", contract)
+        self.assertIn("never substitutes generated media", contract)
         for output in ADOPTED_OUTPUTS:
             self.assertIn(f"`{output}`", contract)
 
@@ -547,7 +547,7 @@ class CliEvidenceContractTests(unittest.TestCase):
         )
         self.assertIn("--source-tree", workflow)
         self.assertIn("needs: quality", workflow)
-        self.assertIn("if: $" "{{ always() }}", workflow)
+        self.assertIn("if: ${{ always() }}", workflow)
         self.assertIn("actions/upload-artifact@", workflow)
         self.assertIn("compression-level: 0", workflow)
         self.assertIn("retention-days: 1", workflow)

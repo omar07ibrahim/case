@@ -465,7 +465,7 @@ The frozen candidate provenance is:
 - source commit `03c6f16c03e3d3e1a5230afe58f478da12228d4a`;
 - source tree `78f789909de47ab5b8121f5acc510d758c241492`;
 - workflow run `31293264288`, attempt `1`, job `93194112959`;
-- artifact `case-cli-evidence-candidate-31293264288-1`, ID `9032120081`; and
+- artifact `generated-cli-evidence-31293264288`, ID `9032120081`; and
 - archive size `188273` bytes with SHA-256
   `2d9f3f8aee1f95868bfb656d17468b14854a75be606aa8a45df246ec3e04d4d4`.
 
@@ -503,7 +503,7 @@ source bindings, per-file identities, PNG/GIF/SVG structure, complete unclipped
 rendering, and absence of host paths, secrets, email addresses, remote assets,
 or personal data. Commit
 `fca957b24f45031f651d918636294874b18e3251` adopted the reviewed six-file bundle state, changing only the two drifting
-blobs and rerendering nothing. The separate canonical record
+blobs without rerendering either one. The separate canonical record
 `docs/cli-evidence/evidence/cli-evidence-adoption.v1.json` preserves the
 artifact archive identity, every adopted file hash and size, capture source
 commit and tree, and review outcomes.
@@ -514,8 +514,8 @@ GIF, a receipt-derived result, and an explanatory workflow. Current CI checks
 out the explicit pull-request head, builds and installs its wheel outside the
 checkout, performs two fresh captures, audits and compares them, and then
 compares all six outputs byte-for-byte with the adopted files. Any bound runtime
-source drift fails the check, and the checkout must remain clean. The final job
-does not upload or substitute generated media.
+source drift fails the check, and the checkout must remain clean. On drift, the final job uploads only the bounded review candidate; it never
+substitutes generated media into the repository.
 
 No evidence file contains a remote font, script, image, stylesheet, tracking
 identifier, timestamp, absolute host path, machine identifier, secret, or copied

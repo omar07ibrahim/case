@@ -48,7 +48,7 @@ The capture and adoption chain is immutable and machine-readable:
 | Capture source tree | `78f789909de47ab5b8121f5acc510d758c241492` |
 | Workflow run / attempt | [`31293264288` / `1`](https://github.com/omar07ibrahim/case/actions/runs/31293264288) |
 | Workflow job | [`93194112959`](https://github.com/omar07ibrahim/case/actions/runs/31293264288/job/93194112959) |
-| Hosted artifact | `case-cli-evidence-candidate-31293264288-1`, ID `9032120081` |
+| Hosted artifact | `generated-cli-evidence-31293264288`, ID `9032120081` |
 | Artifact archive | `188273` bytes, SHA-256 `2d9f3f8aee1f95868bfb656d17468b14854a75be606aa8a45df246ec3e04d4d4` |
 | Adoption commit | `fca957b24f45031f651d918636294874b18e3251` |
 | Canonical adoption record | [`evidence/cli-evidence-adoption.v1.json`](evidence/cli-evidence-adoption.v1.json) |
