@@ -456,7 +456,7 @@ class CliEvidenceContractTests(unittest.TestCase):
         self.assertIn("actual ink bounding-box top-left", contract)
         self.assertIn("tallest measured phase", contract)
         self.assertIn("raster mode derived from\nthe target drawing surface", contract)
-        self.assertIn("never substitutes generated media", contract)
+        self.assertIn("substitutes generated media into the repository", contract)
         for output in ADOPTED_OUTPUTS:
             self.assertIn(f"`{output}`", contract)
 
