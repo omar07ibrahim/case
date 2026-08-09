@@ -15,31 +15,21 @@ GENERATOR_PATH = PROJECT_ROOT / "scripts" / "render_report_evidence.py"
 VERIFIER_PATH = PROJECT_ROOT / "scripts" / "verify_report_evidence.py"
 WORKFLOW_PATH = PROJECT_ROOT / ".github" / "workflows" / "report-evidence.yml"
 REQUIREMENTS_PATH = PROJECT_ROOT / "requirements" / "report-browser.txt"
-IMAGE_LOCK_PATH = (
-    PROJECT_ROOT / "requirements" / "report-browser-image.lock.json"
-)
+IMAGE_LOCK_PATH = PROJECT_ROOT / "requirements" / "report-browser-image.lock.json"
 MANIFEST_TEMPLATE_PATH = PROJECT_ROOT / "MANIFEST.in"
 README_PATH = PROJECT_ROOT / "README.md"
 SECURITY_PATH = PROJECT_ROOT / "SECURITY.md"
 CONTRACT_PATH = PROJECT_ROOT / "docs" / "portable-receipt-contract.md"
-REPORT_IMPLEMENTATION_PATH = (
-    PROJECT_ROOT / "src" / "casefold_observatory" / "report.py"
-)
+REPORT_IMPLEMENTATION_PATH = PROJECT_ROOT / "src" / "casefold_observatory" / "report.py"
 EVIDENCE_MANIFEST_PATH = (
-    PROJECT_ROOT
-    / "docs"
-    / "report-evidence"
-    / "evidence"
-    / "report-evidence.v1.json"
+    PROJECT_ROOT / "docs" / "report-evidence" / "evidence" / "report-evidence.v1.json"
 )
 
 FIXTURE_SHA256 = "58c4b868820471fcb67a42351d7bddbfbcc66bfd4b2165d4e9868390787991cf"
 PLATFORM_DIGEST = (
     "sha256:51d31fdfacb0cff99a1a724152e34ae408d2bd4e7da310ff157450f49261cc59"
 )
-INDEX_DIGEST = (
-    "sha256:aa81288e738725378becba5b3e06cb0f3a7f012a610e87e8d767a090ea3f740d"
-)
+INDEX_DIGEST = "sha256:aa81288e738725378becba5b3e06cb0f3a7f012a610e87e8d767a090ea3f740d"
 OUTPUT_PATHS = (
     "docs/report-evidence/evidence/report-evidence.v1.json",
     "docs/report-evidence/evidence/report-demo.receipt.v1.json",
@@ -105,16 +95,10 @@ class ReportEvidenceContractTests(unittest.TestCase):
         generator_imports = imports(generator_tree)
         verifier_imports = imports(verifier_tree)
         self.assertFalse(
-            any(
-                name.startswith("casefold_observatory")
-                for name in generator_imports
-            )
+            any(name.startswith("casefold_observatory") for name in generator_imports)
         )
         self.assertFalse(
-            any(
-                name.startswith("casefold_observatory")
-                for name in verifier_imports
-            )
+            any(name.startswith("casefold_observatory") for name in verifier_imports)
         )
         self.assertNotIn("scripts.render_report_evidence", imports(verifier_tree))
         self.assertNotIn("playwright.sync_api import", generator)

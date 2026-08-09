@@ -181,6 +181,17 @@ def _command(
 ) -> tuple[subprocess.CompletedProcess[bytes], JsonObject]:
     environment = os.environ.copy()
     environment.pop("PYTHONPATH", None)
+    evidence_site_root = os.environ.get("EVIDENCE_SITE_ROOT")
+    if evidence_site_root is None:
+        _fail("isolated evidence site root is missing")
+    site_root = Path(evidence_site_root)
+    if (
+        not site_root.is_absolute()
+        or site_root.is_symlink()
+        or not site_root.is_dir()
+    ):
+        _fail("isolated evidence site root is invalid")
+    environment["PYTHONPATH"] = site_root.as_posix()
     environment["PYTHONNOUSERSITE"] = "1"
     completed = subprocess.run(
         argv,
@@ -405,14 +416,14 @@ def _capture_page(
     console_messages: list[tuple[str, str]] = []
     page_errors: list[str] = []
     popups: list[str] = []
-    context.on("request", lambda request: requests.append(
-        (request.resource_type, request.url)
-    ))
+    context.on(
+        "request", lambda request: requests.append((request.resource_type, request.url))
+    )
     context.on("page", lambda _page: popups.append("popup"))
     page = context.new_page()
-    page.on("console", lambda message: console_messages.append(
-        (message.type, message.text)
-    ))
+    page.on(
+        "console", lambda message: console_messages.append((message.type, message.text))
+    )
     page.on("pageerror", lambda error: page_errors.append(str(error)))
     uri = report_path.resolve().as_uri()
     page.goto(uri, wait_until="load")
@@ -541,17 +552,17 @@ def _architecture_svg() -> bytes:
             'viewBox="0 0 1440 560" role="img" '
             'aria-labelledby="title description">'
         ),
-        "<title id=\"title\">Casefold Observatory report evidence architecture</title>",
+        '<title id="title">Casefold Observatory report evidence architecture</title>',
         (
-            "<desc id=\"description\">Six-stage offline evidence flow from exact "
+            '<desc id="description">Six-stage offline evidence flow from exact '
             "inputs to independently reviewed browser artifacts.</desc>"
         ),
-        "<rect width=\"1440\" height=\"560\" fill=\"#091015\"/>",
-        "<text x=\"72\" y=\"76\" fill=\"#63e6d2\" ",
-        "font-family=\"monospace\" font-size=\"18\" font-weight=\"700\">",
+        '<rect width="1440" height="560" fill="#091015"/>',
+        '<text x="72" y="76" fill="#63e6d2" ',
+        'font-family="monospace" font-size="18" font-weight="700">',
         "VERIFIED OFFLINE REPORT / EVIDENCE FLOW</text>",
-        "<text x=\"72\" y=\"122\" fill=\"#edf5f1\" ",
-        "font-family=\"sans-serif\" font-size=\"34\" font-weight=\"700\">",
+        '<text x="72" y="122" fill="#edf5f1" ',
+        'font-family="sans-serif" font-size="34" font-weight="700">',
         "Real browser output, bound to exact bytes.</text>",
     ]
     for index, (number, title, detail) in enumerate(boxes):
@@ -591,7 +602,7 @@ def _architecture_svg() -> bytes:
             (
                 '<text x="72" y="520" fill="#9fb4ad" font-family="monospace" '
                 'font-size="14">No network during capture / synthetic data only / '
-                'artifact adoption is a separate reviewed commit</text>'
+                "artifact adoption is a separate reviewed commit</text>"
             ),
             "</svg>",
         )

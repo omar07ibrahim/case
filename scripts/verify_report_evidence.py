@@ -518,9 +518,7 @@ def _verify(
         _fail("analyze summary lost receipt parity")
     if command_payloads[1].get("receipt_sha256") != receipt_sha:
         _fail("report summary lost receipt parity")
-    if command_payloads[1].get("report_sha256") != _sha256(
-        payloads[REPORT_PATH]
-    ):
+    if command_payloads[1].get("report_sha256") != _sha256(payloads[REPORT_PATH]):
         _fail("report summary lost output parity")
     if command_payloads[2].get("receipt_sha256") != receipt_sha:
         _fail("verify summary lost receipt parity")
