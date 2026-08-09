@@ -18,7 +18,7 @@ from typing import BinaryIO, cast
 from unittest import mock
 
 import casefold_observatory.__main__ as module_entry
-from casefold_observatory import cli, filesystem
+from casefold_observatory import cli, filesystem, report
 from casefold_observatory.collision import (
     CollisionAnalysisError,
     CollisionErrorCode,
@@ -34,6 +34,7 @@ from casefold_observatory.filesystem import (
     FileBoundaryErrorCode,
 )
 from casefold_observatory.model import HazardHandling, TransformStep
+from casefold_observatory.report import OfflineReportError, OfflineReportErrorCode
 from casefold_observatory.receipt import (
     DISTRIBUTION_VERSION,
     ReceiptErrorCode,
@@ -56,6 +57,15 @@ _ANALYZE_ARGV = (
     "reject@case:lower,case:casefold",
     "--receipt",
     "result.receipt.json",
+)
+_REPORT_ARGV = (
+    "report",
+    "--source",
+    "source.jsonl",
+    "--receipt",
+    "result.receipt.json",
+    "--output",
+    "report.html",
 )
 _VERIFY_ARGV = (
     "verify",
@@ -113,6 +123,7 @@ class CliParsingTests(unittest.TestCase):
         cases = (
             (("--help",), cli._TOP_HELP),
             (("analyze", "--help"), cli._ANALYZE_HELP),
+            (("report", "--help"), cli._REPORT_HELP),
             (("verify", "--help"), cli._VERIFY_HELP),
             (
                 ("--version",),
@@ -220,6 +231,80 @@ class CliParsingTests(unittest.TestCase):
                 "--receipt",
                 "receipt",
             ),
+            ("report", "--source", "source", "--receipt", "receipt"),
+            (
+                "report",
+                "--source",
+                "source",
+                "--source",
+                "second",
+                "--output",
+                "report",
+            ),
+            (
+                "report",
+                "--receipt",
+                "receipt",
+                "--receipt",
+                "second",
+                "--output",
+                "report",
+            ),
+            (
+                "report",
+                "--output",
+                "report",
+                "--output",
+                "second",
+                "--source",
+                "source",
+            ),
+            (
+                "report",
+                "--source",
+                "-",
+                "--receipt",
+                "receipt",
+                "--output",
+                "report",
+            ),
+            (
+                "report",
+                "--source",
+                "source",
+                "--receipt",
+                "-",
+                "--output",
+                "report",
+            ),
+            (
+                "report",
+                "--source",
+                "source",
+                "--receipt",
+                "receipt",
+                "--output",
+                "-",
+            ),
+            (
+                "report",
+                "--source",
+                "source",
+                "--receipt",
+                "receipt",
+                "--private",
+                "report",
+            ),
+            (
+                "report",
+                "--source",
+                "source",
+                "--receipt",
+                "receipt",
+                "--output",
+                "report",
+                "extra",
+            ),
         )
         for argv in cases:
             with self.subTest(argument_count=len(argv)):
@@ -314,6 +399,26 @@ class CliParsingTests(unittest.TestCase):
             cli._VerifyCommand(source_path="source", receipt_path="receipt"),
         )
 
+        option_orders = (
+            (("--source", "source"), ("--receipt", "receipt"), ("--output", "out")),
+            (("--source", "source"), ("--output", "out"), ("--receipt", "receipt")),
+            (("--receipt", "receipt"), ("--source", "source"), ("--output", "out")),
+            (("--receipt", "receipt"), ("--output", "out"), ("--source", "source")),
+            (("--output", "out"), ("--source", "source"), ("--receipt", "receipt")),
+            (("--output", "out"), ("--receipt", "receipt"), ("--source", "source")),
+        )
+        for order in option_orders:
+            argv = ("report",) + tuple(value for pair in order for value in pair)
+            with self.subTest(order=order):
+                self.assertEqual(
+                    cli._parse_command(argv),
+                    cli._ReportCommand(
+                        source_path="source",
+                        receipt_path="receipt",
+                        output_path="out",
+                    ),
+                )
+
     def test_forged_argv_container_is_internal_not_echoed(self) -> None:
         status, output, error = cli._dispatch(cast(tuple[str, ...], ["private-value"]))
         self.assertEqual(status, cli.EXIT_INTERNAL)
@@ -325,7 +430,7 @@ class CliParsingTests(unittest.TestCase):
 
 
 class CliWorkflowTests(unittest.TestCase):
-    def test_analyze_and_verify_real_files_with_safe_summaries(self) -> None:
+    def test_analyze_verify_and_report_real_files_with_safe_summaries(self) -> None:
         with tempfile.TemporaryDirectory(prefix="casefold-cli-workflow-") as directory:
             root = Path(directory)
             source = root / "source.jsonl"
@@ -384,6 +489,37 @@ class CliWorkflowTests(unittest.TestCase):
             )
             _assert_canonical_line(self, verify_stdout)
 
+            report_path = root / "report.html"
+            report_status, report_stdout, report_stderr = _invoke(
+                (
+                    "report",
+                    "--output",
+                    report_path.as_posix(),
+                    "--receipt",
+                    receipt.as_posix(),
+                    "--source",
+                    source.as_posix(),
+                )
+            )
+            self.assertEqual(report_status, cli.EXIT_SUCCESS)
+            self.assertEqual(report_stderr, b"")
+            report_bytes = report_path.read_bytes()
+            self.assertTrue(report_bytes.startswith(b"<!doctype html>\n"))
+            self.assertEqual(
+                _json_line(report_stdout),
+                {
+                    "receipt_sha256": hashlib.sha256(receipt_bytes).hexdigest(),
+                    "report_byte_count": len(report_bytes),
+                    "report_sha256": hashlib.sha256(report_bytes).hexdigest(),
+                    "status": "reported",
+                },
+            )
+            report_info = report_path.stat()
+            self.assertEqual(stat.S_IMODE(report_info.st_mode), 0o600)
+            self.assertEqual(report_info.st_nlink, 1)
+            self.assertNotIn(report_bytes, report_stdout)
+            _assert_canonical_line(self, report_stdout)
+
     def test_existing_destination_and_input_output_alias_never_clobber(self) -> None:
         with tempfile.TemporaryDirectory(
             prefix="casefold-cli-no-clobber-"
@@ -429,6 +565,69 @@ class CliWorkflowTests(unittest.TestCase):
             self.assertEqual(_json_line(stderr)["code"], "filesystem.alias")
             self.assertEqual(source.read_bytes(), _SOURCE)
 
+    def test_report_output_aliases_and_existing_destination_never_clobber(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="casefold-cli-report-") as directory:
+            root = Path(directory)
+            source = root / "source.jsonl"
+            receipt = root / "receipt.json"
+            source.write_bytes(_SOURCE)
+            status, _stdout, _stderr = _invoke(
+                (
+                    "analyze",
+                    "--source",
+                    source.as_posix(),
+                    "--policy",
+                    "reject@case:lower",
+                    "--receipt",
+                    receipt.as_posix(),
+                )
+            )
+            self.assertEqual(status, cli.EXIT_SUCCESS)
+            source_before = source.read_bytes()
+            receipt_before = receipt.read_bytes()
+
+            for output in (source, receipt):
+                with self.subTest(output=output.name):
+                    status, stdout, stderr = _invoke(
+                        (
+                            "report",
+                            "--source",
+                            source.as_posix(),
+                            "--receipt",
+                            receipt.as_posix(),
+                            "--output",
+                            output.as_posix(),
+                        )
+                    )
+                    self.assertEqual(status, cli.EXIT_FILESYSTEM)
+                    self.assertEqual(stdout, b"")
+                    self.assertEqual(_json_line(stderr)["code"], "filesystem.alias")
+                    self.assertEqual(source.read_bytes(), source_before)
+                    self.assertEqual(receipt.read_bytes(), receipt_before)
+
+            existing = root / "existing.html"
+            existing.write_bytes(b"private-existing")
+            status, stdout, stderr = _invoke(
+                (
+                    "report",
+                    "--source",
+                    source.as_posix(),
+                    "--receipt",
+                    receipt.as_posix(),
+                    "--output",
+                    existing.as_posix(),
+                )
+            )
+            self.assertEqual(status, cli.EXIT_FILESYSTEM)
+            self.assertEqual(stdout, b"")
+            self.assertEqual(
+                _json_line(stderr)["code"],
+                "filesystem.destination_exists",
+            )
+            self.assertEqual(existing.read_bytes(), b"private-existing")
+
     def test_digest_replay_mismatch_is_exit_four(self) -> None:
         with tempfile.TemporaryDirectory(prefix="casefold-cli-mismatch-") as directory:
             root = Path(directory)
@@ -464,6 +663,23 @@ class CliWorkflowTests(unittest.TestCase):
                 _json_line(stderr)["code"],
                 "receipt.source_mismatch",
             )
+
+            report_path = root / "mismatch.html"
+            status, stdout, stderr = _invoke(
+                (
+                    "report",
+                    "--source",
+                    source.as_posix(),
+                    "--receipt",
+                    receipt.as_posix(),
+                    "--output",
+                    report_path.as_posix(),
+                )
+            )
+            self.assertEqual(status, cli.EXIT_MISMATCH)
+            self.assertEqual(stdout, b"")
+            self.assertEqual(_json_line(stderr)["code"], "receipt.source_mismatch")
+            self.assertFalse(report_path.exists())
 
     def test_symlink_and_oversized_source_use_filesystem_and_resource_exits(
         self,
@@ -627,6 +843,27 @@ class CliErrorTaxonomyTests(unittest.TestCase):
                     },
                 )
 
+    def test_every_report_code_maps_to_policy_exit(self) -> None:
+        for code in OfflineReportErrorCode:
+            with (
+                self.subTest(code=code),
+                mock.patch.object(
+                    cli,
+                    "_report",
+                    side_effect=OfflineReportError(code),
+                ),
+            ):
+                status, stdout, stderr = cli._dispatch(_REPORT_ARGV)
+                self.assertEqual(status, cli.EXIT_POLICY)
+                self.assertEqual(stdout, b"")
+                self.assertEqual(
+                    _json_line(stderr),
+                    {
+                        "code": f"report.{code.value}",
+                        "status": "error",
+                    },
+                )
+
     def test_every_file_code_maps_to_filesystem_except_read_limit(self) -> None:
         for code in FileBoundaryErrorCode:
             with (
@@ -656,6 +893,19 @@ class CliErrorTaxonomyTests(unittest.TestCase):
                 )
 
     def test_interrupt_and_unexpected_failures_are_bounded_and_redacted(self) -> None:
+        with mock.patch.object(
+            cli,
+            "_parse_command",
+            return_value=cast(cli._Command, object()),
+        ):
+            status, stdout, stderr = cli._dispatch(())
+        self.assertEqual(status, cli.EXIT_INTERNAL)
+        self.assertEqual(stdout, b"")
+        self.assertEqual(
+            _json_line(stderr),
+            {"code": "internal.unexpected", "status": "error"},
+        )
+
         cases: tuple[tuple[BaseException, str], ...] = (
             (KeyboardInterrupt(), "internal.interrupted"),
             (RuntimeError("PRIVATE-VALUE"), "internal.unexpected"),
@@ -720,6 +970,58 @@ class CliChannelTests(unittest.TestCase):
 
 
 class CliInternalAndInstalledTests(unittest.TestCase):
+    def test_report_uses_both_input_identities_and_redacted_summary(self) -> None:
+        receipt = CapturedFile(data=b"receipt", device=1, inode=2)
+        source = CapturedFile(data=b"source", device=3, inode=4)
+        report_bytes = b"<!doctype html>\n"
+        with (
+            mock.patch.object(
+                cli,
+                "capture_regular_file",
+                side_effect=(receipt, source),
+            ),
+            mock.patch.object(
+                cli,
+                "render_offline_report",
+                return_value=report_bytes,
+            ) as render,
+            mock.patch.object(cli, "publish_new_file") as publish,
+        ):
+            status, stdout, stderr = cli._dispatch(_REPORT_ARGV)
+        self.assertEqual(status, cli.EXIT_SUCCESS)
+        self.assertEqual(stderr, b"")
+        self.assertEqual(
+            _json_line(stdout),
+            {
+                "receipt_sha256": hashlib.sha256(receipt.data).hexdigest(),
+                "report_byte_count": len(report_bytes),
+                "report_sha256": hashlib.sha256(report_bytes).hexdigest(),
+                "status": "reported",
+            },
+        )
+        render.assert_called_once_with(receipt.data, source.data)
+        publish.assert_called_once_with(
+            "report.html",
+            report_bytes,
+            forbidden_identities=((1, 2), (3, 4)),
+        )
+
+    def test_report_rejects_same_descriptor_identity_before_render(self) -> None:
+        captured = CapturedFile(data=b"private", device=1, inode=2)
+        with (
+            mock.patch.object(
+                cli,
+                "capture_regular_file",
+                side_effect=(captured, captured),
+            ),
+            mock.patch.object(cli, "render_offline_report") as render,
+        ):
+            status, stdout, stderr = cli._dispatch(_REPORT_ARGV)
+        self.assertEqual(status, cli.EXIT_FILESYSTEM)
+        self.assertEqual(stdout, b"")
+        self.assertEqual(_json_line(stderr)["code"], "filesystem.alias")
+        render.assert_not_called()
+
     def test_verify_rejects_same_descriptor_identity_before_replay(self) -> None:
         captured = CapturedFile(data=b"private", device=1, inode=2)
         with (
@@ -750,6 +1052,7 @@ class CliInternalAndInstalledTests(unittest.TestCase):
         paths = (
             Path(cli.__file__),
             Path(filesystem.__file__),
+            Path(report.__file__),
         )
         for target in paths:
             tree = ast.parse(target.read_text(encoding="utf-8"))
@@ -796,6 +1099,15 @@ class CliInternalAndInstalledTests(unittest.TestCase):
             ("--version",),
             ("--help",),
             ("verify", "--source", "PRIVATE-PATH"),
+            (
+                "report",
+                "--source",
+                "PRIVATE-SOURCE",
+                "--receipt",
+                "PRIVATE-RECEIPT",
+                "--output",
+                "PRIVATE-OUTPUT",
+            ),
         )
         for arguments in commands:
             with self.subTest(arguments=arguments):

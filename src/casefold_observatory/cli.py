@@ -37,6 +37,7 @@ from casefold_observatory.receipt import (
     create_collision_receipt,
     verify_collision_receipt,
 )
+from casefold_observatory.report import OfflineReportError, render_offline_report
 
 EXIT_SUCCESS = 0
 EXIT_INTERNAL = 1
@@ -51,6 +52,7 @@ _TOP_HELP = b"""Usage: casefold-observatory <command> [options]
 
 Commands:
   analyze  create a no-clobber collision receipt
+  report   render a verified, no-clobber offline HTML report
   verify   replay a receipt against exact source bytes
 
 Run 'casefold-observatory <command> --help' for command options.
@@ -60,6 +62,10 @@ _ANALYZE_HELP = (
     b"[--policy SPEC ...] --receipt PATH\n\n"
     b"SPEC is exactly (reject|preserve)@STEP[,STEP...].\n"
     b"One through eight policies are required and their order is significant.\n"
+)
+_REPORT_HELP = (
+    b"Usage: casefold-observatory report --source PATH --receipt PATH "
+    b"--output PATH\n"
 )
 _VERIFY_HELP = b"""Usage: casefold-observatory verify --source PATH --receipt PATH
 """
@@ -76,6 +82,7 @@ class _PolicyArgumentError(ValueError):
 class _StaticRequest(Enum):
     TOP_HELP = "top_help"
     ANALYZE_HELP = "analyze_help"
+    REPORT_HELP = "report_help"
     VERIFY_HELP = "verify_help"
     VERSION = "version"
 
@@ -88,12 +95,19 @@ class _AnalyzeCommand:
 
 
 @dataclass(frozen=True, slots=True)
+class _ReportCommand:
+    source_path: str
+    receipt_path: str
+    output_path: str
+
+
+@dataclass(frozen=True, slots=True)
 class _VerifyCommand:
     source_path: str
     receipt_path: str
 
 
-_Command = _StaticRequest | _AnalyzeCommand | _VerifyCommand
+_Command = _StaticRequest | _AnalyzeCommand | _ReportCommand | _VerifyCommand
 
 
 def _raise_usage() -> NoReturn:
@@ -193,6 +207,41 @@ def _parse_verify(argv: tuple[str, ...]) -> _VerifyCommand | _StaticRequest:
     )
 
 
+def _parse_report(argv: tuple[str, ...]) -> _ReportCommand | _StaticRequest:
+    if argv == ("report", "--help"):
+        return _StaticRequest.REPORT_HELP
+    if len(argv) != 7:
+        _raise_usage()
+
+    source_path: str | None = None
+    receipt_path: str | None = None
+    output_path: str | None = None
+    index = 1
+    while index < len(argv):
+        option = argv[index]
+        value = argv[index + 1]
+        if option == "--source":
+            if source_path is not None or value == "-":
+                _raise_usage()
+            source_path = value
+        elif option == "--receipt":
+            if receipt_path is not None or value == "-":
+                _raise_usage()
+            receipt_path = value
+        elif option == "--output":
+            if output_path is not None or value == "-":
+                _raise_usage()
+            output_path = value
+        else:
+            _raise_usage()
+        index += 2
+    return _ReportCommand(
+        source_path=cast(str, source_path),
+        receipt_path=cast(str, receipt_path),
+        output_path=cast(str, output_path),
+    )
+
+
 def _parse_command(argv: tuple[str, ...]) -> _Command:
     if type(argv) is not tuple or any(type(argument) is not str for argument in argv):
         raise TypeError("argv must be an exact tuple of exact strings")
@@ -204,6 +253,8 @@ def _parse_command(argv: tuple[str, ...]) -> _Command:
         _raise_usage()
     if argv[0] == "analyze":
         return _parse_analyze(argv)
+    if argv[0] == "report":
+        return _parse_report(argv)
     if argv[0] == "verify":
         return _parse_verify(argv)
     _raise_usage()
@@ -247,6 +298,8 @@ def _static_output(request: _StaticRequest) -> bytes:
         return _TOP_HELP
     if request is _StaticRequest.ANALYZE_HELP:
         return _ANALYZE_HELP
+    if request is _StaticRequest.REPORT_HELP:
+        return _REPORT_HELP
     if request is _StaticRequest.VERIFY_HELP:
         return _VERIFY_HELP
     return f"casefold-observatory {DISTRIBUTION_VERSION}\n".encode("ascii")
@@ -302,6 +355,36 @@ def _verify(command: _VerifyCommand) -> bytes:
     )
 
 
+def _report(command: _ReportCommand) -> bytes:
+    receipt_file = capture_regular_file(
+        command.receipt_path,
+        limit=MAX_RECEIPT_BYTES,
+    )
+    source_file = capture_regular_file(
+        command.source_path,
+        limit=MAX_CORPUS_SOURCE_BYTES,
+    )
+    if _same_file(receipt_file, source_file):
+        raise FileBoundaryError(FileBoundaryErrorCode.ALIAS)
+    report_bytes = render_offline_report(receipt_file.data, source_file.data)
+    publish_new_file(
+        command.output_path,
+        report_bytes,
+        forbidden_identities=(
+            (receipt_file.device, receipt_file.inode),
+            (source_file.device, source_file.inode),
+        ),
+    )
+    return _canonical_line(
+        {
+            "receipt_sha256": hashlib.sha256(receipt_file.data).hexdigest(),
+            "report_byte_count": len(report_bytes),
+            "report_sha256": hashlib.sha256(report_bytes).hexdigest(),
+            "status": "reported",
+        }
+    )
+
+
 _CORPUS_RESOURCE_CODES = {
     CorpusErrorCode.JSON_DEPTH,
     CorpusErrorCode.LINE_COUNT,
@@ -328,7 +411,11 @@ def _dispatch(argv: tuple[str, ...]) -> tuple[int, bytes, bytes]:
             return EXIT_SUCCESS, _static_output(command), b""
         if type(command) is _AnalyzeCommand:
             return EXIT_SUCCESS, _analyze(command), b""
-        return EXIT_SUCCESS, _verify(cast(_VerifyCommand, command)), b""
+        if type(command) is _ReportCommand:
+            return EXIT_SUCCESS, _report(command), b""
+        if type(command) is _VerifyCommand:
+            return EXIT_SUCCESS, _verify(command), b""
+        raise RuntimeError("parsed command has an unsupported type")
     except _UsageError:
         return (
             EXIT_USAGE,
@@ -362,6 +449,12 @@ def _dispatch(argv: tuple[str, ...]) -> tuple[int, bytes, bytes]:
                 canonical_record_ordinal=error.canonical_record_ordinal,
                 policy_ordinal=error.policy_ordinal,
             ),
+        )
+    except OfflineReportError as error:
+        return (
+            EXIT_POLICY,
+            b"",
+            _error_line(f"report.{error.code.value}"),
         )
     except ReceiptVerificationError as error:
         if error.code in _RECEIPT_SCHEMA_CODES:

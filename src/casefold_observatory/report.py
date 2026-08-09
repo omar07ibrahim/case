@@ -176,9 +176,11 @@ def _codepoint_tokens(value: str) -> str:
 
 
 def _members(record_ids: tuple[str, ...]) -> str:
-    return '<div class="members">' + "".join(
-        f"<code>{_escaped(record_id)}</code>" for record_id in record_ids
-    ) + "</div>"
+    return (
+        '<div class="members">'
+        + "".join(f"<code>{_escaped(record_id)}</code>" for record_id in record_ids)
+        + "</div>"
+    )
 
 
 def _record_card(record: IdentifierRecord, ordinal: int) -> str:
