@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1500" height="791" viewBox="0 0 1500 791" role="img" aria-labelledby="title desc">
 <title id="title">Receipt-derived collision result</title>
 <desc id="desc">Component membership and witness-tree counts read from the real installed-command receipt.</desc>
-<metadata>{&quot;kind&quot;:&quot;receipt-derived-result&quot;,&quot;receipt_sha256&quot;:&quot;f27a1e8abecfea76d9ef054ceea0bf3d38d07d246d21653ade01e65846a58ccb&quot;,&quot;schema&quot;:&quot;casefold-observatory.cli-evidence-svg&quot;,&quot;schema_version&quot;:1,&quot;source_sha256&quot;:&quot;a77c90ed5e767a4e0a8029cad14ed347354a3b939b62ad75c0da091b522a259f&quot;}</metadata>
+<metadata>{&quot;kind&quot;:&quot;receipt-derived-result&quot;,&quot;receipt_sha256&quot;:&quot;ae7f54706bc2014e9f4dbaafe2a58f301f5b259ab60fb67c391e0b5dde0c4c63&quot;,&quot;schema&quot;:&quot;casefold-observatory.cli-evidence-svg&quot;,&quot;schema_version&quot;:1,&quot;source_sha256&quot;:&quot;a77c90ed5e767a4e0a8029cad14ed347354a3b939b62ad75c0da091b522a259f&quot;}</metadata>
 <rect width="1500" height="791" fill="#07111f"/>
 <text x="70" y="78" fill="#eff6ff" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="34" font-weight="700" text-anchor="start">Receipt-derived collision result</text>
 <text x="70" y="120" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="18" font-weight="400" text-anchor="start">Actual installed-command receipt; labels are reviewed synthetic record IDs.</text>
@@ -40,6 +40,6 @@
 <text x="190" y="545" fill="#eff6ff" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="18" font-weight="400" text-anchor="start">eszett, lower-ss, upper-ss</text>
 <text x="830" y="545" fill="#4db5ff" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="18" font-weight="400" text-anchor="start">0, 1, 2</text>
 <text x="1120" y="545" fill="#ffbd59" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="18" font-weight="400" text-anchor="start">2</text>
-<text x="70" y="713" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="16" font-weight="400" text-anchor="start">receipt sha256 f27a1e8abecfea76d9ef054ceea0bf3d38d07d246d21653ade01e65846a58ccb</text>
+<text x="70" y="713" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="16" font-weight="400" text-anchor="start">receipt sha256 ae7f54706bc2014e9f4dbaafe2a58f301f5b259ab60fb67c391e0b5dde0c4c63</text>
 <text x="70" y="745" fill="#9fb2c9" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="16" font-weight="400" text-anchor="start">source sha256  a77c90ed5e767a4e0a8029cad14ed347354a3b939b62ad75c0da091b522a259f</text>
 </svg>
