@@ -121,6 +121,46 @@ The separate adoption record at
 binds the reviewed hosted archive to the exact committed bytes. It is not
 generator-owned and is intentionally outside the eight-file bundle.
 
+## Provenance
+
+The capture and adoption chain is immutable and machine-readable:
+
+| Field | Reviewed identity |
+| --- | --- |
+| Capture source commit | `cc4e5fc4403f4d7dcbe20df83dc9545fc22808d1` |
+| Capture source tree | `0b371628fa35fee844834aad329ffefcca77fc04` |
+| Workflow run / attempt | [`31332062366` / `1`](https://github.com/omar07ibrahim/case/actions/runs/31332062366) |
+| Workflow job | [`93291774425`](https://github.com/omar07ibrahim/case/actions/runs/31332062366/job/93291774425) |
+| Hosted artifact | `generated-report-evidence-31332062366-1`, ID `9043217069` |
+| Artifact archive | `1503825` bytes, SHA-256 `28f90cf9ea5f093ae58db70c8468de83806ad3386a5282c19ee243a0823982a5` |
+| Adoption commit | `3ce13bc5c91ed89f0e466f434a17a56229b62293` |
+| Canonical adoption record | [`evidence/report-evidence-adoption.v1.json`](evidence/report-evidence-adoption.v1.json) |
+| Capture manifest | [`evidence/report-evidence.v1.json`](evidence/report-evidence.v1.json) |
+| Synthetic fixture | [`fixtures/report-demo.v1.jsonl`](fixtures/report-demo.v1.jsonl), SHA-256 `58c4b868820471fcb67a42351d7bddbfbcc66bfd4b2165d4e9868390787991cf` |
+
+The hosted archive was independently downloaded and checked for exact
+inventory, regular `100644` entry modes, source bindings, receipt replay,
+HTML and CSP integrity, browser assertions, media structure, privacy markers,
+and visual completeness. The eight reviewed files were committed without
+rerendering. The durable adoption record preserves that review even after the
+temporary hosted artifact expires.
+
+The eight adopted file identities are:
+
+| File | Bytes | SHA-256 | Role |
+| --- | ---: | --- | --- |
+| [`evidence/report-demo.receipt.v1.json`](evidence/report-demo.receipt.v1.json) | 8,537 | `6ac6363a609cfa64c8bca7bdace514f09beab5f60927a880b220ad258f70d06e` | Replayed canonical receipt |
+| [`evidence/report-demo.v1.html`](evidence/report-demo.v1.html) | 33,092 | `52e41982b2defd6f8eae643cabfc0bfd96f44fb47c0172e36aba5d864cc93d4c` | Exact offline report |
+| [`evidence/report-evidence.v1.json`](evidence/report-evidence.v1.json) | 17,812 | `2059557f5400e260e09fab8ac204204b69791f4e4c878cecd913d889ba270379` | Capture manifest |
+| [`report-architecture.svg`](report-architecture.svg) | 3,486 | `56ec83288a91d68a423f465ed089cc17a85a2d87b8ad045865803d1f146fac54` | Evidence architecture |
+| [`report-desktop.png`](report-desktop.png) | 136,923 | `144220805f9137f9ecef4a809ed3e2165f4829efc6c65667f699e021d4765045` | Desktop viewport |
+| [`report-full-page.png`](report-full-page.png) | 1,020,472 | `893a85813c07b89b81acaef2a633f49985374bea0f14384645c9a20d359b02b5` | Full document |
+| [`report-mobile.png`](report-mobile.png) | 71,185 | `12a5d1a03d302d7429e8d94ba0a5e87f33f0ea61569e77506ca5bee1f7e2788c` | Mobile emulation |
+| [`report-scroll.gif`](report-scroll.gif) | 210,842 | `daf9abff4452a4c3f5b9278c360d2c2b4766d19121fe8a5e1ac2d72625005204` | Four real scroll positions |
+
+The README and adoption record are outside the generator-owned eight-file
+bundle.
+
 The manifest records the source revision and tree, per-source bindings, wheel
 identity, installed runtime file identities, exact command channels, runtime
 output modes, OCI image digest, Chromium version and executable hash,

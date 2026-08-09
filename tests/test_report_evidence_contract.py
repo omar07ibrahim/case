@@ -3,6 +3,7 @@ from __future__ import annotations
 import ast
 import hashlib
 import json
+import stat
 import unittest
 from pathlib import Path
 from typing import cast
@@ -24,6 +25,55 @@ REPORT_IMPLEMENTATION_PATH = PROJECT_ROOT / "src" / "casefold_observatory" / "re
 EVIDENCE_MANIFEST_PATH = (
     PROJECT_ROOT / "docs" / "report-evidence" / "evidence" / "report-evidence.v1.json"
 )
+
+REPORT_ROOT = PROJECT_ROOT / "docs" / "report-evidence"
+REPORT_INDEX_PATH = REPORT_ROOT / "README.md"
+ADOPTION_PATH = REPORT_ROOT / "evidence" / "report-evidence-adoption.v1.json"
+ARTIFACT_ARCHIVE_BYTES = 1_503_825
+ARTIFACT_ARCHIVE_SHA256 = (
+    "28f90cf9ea5f093ae58db70c8468de83806ad3386a5282c19ee243a0823982a5"
+)
+ARTIFACT_ID = 9_043_217_069
+ARTIFACT_NAME = "generated-report-evidence-31332062366-1"
+ARTIFACT_RUN_ID = 31_332_062_366
+ARTIFACT_JOB_ID = 93_291_774_425
+ADOPTED_SOURCE_REVISION = "cc4e5fc4403f4d7dcbe20df83dc9545fc22808d1"
+ADOPTED_SOURCE_TREE = "0b371628fa35fee844834aad329ffefcca77fc04"
+ADOPTION_COMMIT = "3ce13bc5c91ed89f0e466f434a17a56229b62293"
+ADOPTED_IDENTITIES: dict[str, dict[str, object]] = {
+    "docs/report-evidence/evidence/report-demo.receipt.v1.json": {
+        "bytes": 8_537,
+        "sha256": "6ac6363a609cfa64c8bca7bdace514f09beab5f60927a880b220ad258f70d06e",
+    },
+    "docs/report-evidence/evidence/report-demo.v1.html": {
+        "bytes": 33_092,
+        "sha256": "52e41982b2defd6f8eae643cabfc0bfd96f44fb47c0172e36aba5d864cc93d4c",
+    },
+    "docs/report-evidence/evidence/report-evidence.v1.json": {
+        "bytes": 17_812,
+        "sha256": "2059557f5400e260e09fab8ac204204b69791f4e4c878cecd913d889ba270379",
+    },
+    "docs/report-evidence/report-architecture.svg": {
+        "bytes": 3_486,
+        "sha256": "56ec83288a91d68a423f465ed089cc17a85a2d87b8ad045865803d1f146fac54",
+    },
+    "docs/report-evidence/report-desktop.png": {
+        "bytes": 136_923,
+        "sha256": "144220805f9137f9ecef4a809ed3e2165f4829efc6c65667f699e021d4765045",
+    },
+    "docs/report-evidence/report-full-page.png": {
+        "bytes": 1_020_472,
+        "sha256": "893a85813c07b89b81acaef2a633f49985374bea0f14384645c9a20d359b02b5",
+    },
+    "docs/report-evidence/report-mobile.png": {
+        "bytes": 71_185,
+        "sha256": "12a5d1a03d302d7429e8d94ba0a5e87f33f0ea61569e77506ca5bee1f7e2788c",
+    },
+    "docs/report-evidence/report-scroll.gif": {
+        "bytes": 210_842,
+        "sha256": "daf9abff4452a4c3f5b9278c360d2c2b4766d19121fe8a5e1ac2d72625005204",
+    },
+}
 
 FIXTURE_SHA256 = "58c4b868820471fcb67a42351d7bddbfbcc66bfd4b2165d4e9868390787991cf"
 PLATFORM_DIGEST = (
@@ -185,6 +235,105 @@ class ReportEvidenceContractTests(unittest.TestCase):
         source = REPORT_IMPLEMENTATION_PATH.read_text(encoding="utf-8")
         self.assertIn('" -&gt; "', source)
         self.assertNotIn("&rarr;", source)
+
+    def test_adopted_bundle_matches_reviewed_hosted_artifact(self) -> None:
+        expected_files = {
+            "docs/report-evidence/README.md",
+            "docs/report-evidence/fixtures/report-demo.v1.jsonl",
+            ADOPTION_PATH.relative_to(PROJECT_ROOT).as_posix(),
+            *OUTPUT_PATHS,
+        }
+        actual_files = {
+            path.relative_to(PROJECT_ROOT).as_posix()
+            for path in REPORT_ROOT.rglob("*")
+            if path.is_file()
+        }
+        self.assertEqual(actual_files, expected_files)
+
+        for relative_path, expected_identity in ADOPTED_IDENTITIES.items():
+            path = PROJECT_ROOT / relative_path
+            self.assertFalse(path.is_symlink())
+            status = path.stat()
+            self.assertTrue(stat.S_ISREG(status.st_mode))
+            self.assertEqual(stat.S_IMODE(status.st_mode), 0o644)
+            content = path.read_bytes()
+            self.assertEqual(
+                {
+                    "bytes": len(content),
+                    "sha256": hashlib.sha256(content).hexdigest(),
+                },
+                expected_identity,
+            )
+
+        adoption_bytes = ADOPTION_PATH.read_bytes()
+        self.assertTrue(adoption_bytes.isascii())
+        adoption = _object(json.loads(adoption_bytes))
+        self.assertEqual(
+            adoption_bytes,
+            (
+                json.dumps(
+                    adoption,
+                    ensure_ascii=True,
+                    allow_nan=False,
+                    indent=2,
+                    sort_keys=True,
+                )
+                + "\n"
+            ).encode("ascii"),
+        )
+        self.assertEqual(
+            adoption,
+            {
+                "artifact": {
+                    "archive_bytes": ARTIFACT_ARCHIVE_BYTES,
+                    "archive_sha256": ARTIFACT_ARCHIVE_SHA256,
+                    "id": ARTIFACT_ID,
+                    "name": ARTIFACT_NAME,
+                    "run_attempt": 1,
+                    "workflow_job_id": ARTIFACT_JOB_ID,
+                    "workflow_run_id": ARTIFACT_RUN_ID,
+                },
+                "files": ADOPTED_IDENTITIES,
+                "schema": "casefold-observatory.report-evidence-adoption",
+                "schema_version": 1,
+                "source_revision": ADOPTED_SOURCE_REVISION,
+                "source_tree": ADOPTED_SOURCE_TREE,
+                "validation": {
+                    "archive_entry_mode": "100644",
+                    "archive_inventory_exact": True,
+                    "browser_assertions_verified": True,
+                    "byte_identities_match_manifest": True,
+                    "html_and_csp_verified": True,
+                    "privacy_scan_passed": True,
+                    "visual_review_passed": True,
+                },
+            },
+        )
+
+        manifest = _object(json.loads(EVIDENCE_MANIFEST_PATH.read_bytes()))
+        source = _object(manifest["source"])
+        self.assertEqual(source["revision"], ADOPTED_SOURCE_REVISION)
+        self.assertEqual(source["tree"], ADOPTED_SOURCE_TREE)
+        self.assertEqual(manifest["generated_files"], list(OUTPUT_PATHS))
+
+    def test_adopted_capture_provenance_is_documented(self) -> None:
+        index = REPORT_INDEX_PATH.read_text(encoding="utf-8")
+        for expected in (
+            ARTIFACT_ARCHIVE_SHA256,
+            ARTIFACT_NAME,
+            str(ARTIFACT_ID),
+            str(ARTIFACT_RUN_ID),
+            str(ARTIFACT_JOB_ID),
+            ADOPTED_SOURCE_REVISION,
+            ADOPTED_SOURCE_TREE,
+            ADOPTION_COMMIT,
+            "independently downloaded and checked",
+            "without rerendering",
+        ):
+            self.assertIn(expected, index)
+        for relative_path, identity in ADOPTED_IDENTITIES.items():
+            self.assertIn(Path(relative_path).name, index)
+            self.assertIn(cast(str, identity["sha256"]), index)
 
     def test_adopted_manifest_is_self_consistent_when_present(self) -> None:
         if not EVIDENCE_MANIFEST_PATH.exists():

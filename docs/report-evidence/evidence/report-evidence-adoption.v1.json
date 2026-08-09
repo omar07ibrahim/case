@@ -1,0 +1,58 @@
+{
+  "artifact": {
+    "archive_bytes": 1503825,
+    "archive_sha256": "28f90cf9ea5f093ae58db70c8468de83806ad3386a5282c19ee243a0823982a5",
+    "id": 9043217069,
+    "name": "generated-report-evidence-31332062366-1",
+    "run_attempt": 1,
+    "workflow_job_id": 93291774425,
+    "workflow_run_id": 31332062366
+  },
+  "files": {
+    "docs/report-evidence/evidence/report-demo.receipt.v1.json": {
+      "bytes": 8537,
+      "sha256": "6ac6363a609cfa64c8bca7bdace514f09beab5f60927a880b220ad258f70d06e"
+    },
+    "docs/report-evidence/evidence/report-demo.v1.html": {
+      "bytes": 33092,
+      "sha256": "52e41982b2defd6f8eae643cabfc0bfd96f44fb47c0172e36aba5d864cc93d4c"
+    },
+    "docs/report-evidence/evidence/report-evidence.v1.json": {
+      "bytes": 17812,
+      "sha256": "2059557f5400e260e09fab8ac204204b69791f4e4c878cecd913d889ba270379"
+    },
+    "docs/report-evidence/report-architecture.svg": {
+      "bytes": 3486,
+      "sha256": "56ec83288a91d68a423f465ed089cc17a85a2d87b8ad045865803d1f146fac54"
+    },
+    "docs/report-evidence/report-desktop.png": {
+      "bytes": 136923,
+      "sha256": "144220805f9137f9ecef4a809ed3e2165f4829efc6c65667f699e021d4765045"
+    },
+    "docs/report-evidence/report-full-page.png": {
+      "bytes": 1020472,
+      "sha256": "893a85813c07b89b81acaef2a633f49985374bea0f14384645c9a20d359b02b5"
+    },
+    "docs/report-evidence/report-mobile.png": {
+      "bytes": 71185,
+      "sha256": "12a5d1a03d302d7429e8d94ba0a5e87f33f0ea61569e77506ca5bee1f7e2788c"
+    },
+    "docs/report-evidence/report-scroll.gif": {
+      "bytes": 210842,
+      "sha256": "daf9abff4452a4c3f5b9278c360d2c2b4766d19121fe8a5e1ac2d72625005204"
+    }
+  },
+  "schema": "casefold-observatory.report-evidence-adoption",
+  "schema_version": 1,
+  "source_revision": "cc4e5fc4403f4d7dcbe20df83dc9545fc22808d1",
+  "source_tree": "0b371628fa35fee844834aad329ffefcca77fc04",
+  "validation": {
+    "archive_entry_mode": "100644",
+    "archive_inventory_exact": true,
+    "browser_assertions_verified": true,
+    "byte_identities_match_manifest": true,
+    "html_and_csp_verified": true,
+    "privacy_scan_passed": true,
+    "visual_review_passed": true
+  }
+}
