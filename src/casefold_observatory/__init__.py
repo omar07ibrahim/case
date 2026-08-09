@@ -54,6 +54,16 @@ from casefold_observatory.model import (
     TransformStep,
     create_policy,
 )
+from casefold_observatory.report import (
+    MAX_OFFLINE_REPORT_BYTES,
+    MAX_OFFLINE_REPORT_CODEPOINT_TOKENS,
+    MAX_OFFLINE_REPORT_RECORDS,
+    OFFLINE_REPORT_SCHEMA,
+    OFFLINE_REPORT_SCHEMA_VERSION,
+    OfflineReportError,
+    OfflineReportErrorCode,
+    render_offline_report,
+)
 from casefold_observatory.receipt import (
     DISTRIBUTION_NAME,
     DISTRIBUTION_VERSION,
@@ -91,6 +101,9 @@ __all__ = [
     "MAX_INPUT_CODEPOINTS",
     "MAX_INPUT_UTF8_BYTES",
     "MAX_JSON_DEPTH",
+    "MAX_OFFLINE_REPORT_BYTES",
+    "MAX_OFFLINE_REPORT_CODEPOINT_TOKENS",
+    "MAX_OFFLINE_REPORT_RECORDS",
     "MAX_POLICY_STEPS",
     "MAX_RECEIPT_BYTES",
     "MAX_RECORD_ID_CHARS",
@@ -98,6 +111,8 @@ __all__ = [
     "MAX_STAGE_UTF8_BYTES",
     "MAX_UNICODE_VERSION_CHARS",
     "RECEIPT_SCHEMA",
+    "OFFLINE_REPORT_SCHEMA",
+    "OFFLINE_REPORT_SCHEMA_VERSION",
     "RECEIPT_SCHEMA_VERSION",
     "CollisionAnalysisError",
     "CollisionErrorCode",
@@ -113,6 +128,8 @@ __all__ = [
     "HazardKind",
     "IdentifierRecord",
     "IdentifierTransformError",
+    "OfflineReportError",
+    "OfflineReportErrorCode",
     "PolicyCollisionGroup",
     "ReceiptErrorCode",
     "ReceiptSource",
@@ -130,5 +147,6 @@ __all__ = [
     "create_collision_receipt",
     "create_identifier_record",
     "create_policy",
+    "render_offline_report",
     "verify_collision_receipt",
 ]
