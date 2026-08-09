@@ -413,7 +413,7 @@
     "bindings": {
       ".github/workflows/report-evidence.yml": {
         "bytes": 8459,
-        "sha256": "4ce73a9f5d4107bac3fd91dfff37b02cf557ba3e0a7ff207370042d16cdadcbd"
+        "sha256": "8e4fec09745b4941fd56b048facff611c9195cfffa3162d61f5e476812ac83c3"
       },
       "README.md": {
         "bytes": 16366,
@@ -437,11 +437,11 @@
       },
       "scripts/render_report_evidence.py": {
         "bytes": 36989,
-        "sha256": "9d8df5a931d7ae6de2df0c8cbc9e726d8a871fce76a2d537409f33c4bba22601"
+        "sha256": "9a63ae4eb1a108215c16c99385d3d6aec9b1ec783eca41d60f338d8acc3a2861"
       },
       "scripts/verify_report_evidence.py": {
         "bytes": 25879,
-        "sha256": "208f505561a81f6dae40a12aea00ae60171f56954efcece1193556225d01ed8a"
+        "sha256": "699bb2434c3969262870f6a0dca79d10a3b8b60d4f31d12b574ab54b28093445"
       },
       "src/casefold_observatory/__init__.py": {
         "bytes": 4349,
@@ -488,7 +488,7 @@
         "sha256": "093b36509dbb8d20bcf8a6e1a0f5eff4dc2fb4eb70e4ad0efe4cfda43e6ff13b"
       }
     },
-    "revision": "cc4e5fc4403f4d7dcbe20df83dc9545fc22808d1",
-    "tree": "0b371628fa35fee844834aad329ffefcca77fc04"
+    "revision": "c9200af37fc077ce044f30c20bdf4411735f5a21",
+    "tree": "527e205dda8b661cadf33b25694fc9b3caac85ca"
   }
 }
