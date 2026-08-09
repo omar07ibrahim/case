@@ -44,13 +44,13 @@ The capture and adoption chain is immutable and machine-readable:
 
 | Field | Reviewed identity |
 | --- | --- |
-| Capture source commit | `b83e7a936f0b3e77ac4c2e1285b2e88dcc029741` |
-| Capture source tree | `71e4f3ec9cd69ba74036601232c59e015b03a437` |
-| Workflow run / attempt | [`31273971052` / `1`](https://github.com/omar07ibrahim/case/actions/runs/31273971052) |
-| Workflow job | [`93144542401`](https://github.com/omar07ibrahim/case/actions/runs/31273971052/job/93144542401) |
-| Hosted artifact | `case-cli-evidence-candidate-31273971052-1`, ID `9026465100` |
-| Artifact archive | `188273` bytes, SHA-256 `11c9a0d0bfd33c2b828629dd9b207a9a587a1fa907e23ec0a5d4c18d0ead90f7` |
-| Adoption commit | `2a83f25ca18b12469a3336341f42c58d6643a834` |
+| Capture source commit | `03c6f16c03e3d3e1a5230afe58f478da12228d4a` |
+| Capture source tree | `78f789909de47ab5b8121f5acc510d758c241492` |
+| Workflow run / attempt | [`31293264288` / `1`](https://github.com/omar07ibrahim/case/actions/runs/31293264288) |
+| Workflow job | [`93194112959`](https://github.com/omar07ibrahim/case/actions/runs/31293264288/job/93194112959) |
+| Hosted artifact | `case-cli-evidence-candidate-31293264288-1`, ID `9032120081` |
+| Artifact archive | `188273` bytes, SHA-256 `2d9f3f8aee1f95868bfb656d17468b14854a75be606aa8a45df246ec3e04d4d4` |
+| Adoption commit | `fca957b24f45031f651d918636294874b18e3251` |
 | Canonical adoption record | [`evidence/cli-evidence-adoption.v1.json`](evidence/cli-evidence-adoption.v1.json) |
 | Capture manifest | [`evidence/cli-evidence.v1.json`](evidence/cli-evidence.v1.json) |
 | Synthetic fixture | [`fixtures/cli-demo.v1.jsonl`](fixtures/cli-demo.v1.jsonl), SHA-256 `a77c90ed5e767a4e0a8029cad14ed347354a3b939b62ad75c0da091b522a259f` |
@@ -69,9 +69,9 @@ The six adopted file identities are:
 | [`cli-demo.gif`](cli-demo.gif) | 45,778 | `0034dccbefc08dfde3a3884162d44566664fbe80e0fc56bfef7dca9677543aea` | Four captured phases |
 | [`cli-result.svg`](cli-result.svg) | 6,582 | `dba4fcad5da2303e3ccbfa6ea53709ad4d4e28201cdf5dde110bb64712c71ed2` | Receipt-derived result |
 | [`cli-transcript.png`](cli-transcript.png) | 109,515 | `e76316607fe1813661e799178645818bddfe73419ceaa179b0684be49ea9ed89` | Rasterized command channels |
-| [`cli-workflow.svg`](cli-workflow.svg) | 9,610 | `96752ec5aec6465b8d25179f78573b803e026ffed81ef8623b2d1cedd68be684` | Explanatory workflow |
+| [`cli-workflow.svg`](cli-workflow.svg) | 9,610 | `19dba92c23617b56ac4bfc46dc9995cf909be52cd7e7ef62d61021531fc84f47` | Explanatory workflow |
 | [`evidence/cli-demo.receipt.v1.json`](evidence/cli-demo.receipt.v1.json) | 6,905 | `f27a1e8abecfea76d9ef054ceea0bf3d38d07d246d21653ade01e65846a58ccb` | Real canonical receipt |
-| [`evidence/cli-evidence.v1.json`](evidence/cli-evidence.v1.json) | 8,849 | `e61e48ed714c85403b032781e7d21b7ba0dc2a40a8063fa61180ee0d83829e21` | Capture manifest |
+| [`evidence/cli-evidence.v1.json`](evidence/cli-evidence.v1.json) | 8,849 | `2ca3e07785a591b059f25d9b97207fe481eef5f9f77322e27f4faa678d822389` | Capture manifest |
 
 This README is an index and is deliberately not a seventh artifact member.
 

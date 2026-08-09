@@ -29,15 +29,15 @@ FIXTURE_SHA256 = "a77c90ed5e767a4e0a8029cad14ed347354a3b939b62ad75c0da091b522a25
 PILLOW_SHA256 = "78cb2c6865a35ab8ff8b75fd122f6033b92a62c82801110e48ddd6c936a45d91"
 ARTIFACT_ARCHIVE_BYTES = 188_273
 ARTIFACT_ARCHIVE_SHA256 = (
-    "11c9a0d0bfd33c2b828629dd9b207a9a587a1fa907e23ec0a5d4c18d0ead90f7"
+    "2d9f3f8aee1f95868bfb656d17468b14854a75be606aa8a45df246ec3e04d4d4"
 )
-ARTIFACT_ID = 9_026_465_100
-ARTIFACT_NAME = "case-cli-evidence-candidate-31273971052-1"
-ARTIFACT_RUN_ID = 31_273_971_052
-ARTIFACT_JOB_ID = 93_144_542_401
-ADOPTED_SOURCE_REVISION = "b83e7a936f0b3e77ac4c2e1285b2e88dcc029741"
-ADOPTED_SOURCE_TREE = "71e4f3ec9cd69ba74036601232c59e015b03a437"
-ADOPTION_COMMIT = "2a83f25ca18b12469a3336341f42c58d6643a834"
+ARTIFACT_ID = 9_032_120_081
+ARTIFACT_NAME = "case-cli-evidence-candidate-31293264288-1"
+ARTIFACT_RUN_ID = 31_293_264_288
+ARTIFACT_JOB_ID = 93_194_112_959
+ADOPTED_SOURCE_REVISION = "03c6f16c03e3d3e1a5230afe58f478da12228d4a"
+ADOPTED_SOURCE_TREE = "78f789909de47ab5b8121f5acc510d758c241492"
+ADOPTION_COMMIT = "fca957b24f45031f651d918636294874b18e3251"
 ADOPTED_OUTPUTS = (
     "docs/cli-evidence/evidence/cli-evidence.v1.json",
     "docs/cli-evidence/evidence/cli-demo.receipt.v1.json",
@@ -61,7 +61,7 @@ ADOPTED_IDENTITIES: dict[str, dict[str, object]] = {
     },
     "docs/cli-evidence/cli-workflow.svg": {
         "bytes": 9_610,
-        "sha256": "96752ec5aec6465b8d25179f78573b803e026ffed81ef8623b2d1cedd68be684",
+        "sha256": "19dba92c23617b56ac4bfc46dc9995cf909be52cd7e7ef62d61021531fc84f47",
     },
     "docs/cli-evidence/evidence/cli-demo.receipt.v1.json": {
         "bytes": 6_905,
@@ -69,7 +69,7 @@ ADOPTED_IDENTITIES: dict[str, dict[str, object]] = {
     },
     "docs/cli-evidence/evidence/cli-evidence.v1.json": {
         "bytes": 8_849,
-        "sha256": "e61e48ed714c85403b032781e7d21b7ba0dc2a40a8063fa61180ee0d83829e21",
+        "sha256": "2ca3e07785a591b059f25d9b97207fe481eef5f9f77322e27f4faa678d822389",
     },
 }
 FIXTURE_RECORDS = (
@@ -539,14 +539,21 @@ class CliEvidenceContractTests(unittest.TestCase):
         )
         self.assertEqual(
             workflow.count("scripts/render_cli_evidence.py render"),
-            0,
+            2,
         )
         self.assertEqual(
             workflow.count("scripts/render_cli_evidence.py compare"),
-            0,
+            1,
         )
-        self.assertNotIn("--source-tree", workflow)
-        self.assertNotIn("actions/upload-artifact@", workflow)
+        self.assertIn("--source-tree", workflow)
+        self.assertIn("needs: quality", workflow)
+        self.assertIn("if: $" "{{ always() }}", workflow)
+        self.assertIn("actions/upload-artifact@", workflow)
+        self.assertIn("compression-level: 0", workflow)
+        self.assertIn("retention-days: 1", workflow)
+        self.assertIn("Preserve refreshed CLI evidence for review", workflow)
+        self.assertIn("Reject stale committed CLI evidence", workflow)
+        self.assertIn('find "$candidate_a" -type f', workflow)
         self.assertIn("Reproduce and verify adopted CLI evidence", workflow)
         self.assertIn("git diff --exit-code", workflow)
         self.assertIn("git status --porcelain --untracked-files=all", workflow)

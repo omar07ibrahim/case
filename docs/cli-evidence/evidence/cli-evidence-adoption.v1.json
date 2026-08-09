@@ -1,12 +1,12 @@
 {
   "artifact": {
     "archive_bytes": 188273,
-    "archive_sha256": "11c9a0d0bfd33c2b828629dd9b207a9a587a1fa907e23ec0a5d4c18d0ead90f7",
-    "id": 9026465100,
-    "name": "case-cli-evidence-candidate-31273971052-1",
+    "archive_sha256": "2d9f3f8aee1f95868bfb656d17468b14854a75be606aa8a45df246ec3e04d4d4",
+    "id": 9032120081,
+    "name": "generated-cli-evidence-31293264288",
     "run_attempt": 1,
-    "workflow_job_id": 93144542401,
-    "workflow_run_id": 31273971052
+    "workflow_job_id": 93194112959,
+    "workflow_run_id": 31293264288
   },
   "files": {
     "docs/cli-evidence/cli-demo.gif": {
@@ -23,7 +23,7 @@
     },
     "docs/cli-evidence/cli-workflow.svg": {
       "bytes": 9610,
-      "sha256": "96752ec5aec6465b8d25179f78573b803e026ffed81ef8623b2d1cedd68be684"
+      "sha256": "19dba92c23617b56ac4bfc46dc9995cf909be52cd7e7ef62d61021531fc84f47"
     },
     "docs/cli-evidence/evidence/cli-demo.receipt.v1.json": {
       "bytes": 6905,
@@ -31,13 +31,13 @@
     },
     "docs/cli-evidence/evidence/cli-evidence.v1.json": {
       "bytes": 8849,
-      "sha256": "e61e48ed714c85403b032781e7d21b7ba0dc2a40a8063fa61180ee0d83829e21"
+      "sha256": "2ca3e07785a591b059f25d9b97207fe481eef5f9f77322e27f4faa678d822389"
     }
   },
   "schema": "casefold-observatory.cli-evidence-adoption",
   "schema_version": 1,
-  "source_revision": "b83e7a936f0b3e77ac4c2e1285b2e88dcc029741",
-  "source_tree": "71e4f3ec9cd69ba74036601232c59e015b03a437",
+  "source_revision": "03c6f16c03e3d3e1a5230afe58f478da12228d4a",
+  "source_tree": "78f789909de47ab5b8121f5acc510d758c241492",
   "validation": {
     "archive_entry_mode": "100644",
     "archive_inventory_exact": true,

@@ -462,12 +462,12 @@ do not imply that checkout preserves the runtime mode.
 
 The frozen candidate provenance is:
 
-- source commit `b83e7a936f0b3e77ac4c2e1285b2e88dcc029741`;
-- source tree `71e4f3ec9cd69ba74036601232c59e015b03a437`;
-- workflow run `31273971052`, attempt `1`, job `93144542401`;
-- artifact `case-cli-evidence-candidate-31273971052-1`, ID `9026465100`; and
+- source commit `03c6f16c03e3d3e1a5230afe58f478da12228d4a`;
+- source tree `78f789909de47ab5b8121f5acc510d758c241492`;
+- workflow run `31293264288`, attempt `1`, job `93194112959`;
+- artifact `case-cli-evidence-candidate-31293264288-1`, ID `9032120081`; and
 - archive size `188273` bytes with SHA-256
-  `11c9a0d0bfd33c2b828629dd9b207a9a587a1fa907e23ec0a5d4c18d0ead90f7`.
+  `2d9f3f8aee1f95868bfb656d17468b14854a75be606aa8a45df246ec3e04d4d4`.
 
 The candidate job was pinned to `ubuntu-24.04`, checked out the explicit
 pull-request head SHA, asserted the 40-hex source revision and HEAD tree, built
@@ -502,8 +502,8 @@ six-entry inventory, regular `100644` modes, manifest and receipt consistency,
 source bindings, per-file identities, PNG/GIF/SVG structure, complete unclipped
 rendering, and absence of host paths, secrets, email addresses, remote assets,
 or personal data. Commit
-`2a83f25ca18b12469a3336341f42c58d6643a834` adopted those six exact blobs
-without rerendering. The separate canonical record
+`fca957b24f45031f651d918636294874b18e3251` adopted the reviewed six-file bundle state, changing only the two drifting
+blobs and rerendering nothing. The separate canonical record
 `docs/cli-evidence/evidence/cli-evidence-adoption.v1.json` preserves the
 artifact archive identity, every adopted file hash and size, capture source
 commit and tree, and review outcomes.
