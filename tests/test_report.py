@@ -104,7 +104,7 @@ class OfflineReportTests(unittest.TestCase):
         self.assertIn(b"form-action 'none'", first)
 
     def test_controls_whitespace_combining_and_bidi_are_explicit(self) -> None:
-        identifier = "Á \t\n‮͸"
+        identifier = "A\u0301 \t\n\u202e\u0378"
         source = _source(("hazards", identifier))
         report = render_offline_report(_receipt(source, preserve=True), source)
         for marker in (
