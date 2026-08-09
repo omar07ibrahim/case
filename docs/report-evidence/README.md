@@ -127,23 +127,25 @@ The capture and adoption chain is immutable and machine-readable:
 
 | Field | Reviewed identity |
 | --- | --- |
-| Capture source commit | `cc4e5fc4403f4d7dcbe20df83dc9545fc22808d1` |
-| Capture source tree | `0b371628fa35fee844834aad329ffefcca77fc04` |
-| Workflow run / attempt | [`31332062366` / `1`](https://github.com/omar07ibrahim/case/actions/runs/31332062366) |
-| Workflow job | [`93291774425`](https://github.com/omar07ibrahim/case/actions/runs/31332062366/job/93291774425) |
-| Hosted artifact | `generated-report-evidence-31332062366-1`, ID `9043217069` |
-| Artifact archive | `1503825` bytes, SHA-256 `28f90cf9ea5f093ae58db70c8468de83806ad3386a5282c19ee243a0823982a5` |
-| Adoption commit | `3ce13bc5c91ed89f0e466f434a17a56229b62293` |
+| Capture source commit | `c9200af37fc077ce044f30c20bdf4411735f5a21` |
+| Capture source tree | `527e205dda8b661cadf33b25694fc9b3caac85ca` |
+| Workflow run / attempt | [`31332805018` / `1`](https://github.com/omar07ibrahim/case/actions/runs/31332805018) |
+| Workflow job | [`93293626351`](https://github.com/omar07ibrahim/case/actions/runs/31332805018/job/93293626351) |
+| Hosted artifact | `generated-report-evidence-31332805018-1`, ID `9043425203` |
+| Artifact archive | `1503825` bytes, SHA-256 `3fd41c48d3ceb79d9017673fcfc159b477bc3204fa0a0dfe12039d079724205e` |
+| Adoption commit | `21907595d607c9884cbb0fec3d231edf08e7ec5d` |
 | Canonical adoption record | [`evidence/report-evidence-adoption.v1.json`](evidence/report-evidence-adoption.v1.json) |
 | Capture manifest | [`evidence/report-evidence.v1.json`](evidence/report-evidence.v1.json) |
 | Synthetic fixture | [`fixtures/report-demo.v1.jsonl`](fixtures/report-demo.v1.jsonl), SHA-256 `58c4b868820471fcb67a42351d7bddbfbcc66bfd4b2165d4e9868390787991cf` |
 
 The hosted archive was independently downloaded and checked for exact
-inventory, regular `100644` entry modes, source bindings, receipt replay,
+inventory, private regular `100600` entry modes, source bindings, receipt replay,
 HTML and CSP integrity, browser assertions, media structure, privacy markers,
 and visual completeness. The eight reviewed files were committed without
 rerendering. The durable adoption record preserves that review even after the
-temporary hosted artifact expires.
+temporary hosted artifact expires. Candidate entries remain private through
+verification; Git publishes the reviewed synthetic copies as ordinary `100644`
+blobs.
 
 The eight adopted file identities are:
 
@@ -151,7 +153,7 @@ The eight adopted file identities are:
 | --- | ---: | --- | --- |
 | [`evidence/report-demo.receipt.v1.json`](evidence/report-demo.receipt.v1.json) | 8,537 | `6ac6363a609cfa64c8bca7bdace514f09beab5f60927a880b220ad258f70d06e` | Replayed canonical receipt |
 | [`evidence/report-demo.v1.html`](evidence/report-demo.v1.html) | 33,092 | `52e41982b2defd6f8eae643cabfc0bfd96f44fb47c0172e36aba5d864cc93d4c` | Exact offline report |
-| [`evidence/report-evidence.v1.json`](evidence/report-evidence.v1.json) | 17,812 | `2059557f5400e260e09fab8ac204204b69791f4e4c878cecd913d889ba270379` | Capture manifest |
+| [`evidence/report-evidence.v1.json`](evidence/report-evidence.v1.json) | 17,812 | `2eff1d6fdd9b343ee480368471684498ecbf79bb7b7bdfd8c16e4750dcbfdb5f` | Capture manifest |
 | [`report-architecture.svg`](report-architecture.svg) | 3,486 | `56ec83288a91d68a423f465ed089cc17a85a2d87b8ad045865803d1f146fac54` | Evidence architecture |
 | [`report-desktop.png`](report-desktop.png) | 136,923 | `144220805f9137f9ecef4a809ed3e2165f4829efc6c65667f699e021d4765045` | Desktop viewport |
 | [`report-full-page.png`](report-full-page.png) | 1,020,472 | `893a85813c07b89b81acaef2a633f49985374bea0f14384645c9a20d359b02b5` | Full document |

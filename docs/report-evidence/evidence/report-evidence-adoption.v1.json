@@ -1,12 +1,12 @@
 {
   "artifact": {
     "archive_bytes": 1503825,
-    "archive_sha256": "28f90cf9ea5f093ae58db70c8468de83806ad3386a5282c19ee243a0823982a5",
-    "id": 9043217069,
-    "name": "generated-report-evidence-31332062366-1",
+    "archive_sha256": "3fd41c48d3ceb79d9017673fcfc159b477bc3204fa0a0dfe12039d079724205e",
+    "id": 9043425203,
+    "name": "generated-report-evidence-31332805018-1",
     "run_attempt": 1,
-    "workflow_job_id": 93291774425,
-    "workflow_run_id": 31332062366
+    "workflow_job_id": 93293626351,
+    "workflow_run_id": 31332805018
   },
   "files": {
     "docs/report-evidence/evidence/report-demo.receipt.v1.json": {
@@ -19,7 +19,7 @@
     },
     "docs/report-evidence/evidence/report-evidence.v1.json": {
       "bytes": 17812,
-      "sha256": "2059557f5400e260e09fab8ac204204b69791f4e4c878cecd913d889ba270379"
+      "sha256": "2eff1d6fdd9b343ee480368471684498ecbf79bb7b7bdfd8c16e4750dcbfdb5f"
     },
     "docs/report-evidence/report-architecture.svg": {
       "bytes": 3486,
@@ -44,10 +44,10 @@
   },
   "schema": "casefold-observatory.report-evidence-adoption",
   "schema_version": 1,
-  "source_revision": "cc4e5fc4403f4d7dcbe20df83dc9545fc22808d1",
-  "source_tree": "0b371628fa35fee844834aad329ffefcca77fc04",
+  "source_revision": "c9200af37fc077ce044f30c20bdf4411735f5a21",
+  "source_tree": "527e205dda8b661cadf33b25694fc9b3caac85ca",
   "validation": {
-    "archive_entry_mode": "100644",
+    "archive_entry_mode": "100600",
     "archive_inventory_exact": true,
     "browser_assertions_verified": true,
     "byte_identities_match_manifest": true,

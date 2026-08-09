@@ -31,15 +31,15 @@ REPORT_INDEX_PATH = REPORT_ROOT / "README.md"
 ADOPTION_PATH = REPORT_ROOT / "evidence" / "report-evidence-adoption.v1.json"
 ARTIFACT_ARCHIVE_BYTES = 1_503_825
 ARTIFACT_ARCHIVE_SHA256 = (
-    "28f90cf9ea5f093ae58db70c8468de83806ad3386a5282c19ee243a0823982a5"
+    "3fd41c48d3ceb79d9017673fcfc159b477bc3204fa0a0dfe12039d079724205e"
 )
-ARTIFACT_ID = 9_043_217_069
-ARTIFACT_NAME = "generated-report-evidence-31332062366-1"
-ARTIFACT_RUN_ID = 31_332_062_366
-ARTIFACT_JOB_ID = 93_291_774_425
-ADOPTED_SOURCE_REVISION = "cc4e5fc4403f4d7dcbe20df83dc9545fc22808d1"
-ADOPTED_SOURCE_TREE = "0b371628fa35fee844834aad329ffefcca77fc04"
-ADOPTION_COMMIT = "3ce13bc5c91ed89f0e466f434a17a56229b62293"
+ARTIFACT_ID = 9_043_425_203
+ARTIFACT_NAME = "generated-report-evidence-31332805018-1"
+ARTIFACT_RUN_ID = 31_332_805_018
+ARTIFACT_JOB_ID = 93_293_626_351
+ADOPTED_SOURCE_REVISION = "c9200af37fc077ce044f30c20bdf4411735f5a21"
+ADOPTED_SOURCE_TREE = "527e205dda8b661cadf33b25694fc9b3caac85ca"
+ADOPTION_COMMIT = "21907595d607c9884cbb0fec3d231edf08e7ec5d"
 ADOPTED_IDENTITIES: dict[str, dict[str, object]] = {
     "docs/report-evidence/evidence/report-demo.receipt.v1.json": {
         "bytes": 8_537,
@@ -51,7 +51,7 @@ ADOPTED_IDENTITIES: dict[str, dict[str, object]] = {
     },
     "docs/report-evidence/evidence/report-evidence.v1.json": {
         "bytes": 17_812,
-        "sha256": "2059557f5400e260e09fab8ac204204b69791f4e4c878cecd913d889ba270379",
+        "sha256": "2eff1d6fdd9b343ee480368471684498ecbf79bb7b7bdfd8c16e4750dcbfdb5f",
     },
     "docs/report-evidence/report-architecture.svg": {
         "bytes": 3_486,
@@ -305,7 +305,7 @@ class ReportEvidenceContractTests(unittest.TestCase):
                 "source_revision": ADOPTED_SOURCE_REVISION,
                 "source_tree": ADOPTED_SOURCE_TREE,
                 "validation": {
-                    "archive_entry_mode": "100644",
+                    "archive_entry_mode": "100600",
                     "archive_inventory_exact": True,
                     "browser_assertions_verified": True,
                     "byte_identities_match_manifest": True,
