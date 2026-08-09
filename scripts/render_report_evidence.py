@@ -159,7 +159,7 @@ def _write(root: Path, relative: str, payload: bytes) -> None:
     flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
     flags |= getattr(os, "O_CLOEXEC", 0)
     flags |= getattr(os, "O_NOFOLLOW", 0)
-    descriptor = os.open(target, flags, 0o644)
+    descriptor = os.open(target, flags, 0o600)
     try:
         view = memoryview(payload)
         while view:
@@ -167,7 +167,7 @@ def _write(root: Path, relative: str, payload: bytes) -> None:
             if written <= 0:
                 _fail("short evidence write")
             view = view[written:]
-        os.fchmod(descriptor, 0o644)
+        os.fchmod(descriptor, 0o600)
         os.fsync(descriptor)
     finally:
         os.close(descriptor)

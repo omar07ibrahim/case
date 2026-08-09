@@ -181,7 +181,7 @@ jobs:
             fi
             mkdir -p "$adopted/$(dirname "$path")"
             cp "$path" "$adopted/$path"
-            chmod 0644 "$adopted/$path"
+            chmod 0600 "$adopted/$path"
           done <<'PATHS'
           docs/report-evidence/evidence/report-evidence.v1.json
           docs/report-evidence/evidence/report-demo.receipt.v1.json

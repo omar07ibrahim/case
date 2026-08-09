@@ -100,9 +100,9 @@ def _read(path: Path, limit: int) -> bytes:
     if (
         not stat.S_ISREG(before.st_mode)
         or before.st_nlink != 1
-        or stat.S_IMODE(before.st_mode) != 0o644
+        or stat.S_IMODE(before.st_mode) != 0o600
     ):
-        _fail("evidence file must be a single-link mode-0644 regular file")
+        _fail("evidence file must be a single-link mode-0600 regular file")
     if before.st_size > limit:
         _fail("evidence file exceeds its byte limit")
     payload = path.read_bytes()
