@@ -20,6 +20,7 @@ from casefold_observatory.collision import (
     CollisionWitness,
     ExactDuplicateGroup,
     GlobalCollisionComponent,
+    IdentifierRecord,
     PolicyCollisionGroup,
     WitnessKind,
     analyze_collisions,
@@ -545,14 +546,11 @@ def _new_source(source_bytes: bytes) -> ReceiptSource:
     return source
 
 
-def create_collision_receipt(
+def _seal_collision_receipt(
     source_bytes: bytes,
     policies: tuple[TransformPolicy, ...],
+    graph: CollisionGraph,
 ) -> CollisionReceipt:
-    """Analyze exact corpus bytes and return a bounded factory-owned receipt."""
-
-    records = _parse_corpus_bytes(source_bytes)
-    graph = analyze_collisions(records, policies)
     receipt: CollisionReceipt = object.__new__(CollisionReceipt)
     object.__setattr__(receipt, "schema", RECEIPT_SCHEMA)
     object.__setattr__(receipt, "schema_version", RECEIPT_SCHEMA_VERSION)
@@ -569,6 +567,25 @@ def create_collision_receipt(
         hashlib.sha256(encoded).hexdigest(),
     )
     return receipt
+
+
+def _create_collision_receipt_from_records(
+    source_bytes: bytes,
+    policies: tuple[TransformPolicy, ...],
+    records: tuple[IdentifierRecord, ...],
+) -> CollisionReceipt:
+    graph = analyze_collisions(records, policies)
+    return _seal_collision_receipt(source_bytes, policies, graph)
+
+
+def create_collision_receipt(
+    source_bytes: bytes,
+    policies: tuple[TransformPolicy, ...],
+) -> CollisionReceipt:
+    """Analyze exact corpus bytes and return a bounded factory-owned receipt."""
+
+    records = _parse_corpus_bytes(source_bytes)
+    return _create_collision_receipt_from_records(source_bytes, policies, records)
 
 
 def canonical_receipt_bytes(receipt: CollisionReceipt) -> bytes:
@@ -724,11 +741,21 @@ def _parse_policy_documents(value: object) -> tuple[TransformPolicy, ...]:
     return tuple(policies)
 
 
-def verify_collision_receipt(
+def _canonical_verified_records(
+    records: tuple[IdentifierRecord, ...],
+    record_ids: tuple[str, ...],
+) -> tuple[IdentifierRecord, ...]:
+    by_id = {record.record_id: record for record in records}
+    if len(by_id) != len(records) or set(by_id) != set(record_ids):
+        _raise_receipt(ReceiptErrorCode.GRAPH_MISMATCH)
+    return tuple(by_id[record_id] for record_id in record_ids)
+
+
+def _verify_collision_receipt_and_records(
     receipt_bytes: bytes,
     source_bytes: bytes,
-) -> CollisionReceipt:
-    """Recompute a canonical receipt from exact source bytes and compare it."""
+) -> tuple[CollisionReceipt, tuple[IdentifierRecord, ...]]:
+    """Verify a receipt and return its factory-owned canonical source records."""
 
     if type(receipt_bytes) is not bytes:
         raise TypeError("receipt_bytes must be an exact bytes object")
@@ -811,10 +838,32 @@ def verify_collision_receipt(
         _raise_receipt(ReceiptErrorCode.SOURCE_MISMATCH)
 
     try:
-        expected = create_collision_receipt(source_bytes, policies)
+        records = _parse_corpus_bytes(source_bytes)
+        expected = _create_collision_receipt_from_records(
+            source_bytes,
+            policies,
+            records,
+        )
         expected_bytes = canonical_receipt_bytes(expected)
     except (CorpusIngestionError, CollisionAnalysisError):
         _raise_receipt(ReceiptErrorCode.GRAPH_MISMATCH)
     if not hmac.compare_digest(expected_bytes, receipt_bytes):
         _raise_receipt(ReceiptErrorCode.GRAPH_MISMATCH)
-    return expected
+    canonical_records = _canonical_verified_records(
+        records,
+        expected.graph.record_ids,
+    )
+    return expected, canonical_records
+
+
+def verify_collision_receipt(
+    receipt_bytes: bytes,
+    source_bytes: bytes,
+) -> CollisionReceipt:
+    """Recompute a canonical receipt from exact source bytes and compare it."""
+
+    receipt, _records = _verify_collision_receipt_and_records(
+        receipt_bytes,
+        source_bytes,
+    )
+    return receipt

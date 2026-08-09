@@ -54,16 +54,6 @@ from casefold_observatory.model import (
     TransformStep,
     create_policy,
 )
-from casefold_observatory.report import (
-    MAX_OFFLINE_REPORT_BYTES,
-    MAX_OFFLINE_REPORT_CODEPOINT_TOKENS,
-    MAX_OFFLINE_REPORT_RECORDS,
-    OFFLINE_REPORT_SCHEMA,
-    OFFLINE_REPORT_SCHEMA_VERSION,
-    OfflineReportError,
-    OfflineReportErrorCode,
-    render_offline_report,
-)
 from casefold_observatory.receipt import (
     DISTRIBUTION_NAME,
     DISTRIBUTION_VERSION,
@@ -77,6 +67,19 @@ from casefold_observatory.receipt import (
     canonical_receipt_bytes,
     create_collision_receipt,
     verify_collision_receipt,
+)
+from casefold_observatory.report import (
+    MAX_OFFLINE_REPORT_BYTES,
+    MAX_OFFLINE_REPORT_CODEPOINT_TOKENS,
+    MAX_OFFLINE_REPORT_COMPONENTS,
+    MAX_OFFLINE_REPORT_GROUPS,
+    MAX_OFFLINE_REPORT_RECORDS,
+    MAX_OFFLINE_REPORT_WITNESSES,
+    OFFLINE_REPORT_SCHEMA,
+    OFFLINE_REPORT_SCHEMA_VERSION,
+    OfflineReportError,
+    OfflineReportErrorCode,
+    render_offline_report,
 )
 
 __all__ = [
@@ -103,16 +106,19 @@ __all__ = [
     "MAX_JSON_DEPTH",
     "MAX_OFFLINE_REPORT_BYTES",
     "MAX_OFFLINE_REPORT_CODEPOINT_TOKENS",
+    "MAX_OFFLINE_REPORT_COMPONENTS",
+    "MAX_OFFLINE_REPORT_GROUPS",
     "MAX_OFFLINE_REPORT_RECORDS",
+    "MAX_OFFLINE_REPORT_WITNESSES",
     "MAX_POLICY_STEPS",
     "MAX_RECEIPT_BYTES",
     "MAX_RECORD_ID_CHARS",
     "MAX_STAGE_CODEPOINTS",
     "MAX_STAGE_UTF8_BYTES",
     "MAX_UNICODE_VERSION_CHARS",
-    "RECEIPT_SCHEMA",
     "OFFLINE_REPORT_SCHEMA",
     "OFFLINE_REPORT_SCHEMA_VERSION",
+    "RECEIPT_SCHEMA",
     "RECEIPT_SCHEMA_VERSION",
     "CollisionAnalysisError",
     "CollisionErrorCode",
