@@ -140,23 +140,25 @@ jobs:
               --entrypoint bash \
               "$CONTAINER_IMAGE" \
               -euo pipefail -c '
-                mkdir -p "$HOME"
-                python -m venv /tmp/evidence-venv
-                /tmp/evidence-venv/bin/python -m pip install \
+                mkdir -p "$HOME" /tmp/evidence-python
+                python -m pip install \
                   --no-index \
                   --find-links=/wheelhouse \
+                  --target=/tmp/evidence-python \
                   /project-wheel/*.whl \
                   Pillow==12.3.0 \
                   playwright==1.62.0
+                export PYTHONPATH=/tmp/evidence-python
+                export EVIDENCE_SITE_ROOT=/tmp/evidence-python
                 wheel=(/project-wheel/*.whl)
-                /tmp/evidence-venv/bin/python /src/scripts/render_report_evidence.py render \
-                  --venv-bin /tmp/evidence-venv/bin \
+                python /src/scripts/render_report_evidence.py render \
+                  --venv-bin "$(dirname "$(command -v python)")" \
                   --wheel "${wheel[0]}" \
                   --source-revision "$SOURCE_REVISION" \
                   --source-tree "$SOURCE_TREE" \
                   --container-image "$CONTAINER_IMAGE" \
                   --output-root "$OUTPUT_ROOT"
-                /tmp/evidence-venv/bin/python /src/scripts/verify_report_evidence.py verify \
+                python /src/scripts/verify_report_evidence.py verify \
                   "$OUTPUT_ROOT" \
                   --source-revision "$SOURCE_REVISION" \
                   --source-tree "$SOURCE_TREE" \

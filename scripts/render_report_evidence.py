@@ -225,11 +225,13 @@ import sys
 import unicodedata
 from pathlib import Path
 
+import os
 import casefold_observatory
 
 package_root = Path(casefold_observatory.__file__).resolve().parent
-if not package_root.is_relative_to(Path(sys.prefix).resolve()):
-    raise RuntimeError("project package was not imported from the evidence venv")
+site_root = Path(os.environ["EVIDENCE_SITE_ROOT"]).resolve()
+if not package_root.is_relative_to(site_root):
+    raise RuntimeError("project package was not imported from the isolated target")
 files = {}
 for path in sorted(package_root.iterdir()):
     if path.is_file() and (path.suffix == ".py" or path.name == "py.typed"):
@@ -247,7 +249,7 @@ print(json.dumps({
 }, sort_keys=True, separators=(",", ":")))
 """
     completed = subprocess.run(
-        (venv_python.as_posix(), "-I", "-c", probe),
+        (venv_python.as_posix(), "-c", probe),
         cwd=Path("/tmp"),
         check=True,
         capture_output=True,
@@ -534,12 +536,16 @@ def _architecture_svg() -> bytes:
         ("06", "Independent gate", "structure + hashes + human adoption"),
     )
     parts = [
-        '<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="560" '
-        'viewBox="0 0 1440 560" role="img" '
-        'aria-labelledby="title description">',
+        (
+            '<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="560" '
+            'viewBox="0 0 1440 560" role="img" '
+            'aria-labelledby="title description">'
+        ),
         "<title id=\"title\">Casefold Observatory report evidence architecture</title>",
-        "<desc id=\"description\">Six-stage offline evidence flow from exact "
-        "inputs to independently reviewed browser artifacts.</desc>",
+        (
+            "<desc id=\"description\">Six-stage offline evidence flow from exact "
+            "inputs to independently reviewed browser artifacts.</desc>"
+        ),
         "<rect width=\"1440\" height=\"560\" fill=\"#091015\"/>",
         "<text x=\"72\" y=\"76\" fill=\"#63e6d2\" ",
         "font-family=\"monospace\" font-size=\"18\" font-weight=\"700\">",
@@ -555,8 +561,10 @@ def _architecture_svg() -> bytes:
         y = 175 + row * 170
         parts.extend(
             (
-                f'<rect x="{x}" y="{y}" width="392" height="126" rx="18" '
-                'fill="#111c21" stroke="#36505a"/>',
+                (
+                    f'<rect x="{x}" y="{y}" width="392" height="126" rx="18" '
+                    'fill="#111c21" stroke="#36505a"/>'
+                ),
                 (
                     f'<text x="{x + 24}" y="{y + 35}" fill="#f4c95d" '
                     f'font-family="monospace" font-size="14" font-weight="700">'
@@ -567,17 +575,24 @@ def _architecture_svg() -> bytes:
                     f'font-family="sans-serif" font-size="22" font-weight="700">'
                     f"{title}</text>"
                 ),
-                f'<text x="{x + 24}" y="{y + 98}" fill="#9fb4ad" '
-                f'font-family="monospace" font-size="13">{detail}</text>',
+                (
+                    f'<text x="{x + 24}" y="{y + 98}" fill="#9fb4ad" '
+                    f'font-family="monospace" font-size="13">{detail}</text>'
+                ),
             )
         )
     parts.extend(
         (
-            '<path d="M464 238H502M904 238H942M1268 301V345M942 408H904M502 408H464" '
-            'stroke="#63e6d2" stroke-width="4" fill="none"/>',
-            '<text x="72" y="520" fill="#9fb4ad" font-family="monospace" '
-            'font-size="14">No network during capture / synthetic data only / '
-            'artifact adoption is a separate reviewed commit</text>',
+            (
+                '<path d="M464 238H502M904 238H942M1268 301V345'
+                'M942 408H904M502 408H464" stroke="#63e6d2" '
+                'stroke-width="4" fill="none"/>'
+            ),
+            (
+                '<text x="72" y="520" fill="#9fb4ad" font-family="monospace" '
+                'font-size="14">No network during capture / synthetic data only / '
+                'artifact adoption is a separate reviewed commit</text>'
+            ),
             "</svg>",
         )
     )
@@ -636,10 +651,15 @@ def _render(
     fixture = _read(PROJECT_ROOT / FIXTURE_PATH, 64 * 1024)
     if not fixture.isascii() or not fixture.endswith(b"\n"):
         _fail("report fixture must be canonical ASCII JSON Lines")
-    runtime = _installed_runtime(venv_bin / "python")
-    console = venv_bin / "casefold-observatory"
-    if not console.is_file():
-        _fail("installed wheel omitted the console script")
+    venv_python = venv_bin / "python"
+    if not venv_python.is_file():
+        _fail("evidence Python executable is missing")
+    runtime = _installed_runtime(venv_python)
+    command_prefix = (
+        venv_python.as_posix(),
+        "-m",
+        "casefold_observatory",
+    )
 
     with tempfile.TemporaryDirectory(prefix="report-evidence-", dir="/tmp") as name:
         temporary = Path(name)
@@ -654,7 +674,7 @@ def _render(
             "preserve@normalize:nfkc,case:casefold",
         )
         analyze_argv = (
-            console.as_posix(),
+            *command_prefix,
             "analyze",
             "--source",
             source.as_posix(),
@@ -668,7 +688,9 @@ def _render(
             receipt.as_posix(),
         )
         analyze_display = (
-            "casefold-observatory",
+            "python",
+            "-m",
+            "casefold_observatory",
             "analyze",
             "--source",
             "$FIXTURE",
@@ -694,7 +716,7 @@ def _render(
 
         reported, reported_doc = _command(
             (
-                console.as_posix(),
+                *command_prefix,
                 "report",
                 "--source",
                 source.as_posix(),
@@ -704,7 +726,9 @@ def _render(
                 report.as_posix(),
             ),
             (
-                "casefold-observatory",
+                "python",
+                "-m",
+                "casefold_observatory",
                 "report",
                 "--source",
                 "$FIXTURE",
@@ -723,9 +747,7 @@ def _render(
 
         verified, verified_doc = _command(
             (
-                (venv_bin / "python").as_posix(),
-                "-m",
-                "casefold_observatory",
+                *command_prefix,
                 "verify",
                 "--source",
                 source.as_posix(),
