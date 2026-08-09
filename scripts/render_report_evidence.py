@@ -185,11 +185,7 @@ def _command(
     if evidence_site_root is None:
         _fail("isolated evidence site root is missing")
     site_root = Path(evidence_site_root)
-    if (
-        not site_root.is_absolute()
-        or site_root.is_symlink()
-        or not site_root.is_dir()
-    ):
+    if not site_root.is_absolute() or site_root.is_symlink() or not site_root.is_dir():
         _fail("isolated evidence site root is invalid")
     environment["PYTHONPATH"] = site_root.as_posix()
     environment["PYTHONNOUSERSITE"] = "1"
@@ -799,7 +795,7 @@ def _render(
             _fail("report receipt digest changed")
         if report_summary.get("report_sha256") != _sha256(report_bytes):
             _fail("report output digest changed")
-        if report_summary.get("report_bytes") != len(report_bytes):
+        if report_summary.get("report_byte_count") != len(report_bytes):
             _fail("report byte count changed")
 
         sync_api = importlib.import_module("playwright.sync_api")
