@@ -139,7 +139,7 @@
     },
     "docs/cli-evidence/cli-workflow.svg": {
       "bytes": 9610,
-      "sha256": "96752ec5aec6465b8d25179f78573b803e026ffed81ef8623b2d1cedd68be684"
+      "sha256": "19dba92c23617b56ac4bfc46dc9995cf909be52cd7e7ef62d61021531fc84f47"
     },
     "docs/cli-evidence/evidence/cli-demo.receipt.v1.json": {
       "bytes": 6905,
@@ -203,7 +203,7 @@
   "source_bindings": {
     "docs/cli-evidence/fixtures/cli-demo.v1.jsonl": "a77c90ed5e767a4e0a8029cad14ed347354a3b939b62ad75c0da091b522a259f",
     "pyproject.toml": "99bc0ba743c96c5c5a4cd137b6d8a709585422ca36178dab1fda3d790a46af08",
-    "scripts/render_cli_evidence.py": "942de9df8181b0f12edd989541d80916761972b4cbb39140de14979adc0dcecb",
+    "scripts/render_cli_evidence.py": "951128e88bd6f5f17d07155d1ff42cfc7d92db7bce10c1dca6047f0c079c5add",
     "src/casefold_observatory/__init__.py": "2ac8adf3810f5db3760c3a0fff391caca774897d7e1a303d8478f3d638993e15",
     "src/casefold_observatory/__main__.py": "d1e60b3225c4707d87a9e6c61cb89d502a64b39549fdd6c77596af995e917281",
     "src/casefold_observatory/cli.py": "08d98e15dd451689810e7392d31b48d65488bcc397275ed8338c33e14e4cde83",
@@ -215,7 +215,7 @@
     "src/casefold_observatory/py.typed": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
     "src/casefold_observatory/receipt.py": "b02f67c0cdb66d90a398cc3afbd70c06d7cffc00d28fcfd5d8153017c7fabe69"
   },
-  "source_revision": "b83e7a936f0b3e77ac4c2e1285b2e88dcc029741",
-  "source_tree": "71e4f3ec9cd69ba74036601232c59e015b03a437",
+  "source_revision": "03c6f16c03e3d3e1a5230afe58f478da12228d4a",
+  "source_tree": "78f789909de47ab5b8121f5acc510d758c241492",
   "unicode_version": "15.0.0"
 }
