@@ -1,7 +1,7 @@
 # CLI Evidence
 
 This directory contains the reviewed six-file evidence bundle for the installed
-`casefold-observatory` 0.4.0 workflow. The media is generated from real command
+`casefold-observatory` 0.5.0 workflow. The media is generated from real command
 channels and a real canonical receipt produced from the public seven-record
 fixture. It is not a UI mockup, benchmark, OS terminal screenshot, or claim about
 identifiers outside that fixture.
@@ -44,13 +44,13 @@ The capture and adoption chain is immutable and machine-readable:
 
 | Field | Reviewed identity |
 | --- | --- |
-| Capture source commit | `03c6f16c03e3d3e1a5230afe58f478da12228d4a` |
-| Capture source tree | `78f789909de47ab5b8121f5acc510d758c241492` |
-| Workflow run / attempt | [`31293264288` / `1`](https://github.com/omar07ibrahim/case/actions/runs/31293264288) |
-| Workflow job | [`93194112959`](https://github.com/omar07ibrahim/case/actions/runs/31293264288/job/93194112959) |
-| Hosted artifact | `generated-cli-evidence-31293264288`, ID `9032120081` |
-| Artifact archive | `188273` bytes, SHA-256 `2d9f3f8aee1f95868bfb656d17468b14854a75be606aa8a45df246ec3e04d4d4` |
-| Adoption commit | `fca957b24f45031f651d918636294874b18e3251` |
+| Capture source commit | `7ac811b8070cc7f3c7aa9caeeb9e3dddb082879b` |
+| Capture source tree | `dc2c320291a1166efd1d77893959df340d780479` |
+| Workflow run / attempt | [`31331354478` / `1`](https://github.com/omar07ibrahim/case/actions/runs/31331354478) |
+| Workflow job | [`93290069024`](https://github.com/omar07ibrahim/case/actions/runs/31331354478/job/93290069024) |
+| Hosted artifact | `generated-cli-evidence-31331354478-1`, ID `9043023742` |
+| Artifact archive | `187895` bytes, SHA-256 `a600d916bdb1b1e0ffc15acc94d14895b4c93b99ad6ba9bc2bff4cd1853beb59` |
+| Adoption commit | `a0caad6a912166fe11df7888a6cf9db1a8c28abb` |
 | Canonical adoption record | [`evidence/cli-evidence-adoption.v1.json`](evidence/cli-evidence-adoption.v1.json) |
 | Capture manifest | [`evidence/cli-evidence.v1.json`](evidence/cli-evidence.v1.json) |
 | Synthetic fixture | [`fixtures/cli-demo.v1.jsonl`](fixtures/cli-demo.v1.jsonl), SHA-256 `a77c90ed5e767a4e0a8029cad14ed347354a3b939b62ad75c0da091b522a259f` |
@@ -66,12 +66,12 @@ The six adopted file identities are:
 
 | File | Bytes | SHA-256 | Role |
 | --- | ---: | --- | --- |
-| [`cli-demo.gif`](cli-demo.gif) | 45,778 | `0034dccbefc08dfde3a3884162d44566664fbe80e0fc56bfef7dca9677543aea` | Four captured phases |
-| [`cli-result.svg`](cli-result.svg) | 6,582 | `dba4fcad5da2303e3ccbfa6ea53709ad4d4e28201cdf5dde110bb64712c71ed2` | Receipt-derived result |
-| [`cli-transcript.png`](cli-transcript.png) | 109,515 | `e76316607fe1813661e799178645818bddfe73419ceaa179b0684be49ea9ed89` | Rasterized command channels |
-| [`cli-workflow.svg`](cli-workflow.svg) | 9,610 | `19dba92c23617b56ac4bfc46dc9995cf909be52cd7e7ef62d61021531fc84f47` | Explanatory workflow |
-| [`evidence/cli-demo.receipt.v1.json`](evidence/cli-demo.receipt.v1.json) | 6,905 | `f27a1e8abecfea76d9ef054ceea0bf3d38d07d246d21653ade01e65846a58ccb` | Real canonical receipt |
-| [`evidence/cli-evidence.v1.json`](evidence/cli-evidence.v1.json) | 8,849 | `2ca3e07785a591b059f25d9b97207fe481eef5f9f77322e27f4faa678d822389` | Capture manifest |
+| [`cli-demo.gif`](cli-demo.gif) | 45,779 | `97d1609b3f8da9aa3cd4c09e5e5d4d975f7bf39ff7ad98e7b2dc77a80a9e16b3` | Four captured phases |
+| [`cli-result.svg`](cli-result.svg) | 6,582 | `3acb8bde0875154bdd23766c0e8432462fe30fafda8293fe4f3afd288d83da25` | Receipt-derived result |
+| [`cli-transcript.png`](cli-transcript.png) | 108,918 | `2661e81bf5bb789d88c738e2b661bf72091ff75d7185874edeef41f7eda5e4e0` | Rasterized command channels |
+| [`cli-workflow.svg`](cli-workflow.svg) | 9,610 | `a10a42cfb18d33505d7c1816db1d1c1ba1fed52e7ae5c70e4ef112688092e807` | Explanatory workflow |
+| [`evidence/cli-demo.receipt.v1.json`](evidence/cli-demo.receipt.v1.json) | 6,905 | `ae7f54706bc2014e9f4dbaafe2a58f301f5b259ab60fb67c391e0b5dde0c4c63` | Real canonical receipt |
+| [`evidence/cli-evidence.v1.json`](evidence/cli-evidence.v1.json) | 9,067 | `713d3af791a27d0fe1aa1e718e96ada3853169347f2af6622552d1d7104d7cd4` | Capture manifest |
 
 This README is an index and is deliberately not a seventh artifact member.
 

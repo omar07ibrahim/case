@@ -27,17 +27,17 @@ MANIFEST_PATH = PROJECT_ROOT / "MANIFEST.in"
 
 FIXTURE_SHA256 = "a77c90ed5e767a4e0a8029cad14ed347354a3b939b62ad75c0da091b522a259f"
 PILLOW_SHA256 = "78cb2c6865a35ab8ff8b75fd122f6033b92a62c82801110e48ddd6c936a45d91"
-ARTIFACT_ARCHIVE_BYTES = 188_273
+ARTIFACT_ARCHIVE_BYTES = 187_895
 ARTIFACT_ARCHIVE_SHA256 = (
-    "2d9f3f8aee1f95868bfb656d17468b14854a75be606aa8a45df246ec3e04d4d4"
+    "a600d916bdb1b1e0ffc15acc94d14895b4c93b99ad6ba9bc2bff4cd1853beb59"
 )
-ARTIFACT_ID = 9_032_120_081
-ARTIFACT_NAME = "generated-cli-evidence-31293264288"
-ARTIFACT_RUN_ID = 31_293_264_288
-ARTIFACT_JOB_ID = 93_194_112_959
-ADOPTED_SOURCE_REVISION = "03c6f16c03e3d3e1a5230afe58f478da12228d4a"
-ADOPTED_SOURCE_TREE = "78f789909de47ab5b8121f5acc510d758c241492"
-ADOPTION_COMMIT = "fca957b24f45031f651d918636294874b18e3251"
+ARTIFACT_ID = 9_043_023_742
+ARTIFACT_NAME = "generated-cli-evidence-31331354478-1"
+ARTIFACT_RUN_ID = 31_331_354_478
+ARTIFACT_JOB_ID = 93_290_069_024
+ADOPTED_SOURCE_REVISION = "7ac811b8070cc7f3c7aa9caeeb9e3dddb082879b"
+ADOPTED_SOURCE_TREE = "dc2c320291a1166efd1d77893959df340d780479"
+ADOPTION_COMMIT = "a0caad6a912166fe11df7888a6cf9db1a8c28abb"
 ADOPTED_OUTPUTS = (
     "docs/cli-evidence/evidence/cli-evidence.v1.json",
     "docs/cli-evidence/evidence/cli-demo.receipt.v1.json",
@@ -48,28 +48,28 @@ ADOPTED_OUTPUTS = (
 )
 ADOPTED_IDENTITIES: dict[str, dict[str, object]] = {
     "docs/cli-evidence/cli-demo.gif": {
-        "bytes": 45_778,
-        "sha256": "0034dccbefc08dfde3a3884162d44566664fbe80e0fc56bfef7dca9677543aea",
+        "bytes": 45_779,
+        "sha256": "97d1609b3f8da9aa3cd4c09e5e5d4d975f7bf39ff7ad98e7b2dc77a80a9e16b3",
     },
     "docs/cli-evidence/cli-result.svg": {
         "bytes": 6_582,
-        "sha256": "dba4fcad5da2303e3ccbfa6ea53709ad4d4e28201cdf5dde110bb64712c71ed2",
+        "sha256": "3acb8bde0875154bdd23766c0e8432462fe30fafda8293fe4f3afd288d83da25",
     },
     "docs/cli-evidence/cli-transcript.png": {
-        "bytes": 109_515,
-        "sha256": "e76316607fe1813661e799178645818bddfe73419ceaa179b0684be49ea9ed89",
+        "bytes": 108_918,
+        "sha256": "2661e81bf5bb789d88c738e2b661bf72091ff75d7185874edeef41f7eda5e4e0",
     },
     "docs/cli-evidence/cli-workflow.svg": {
         "bytes": 9_610,
-        "sha256": "19dba92c23617b56ac4bfc46dc9995cf909be52cd7e7ef62d61021531fc84f47",
+        "sha256": "a10a42cfb18d33505d7c1816db1d1c1ba1fed52e7ae5c70e4ef112688092e807",
     },
     "docs/cli-evidence/evidence/cli-demo.receipt.v1.json": {
         "bytes": 6_905,
-        "sha256": "f27a1e8abecfea76d9ef054ceea0bf3d38d07d246d21653ade01e65846a58ccb",
+        "sha256": "ae7f54706bc2014e9f4dbaafe2a58f301f5b259ab60fb67c391e0b5dde0c4c63",
     },
     "docs/cli-evidence/evidence/cli-evidence.v1.json": {
-        "bytes": 8_849,
-        "sha256": "2ca3e07785a591b059f25d9b97207fe481eef5f9f77322e27f4faa678d822389",
+        "bytes": 9_067,
+        "sha256": "713d3af791a27d0fe1aa1e718e96ada3853169347f2af6622552d1d7104d7cd4",
     },
 }
 FIXTURE_RECORDS = (

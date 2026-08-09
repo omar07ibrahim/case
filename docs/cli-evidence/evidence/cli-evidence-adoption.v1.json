@@ -1,43 +1,43 @@
 {
   "artifact": {
-    "archive_bytes": 188273,
-    "archive_sha256": "2d9f3f8aee1f95868bfb656d17468b14854a75be606aa8a45df246ec3e04d4d4",
-    "id": 9032120081,
-    "name": "generated-cli-evidence-31293264288",
+    "archive_bytes": 187895,
+    "archive_sha256": "a600d916bdb1b1e0ffc15acc94d14895b4c93b99ad6ba9bc2bff4cd1853beb59",
+    "id": 9043023742,
+    "name": "generated-cli-evidence-31331354478-1",
     "run_attempt": 1,
-    "workflow_job_id": 93194112959,
-    "workflow_run_id": 31293264288
+    "workflow_job_id": 93290069024,
+    "workflow_run_id": 31331354478
   },
   "files": {
     "docs/cli-evidence/cli-demo.gif": {
-      "bytes": 45778,
-      "sha256": "0034dccbefc08dfde3a3884162d44566664fbe80e0fc56bfef7dca9677543aea"
+      "bytes": 45779,
+      "sha256": "97d1609b3f8da9aa3cd4c09e5e5d4d975f7bf39ff7ad98e7b2dc77a80a9e16b3"
     },
     "docs/cli-evidence/cli-result.svg": {
       "bytes": 6582,
-      "sha256": "dba4fcad5da2303e3ccbfa6ea53709ad4d4e28201cdf5dde110bb64712c71ed2"
+      "sha256": "3acb8bde0875154bdd23766c0e8432462fe30fafda8293fe4f3afd288d83da25"
     },
     "docs/cli-evidence/cli-transcript.png": {
-      "bytes": 109515,
-      "sha256": "e76316607fe1813661e799178645818bddfe73419ceaa179b0684be49ea9ed89"
+      "bytes": 108918,
+      "sha256": "2661e81bf5bb789d88c738e2b661bf72091ff75d7185874edeef41f7eda5e4e0"
     },
     "docs/cli-evidence/cli-workflow.svg": {
       "bytes": 9610,
-      "sha256": "19dba92c23617b56ac4bfc46dc9995cf909be52cd7e7ef62d61021531fc84f47"
+      "sha256": "a10a42cfb18d33505d7c1816db1d1c1ba1fed52e7ae5c70e4ef112688092e807"
     },
     "docs/cli-evidence/evidence/cli-demo.receipt.v1.json": {
       "bytes": 6905,
-      "sha256": "f27a1e8abecfea76d9ef054ceea0bf3d38d07d246d21653ade01e65846a58ccb"
+      "sha256": "ae7f54706bc2014e9f4dbaafe2a58f301f5b259ab60fb67c391e0b5dde0c4c63"
     },
     "docs/cli-evidence/evidence/cli-evidence.v1.json": {
-      "bytes": 8849,
-      "sha256": "2ca3e07785a591b059f25d9b97207fe481eef5f9f77322e27f4faa678d822389"
+      "bytes": 9067,
+      "sha256": "713d3af791a27d0fe1aa1e718e96ada3853169347f2af6622552d1d7104d7cd4"
     }
   },
   "schema": "casefold-observatory.cli-evidence-adoption",
   "schema_version": 1,
-  "source_revision": "03c6f16c03e3d3e1a5230afe58f478da12228d4a",
-  "source_tree": "78f789909de47ab5b8121f5acc510d758c241492",
+  "source_revision": "7ac811b8070cc7f3c7aa9caeeb9e3dddb082879b",
+  "source_tree": "dc2c320291a1166efd1d77893959df340d780479",
   "validation": {
     "archive_entry_mode": "100644",
     "archive_inventory_exact": true,
