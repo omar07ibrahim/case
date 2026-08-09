@@ -532,11 +532,19 @@ def _verify(
         _fail("Playwright version changed")
     if (
         browser.get("network") != "none"
-        or browser.get("sandbox") is not True
+        or browser.get("process_sandbox") is not False
         or browser.get("java_script_enabled") is not True
         or browser.get("service_workers") != "block"
     ):
         _fail("browser isolation claim changed")
+    if browser.get("outer_isolation") != {
+        "capabilities": "dropped",
+        "network": "none",
+        "new_privileges": False,
+        "root_filesystem": "read_only",
+        "runtime_user": "non_root",
+    }:
+        _fail("outer browser isolation claim changed")
     if browser.get("launch_args") != [
         "--disable-dev-shm-usage",
         "--force-color-profile=srgb",

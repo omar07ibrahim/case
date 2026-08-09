@@ -201,10 +201,14 @@ authentication, freshness, authorization, or proof that an identifier is safe.
 
 The evidence-only Chromium workflow uses reviewed synthetic data, an immutable
 Linux-amd64 OCI platform digest, hash-locked automation wheels, a non-root
-read-only container, and no network during capture. JavaScript stays enabled so
-negative CSP probes are real. One local document and zero subresources are
-required. Real desktop, mobile-emulation, full-page, and scroll captures are
-independently verified before manual adoption.
+read-only container, and no network during capture. The hosted Docker boundary
+does not expose a usable Chromium user namespace, so the Chromium process
+sandbox is explicitly disabled and recorded rather than granting `SYS_ADMIN`
+or broader container privileges. Only the trusted locally generated static
+report is opened. JavaScript stays enabled so negative CSP probes are real. One
+local document and zero subresources are required. Real desktop,
+mobile-emulation, full-page, and scroll captures are independently verified
+before manual adoption.
 
 Published fixtures, screenshots, recordings, and generated diagrams must use
 reviewed synthetic or openly licensed data, contain no secrets or personal

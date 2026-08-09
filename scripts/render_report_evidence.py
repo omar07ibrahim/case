@@ -649,6 +649,8 @@ def _render(
         output_root.mkdir(parents=True)
     if platform.system() != "Linux" or platform.machine() != EXPECTED_MACHINE:
         _fail("capture must run on Linux x86-64")
+    if os.geteuid() == 0:
+        _fail("capture container must run as a non-root user")
     if PILLOW_VERSION != EXPECTED_PILLOW:
         _fail("Pillow version changed")
     playwright_metadata = importlib.import_module("importlib.metadata")
@@ -802,9 +804,12 @@ def _render(
         with sync_api.sync_playwright() as playwright:
             executable = Path(playwright.chromium.executable_path)
             executable_bytes = _read(executable, 512 * 1024 * 1024)
+            # GitHub-hosted Docker does not expose a usable Chromium user
+            # namespace. The trusted local report is instead contained by the
+            # non-root, no-network, read-only, cap-drop=ALL outer container.
             browser = playwright.chromium.launch(
                 args=("--disable-dev-shm-usage", "--force-color-profile=srgb"),
-                chromium_sandbox=True,
+                chromium_sandbox=False,
                 headless=True,
             )
             version = browser.version
@@ -882,8 +887,15 @@ def _render(
                     "--force-color-profile=srgb",
                 ],
                 "network": "none",
+                "outer_isolation": {
+                    "capabilities": "dropped",
+                    "network": "none",
+                    "new_privileges": False,
+                    "root_filesystem": "read_only",
+                    "runtime_user": "non_root",
+                },
                 "playwright_version": EXPECTED_PLAYWRIGHT,
-                "sandbox": True,
+                "process_sandbox": False,
                 "service_workers": "block",
             },
             "commands": [

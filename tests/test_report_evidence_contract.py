@@ -118,7 +118,7 @@ class ReportEvidenceContractTests(unittest.TestCase):
         self.assertIn("--security-opt=no-new-privileges", workflow)
         self.assertIn('--user "$(id -u):$(id -g)"', workflow)
         generator = GENERATOR_PATH.read_text(encoding="utf-8")
-        self.assertIn("chromium_sandbox=True", generator)
+        self.assertIn("chromium_sandbox=False", generator)
         self.assertIn("java_script_enabled=True", generator)
         self.assertNotIn("pull_request_target", workflow)
         self.assertNotIn("--no-sandbox", workflow)

@@ -75,8 +75,16 @@ runs in a fresh non-root, read-only container with no network, no added Linux
 capabilities, no-new-privileges, a private temporary filesystem, and no GitHub
 token or Docker socket.
 
-JavaScript remains enabled. The browser must observe one local document request
-and zero subresource requests. The capture fails on a popup, page error, clean
+JavaScript remains enabled. GitHub-hosted Docker does not expose a usable
+Chromium user namespace under these restrictions, so the Chromium process
+sandbox is explicitly disabled and recorded as such. The outer non-root,
+no-network, read-only, capability-free container is the capture boundary; the
+workflow does not add `SYS_ADMIN` or broaden privileges to make an inner
+sandbox appear enabled. Only the trusted, locally generated static report is
+opened.
+
+The browser must observe one local document request and zero subresource
+requests. The capture fails on a popup, page error, clean
 load console error, URL-bearing attribute, active element, non-ASCII decoded DOM
 text, horizontal document overflow, missing stylesheet, or unexpected layout
 height. Negative probes then append an inline script and a modified style and
