@@ -227,8 +227,8 @@
       "src/casefold_observatory/engine.py",
       "src/casefold_observatory/model.py"
     ],
-    "source_revision": "c55833248d5e8a63987c6a88f9ae971f95a05df2",
-    "source_tree_sha256": "5f15c9852a286c26b54ca6811d2bf5b3555e98ba45b9f61c080c89a232f8f847"
+    "source_revision": "9246b7e338974d5f4e2f85aa419cb72302664feb",
+    "source_tree_sha256": "6c163f03295dc9061e8876201a666550459fed5d75f7c9404e5b11e779e5ccd8"
   },
   "landscape": {
     "description": "Reviewed synthetic Unicode identifiers evaluated under four ordered policies. Filled cells are exact final-equality collision groups.",

@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="970" viewBox="0 0 1600 970" role="img" aria-labelledby="svg-title svg-description">
   <title id="svg-title">Collision analysis architecture</title>
   <desc id="svg-description">The bounded deterministic workflow from validated records and ordered policies to minimal witnesses and a collision graph.</desc>
-  <metadata>{&quot;data_sha256&quot;:&quot;811125a9f15ee413c10ea5576d791d48d060831ea1130e2f933b8799d6b92287&quot;,&quot;generated_by&quot;:&quot;scripts/render_collision_visuals.py&quot;,&quot;scenario&quot;:&quot;architecture&quot;,&quot;source_revision&quot;:&quot;c55833248d5e8a63987c6a88f9ae971f95a05df2&quot;}</metadata>
+  <metadata>{&quot;data_sha256&quot;:&quot;811125a9f15ee413c10ea5576d791d48d060831ea1130e2f933b8799d6b92287&quot;,&quot;generated_by&quot;:&quot;scripts/render_collision_visuals.py&quot;,&quot;scenario&quot;:&quot;architecture&quot;,&quot;source_revision&quot;:&quot;9246b7e338974d5f4e2f85aa419cb72302664feb&quot;}</metadata>
   <style>
     text { font-family: Inter, 'Segoe UI', 'DejaVu Sans', sans-serif; }
     .title { fill: #eff6ff; font-size: 34px; font-weight: 750; }
