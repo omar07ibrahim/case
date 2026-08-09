@@ -64,8 +64,7 @@ _ANALYZE_HELP = (
     b"One through eight policies are required and their order is significant.\n"
 )
 _REPORT_HELP = (
-    b"Usage: casefold-observatory report --source PATH --receipt PATH "
-    b"--output PATH\n"
+    b"Usage: casefold-observatory report --source PATH --receipt PATH --output PATH\n"
 )
 _VERIFY_HELP = b"""Usage: casefold-observatory verify --source PATH --receipt PATH
 """

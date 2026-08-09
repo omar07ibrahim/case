@@ -87,6 +87,7 @@ def _assert_archive_contract(sdist: Path, wheel: Path) -> None:
         "casefold_observatory/engine.py",
         "casefold_observatory/filesystem.py",
         "casefold_observatory/model.py",
+        "casefold_observatory/report.py",
         "casefold_observatory/py.typed",
         "casefold_observatory/receipt.py",
     )
@@ -120,6 +121,7 @@ def _assert_archive_contract(sdist: Path, wheel: Path) -> None:
         "tests/test_distribution_script.py",
         "tests/test_filesystem.py",
         "tests/test_receipt.py",
+        "tests/test_report.py",
         "tests/test_visuals.py",
     )
     for required in required_source_files:

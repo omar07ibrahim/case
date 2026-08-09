@@ -64,6 +64,7 @@ SOURCE_BINDINGS: Final = (
     "src/casefold_observatory/engine.py",
     "src/casefold_observatory/filesystem.py",
     "src/casefold_observatory/model.py",
+    "src/casefold_observatory/report.py",
     "src/casefold_observatory/receipt.py",
     "src/casefold_observatory/py.typed",
 )
