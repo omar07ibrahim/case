@@ -324,6 +324,7 @@ class ReportEvidenceContractTests(unittest.TestCase):
 
     def test_adopted_capture_provenance_is_documented(self) -> None:
         index = REPORT_INDEX_PATH.read_text(encoding="utf-8")
+        normalized_index = " ".join(index.split())
         for expected in (
             ARTIFACT_ARCHIVE_SHA256,
             ARTIFACT_NAME,
@@ -336,10 +337,10 @@ class ReportEvidenceContractTests(unittest.TestCase):
             "independently downloaded and checked",
             "without rerendering",
         ):
-            self.assertIn(expected, index)
+            self.assertIn(expected, normalized_index)
         for relative_path, identity in ADOPTED_IDENTITIES.items():
-            self.assertIn(Path(relative_path).name, index)
-            self.assertIn(cast(str, identity["sha256"]), index)
+            self.assertIn(Path(relative_path).name, normalized_index)
+            self.assertIn(cast(str, identity["sha256"]), normalized_index)
 
     def test_adopted_manifest_is_self_consistent_when_present(self) -> None:
         if not EVIDENCE_MANIFEST_PATH.exists():
